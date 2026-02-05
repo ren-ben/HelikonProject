@@ -39,3 +39,8 @@ build/
 pw.env
 backend.log
 nohup.out
+
+### Node & Python ###
+node_modules/
+__pycache__/
+*.pyc

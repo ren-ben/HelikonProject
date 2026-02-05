@@ -1,0 +1,9 @@
+.git/
+target/
+node_modules/
+clil-frontend/node_modules/
+__pycache__/
+*.pyc
+.env
+*.log
+nohup.out

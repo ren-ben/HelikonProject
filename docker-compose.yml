@@ -1,20 +1,29 @@
-version: '3.8'
 services:
+  # ─── Database ───────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: clil-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - helikon
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: clil-pgadmin
+    restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -22,6 +31,78 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    networks:
+      - helikon
 
+  # ─── Backend (Spring Boot) ─────────────────────────────────
+  spring-boot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clil-backend
+    restart: unless-stopped
+    ports:
+      - "8081:8081"          # exposed for local dev; in prod only nginx hits this
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      RAG_SERVICE_URL: http://rag-service:8000   # consumed by RagProxyService (Phase 4)
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - helikon
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s      # give the JVM time to boot
+
+  # ─── RAG service (Python / LangChain) ──────────────────────
+  # Skeleton only — Phase 2 adds the full ingest/query/generate pipeline.
+  # NOT exposed to the host: reachable only by spring-boot on the
+  # internal helikon network.
+  rag-service:
+    build:
+      context: ./rag-service
+    container_name: clil-rag
+    restart: unless-stopped
+    environment:
+      LLM_PROVIDER:      ${LLM_PROVIDER:-openai}
+      LLM_API_KEY:       ${LLM_API_KEY:-}
+      LLM_MODEL:         ${LLM_MODEL:-gpt-4o-mini}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      CHROMADB_PATH:     /data/chromadb
+    volumes:
+      - chromadb_data:/data/chromadb
+    networks:
+      - helikon
+
+  # ─── Frontend (Vue static files + nginx reverse proxy) ─────
+  # The only service with ports open to the host.
+  # Serves the Vue SPA at / and proxies /api/* → spring-boot.
+  frontend:
+    build:
+      context: .
+      dockerfile: clil-frontend/Dockerfile
+    container_name: clil-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - spring-boot
+    networks:
+      - helikon
+
+# ─── Volumes ────────────────────────────────────────────────────
 volumes:
   postgres_data:
+  chromadb_data:     # persists ChromaDB vectors across restarts
+
+# ─── Networks ───────────────────────────────────────────────────
+networks:
+  helikon:
+    driver: bridge

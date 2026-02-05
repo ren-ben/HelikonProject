@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(docker build:*)",
+      "Bash(docker info:*)",
+      "Bash(docker compose config:*)",
+      "Bash(echo \"=== curl http://localhost:80/api/v1/clil/materials ===\")",
+      "Bash(curl:*)",
+      "Bash(docker compose ps:*)"
+    ]
+  }
+}
