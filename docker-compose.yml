@@ -54,6 +54,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rag-service:
+        condition: service_started
     networks:
       - helikon
     healthcheck:
@@ -64,9 +66,8 @@ services:
       start_period: 30s      # give the JVM time to boot
 
   # ─── RAG service (Python / LangChain) ──────────────────────
-  # Skeleton only — Phase 2 adds the full ingest/query/generate pipeline.
-  # NOT exposed to the host: reachable only by spring-boot on the
-  # internal helikon network.
+  # Handles all LLM calls. NOT exposed to the host: reachable
+  # only by spring-boot on the internal helikon network.
   rag-service:
     build:
       context: ./rag-service

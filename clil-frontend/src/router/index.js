@@ -10,32 +10,46 @@ const TemplateLibrary = () => import('@/views/TemplateLibrary.vue')
 const Settings = () => import('@/views/Settings.vue')
 const NotFound = () => import('@/views/NotFound.vue')
 const MaterialsGrid = () => import('@/views/MaterialsGrid.vue') // Import hinzugefügt
+const LoginView = () => import('@/views/LoginView.vue')
+const RegisterView = () => import('@/views/RegisterView.vue')
 
 const routes = [
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: { title: 'Anmelden', noLayout: true }
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: RegisterView,
+    meta: { title: 'Registrieren', noLayout: true }
+  },
   {
     path: '/',
     name: 'dashboard',
     component: Dashboard,
-    meta: { title: 'Dashboard' }
+    meta: { title: 'Dashboard', requiresAuth: true }
   },
   {
     path: '/create',
     name: 'create',
     component: CreateMaterial,
     props: route => ({ templateId: route.query.template, type: route.query.type }),
-    meta: { title: 'Neues Material erstellen' }
+    meta: { title: 'Neues Material erstellen', requiresAuth: true }
   },
   {
     path: '/edit/:id',
     name: 'edit',
     component: EditMaterial,
     props: route => ({ id: route.params.id }),
-    meta: { title: 'Material bearbeiten' }
+    meta: { title: 'Material bearbeiten', requiresAuth: true }
   },
   {
     path: '/materials',
     component: MaterialsList,
-    meta: { title: 'Meine Materialien' },
+    meta: { title: 'Meine Materialien', requiresAuth: true },
     children: [
       {
         path: '',
@@ -54,13 +68,13 @@ const routes = [
     path: '/templates',
     name: 'templates',
     component: TemplateLibrary,
-    meta: { title: 'Vorlagenbibliothek' }
+    meta: { title: 'Vorlagenbibliothek', requiresAuth: true }
   },
   {
     path: '/settings',
     name: 'settings',
     component: Settings,
-    meta: { title: 'Einstellungen' }
+    meta: { title: 'Einstellungen', requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -91,19 +105,33 @@ router.onError((error) => {
   }
 })
 
-// Navigation Guards mit besserem Error Handling
+// Navigation Guards mit Auth-Prüfung
 router.beforeEach(async (to, from, next) => {
   try {
     // Dynamischen Titel setzen
     document.title = to.meta.title ? `${to.meta.title} | CLIL-KI-Tool` : 'CLIL-KI-Tool'
-    
+
     // Überprüfe ob die Route existiert
     if (!to.matched.length) {
       console.warn('No matching route found for:', to.path)
       next({ name: 'not-found' })
       return
     }
-    
+
+    const isAuthenticated = !!localStorage.getItem('accessToken')
+
+    // Geschützte Route ohne Token → Login
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      next({ name: 'login', query: { redirect: to.fullPath } })
+      return
+    }
+
+    // Bereits eingeloggt → nicht nochmal Login/Register zeigen
+    if ((to.name === 'login' || to.name === 'register') && isAuthenticated) {
+      next({ name: 'dashboard' })
+      return
+    }
+
     next()
   } catch (error) {
     console.error('Navigation guard error:', error)
@@ -116,4 +144,4 @@ router.afterEach((to, from) => {
   console.log('Navigation completed:', from.path, '->', to.path)
 })
 
-export default router 
+export default router

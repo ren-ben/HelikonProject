@@ -1,4 +1,5 @@
 import axios from "axios";
+import authService from "./authService";
 
 // Configuration for Spring Boot backend
 const API_CONFIG = {
@@ -12,9 +13,28 @@ const API_CONFIG = {
 // Create axios instance
 const apiClient = axios.create(API_CONFIG);
 
-// Request interceptor for logging
+// Token refresh state — prevents multiple concurrent refresh attempts
+let isRefreshing = false;
+let failedQueue = [];
+
+function processQueue(error, token = null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  failedQueue = [];
+}
+
+// Request interceptor — attach JWT token
 apiClient.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     console.log(
       "API Request:",
       config.method?.toUpperCase(),
@@ -29,13 +49,65 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Response interceptor — handle errors + 401 token refresh
 apiClient.interceptors.response.use(
   (response) => {
     console.log("API Response:", response.status, response.data);
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 — attempt token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return apiClient(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const storedRefresh = localStorage.getItem("refreshToken");
+      if (!storedRefresh) {
+        processQueue(new Error("No refresh token"));
+        isRefreshing = false;
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      try {
+        const response = await authService.refresh(storedRefresh);
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+        localStorage.setItem("user", JSON.stringify({
+          username: response.username,
+          email: response.email,
+          roles: response.roles ? [...response.roles] : ["USER"]
+        }));
+
+        processQueue(null, response.accessToken);
+        originalRequest.headers.Authorization = `Bearer ${response.accessToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     console.error(
       "API Response Error:",
       error.response?.status,
@@ -73,10 +145,10 @@ const reverseTypeMap = Object.fromEntries(
 );
 
 export default {
-  // Get available local LLM models (managed by Ollama)
+  // Get available LLM models from RAG service
   async getAvailableModels() {
     try {
-      console.log('Fetching available local LLM models');
+      console.log('Fetching available LLM models');
       const response = await apiClient.get('/models');
       return {
         success: true,

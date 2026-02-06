@@ -9,20 +9,21 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Slf4j
 @Configuration
-public class OllamaConfig {
+public class RagServiceConfig {
 
-    @Value("${ollama.api.url}")
-    private String apiUrl;
+    @Value("${rag.service.url}")
+    private String ragServiceUrl;
 
     @Bean
-    public WebClient ollamaWebClient() {
-        log.info("Configuring local LLM WebClient (Ollama) with URL: {}", apiUrl);
-        
+    public WebClient ragServiceWebClient() {
+        log.info("Configuring RAG service WebClient with URL: {}", ragServiceUrl);
+
         return WebClient.builder()
-                .baseUrl(apiUrl)
+                .baseUrl(ragServiceUrl)
                 .defaultHeader("Content-Type", "application/json")
                 .exchangeStrategies(ExchangeStrategies.builder()
-                        .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
+                        .codecs(configurer -> configurer.defaultCodecs()
+                                .maxInMemorySize(10 * 1024 * 1024))
                         .build())
                 .build();
     }

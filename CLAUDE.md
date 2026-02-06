@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (post-Phase 3):** Phases 1–3 are complete. Docker infrastructure, Python RAG service, and auth are all in place. Generation still goes through `OllamaService` until Phase 4 wires `RagProxyService`. All `/api/**` endpoints (except `/api/v1/auth/**`) require a JWT Bearer token. Frontend will get 401 on CLIL endpoints until Phase 5 adds auth views.
+**Current state (post-Phase 5):** Phases 1–5 are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API. Legacy Ollama code has been removed.
 
 ## Build Commands
 
@@ -59,7 +59,7 @@ Standard Spring Boot layered architecture:
 
 - **Controllers** — `ClilController` (`/api/v1/clil`) for generation + material CRUD; `AuthController` (`/api/v1/auth`) for register/login/refresh.
 - **Security** (`security/`) — JWT-based stateless auth. `JwtService` (jjwt 0.12.6), `JwtAuthenticationFilter` (OncePerRequestFilter), `UserDetailsServiceImpl`. Config in `config/SecurityConfig`. All `/api/**` except `/api/v1/auth/**` require auth.
-- **Service layer** — `OllamaService` (legacy, Phase 4 replaces with `RagProxyService`), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh), `PromptService`.
+- **Service layer** — `RagProxyService` (proxies generation + models to Python via WebClient), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh).
 - **DTOs** (`dto/`) — `MaterialRequest` for generation; `MaterialCreateRequest` / `MaterialUpdateRequest` for persistence; `dto/auth/` subpackage for auth request/response types.
 - **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
 
@@ -67,11 +67,12 @@ Standard Spring Boot layered architecture:
 
 Vue 3 SPA with Vuetify 3 component library and Pinia state management:
 
-- **Router** (`router/index.js`) — all route components are lazy-loaded. `/materials` has a nested child route for detail view.
+- **Router** (`router/index.js`) — all route components are lazy-loaded. `/materials` has a nested child route for detail view. Auth guard: routes with `meta.requiresAuth` redirect to `/login` if no token. Login/Register use `meta.noLayout` to bypass `AppLayout`.
 - **Pinia stores** (`stores/`):
+  - `auth.js` — auth state (user, tokens), actions (login, register, logout, refresh, initialize from localStorage). Tokens persist in localStorage.
   - `materials.js` — central store for the materials list. All views read/write through this store; it calls the API service layer.
   - `ui.js` — tracks UI state (theme, sidebar, last created/edited material — used for post-action redirects).
-- **API layer** (`services/deepinfra-api.js`) — the single Axios client that talks to the backend. Contains a **type mapping** (`typeMap`) that translates frontend English keys (`worksheet`, `quiz`, etc.) to German strings (`Arbeitsblatt`, `Quiz`, etc.) before sending to the backend, and a `reverseTypeMap` for responses. This is the source of truth for material-type values across the app.
+- **API layer** (`services/deepinfra-api.js`) — Axios client for `/api/v1/clil`. Attaches JWT from localStorage on every request. 401 response interceptor attempts token refresh (via `authService.js`) with request queuing, then redirects to `/login` on failure. `authService.js` is a separate Axios client for `/api/v1/auth` endpoints. Type mapping (`typeMap`/`reverseTypeMap`) translates frontend English keys to German DB strings.
 - **Views** — the bulk of the app logic. `CreateMaterial.vue` (~1000 lines) implements the 5-step generation wizard. `MaterialsGrid.vue` (~1300 lines) is the main materials list/table.
 - **Editor** (`components/Editor/`) — TipTap rich-text editor used in `EditMaterial.vue`, with custom extensions for language help and vocabulary highlighting.
 - **Export** (`components/ExportDialog.vue`) — handles PDF (jspdf + html2canvas) and DOCX (docx library) export.
@@ -81,7 +82,7 @@ Vue 3 SPA with Vuetify 3 component library and Pinia state management:
 1. User fills out the 5-step wizard in `CreateMaterial.vue`.
 2. Wizard calls `materialsStore.generateMaterial()` → `deepinfra-api.generateMaterial()`.
 3. API client POSTs to backend `/api/v1/clil/generate` with the `MaterialRequest` payload (includes the chosen model name).
-4. **Current (pre-Phase 4):** `ClilController` delegates to `OllamaService` → local Ollama. **After Phase 4:** delegates to `RagProxyService` → Python RAG service → cloud LLM API (OpenAI / Groq), with the Bloom's Taxonomy system prompt assembled by LangChain.
+4. `ClilController` delegates to `RagProxyService` → Python RAG service → cloud LLM API (OpenAI / Groq), with the Bloom's Taxonomy system prompt assembled by LangChain.
 5. The generated HTML response comes back to the frontend; the user can review and save it, which POSTs to `/api/v1/clil/materials` to persist via `MaterialService`.
 
 ### Data Flow: CRUD
@@ -107,7 +108,7 @@ Saved materials live in PostgreSQL. The frontend fetches them all via `GET /mate
 
 ## Roadmap & Scope
 
-Phases 1–3 are complete (Docker, RAG service, auth). The remaining objectives are planned in the phases below. All phases are dependency-ordered: do not start a later phase before its prerequisites are done.
+Phases 1–5 are complete (Docker, RAG service, auth, proxy generation, frontend auth). The remaining objectives are planned in the phases below.
 
 ### Target architecture (two-backend split)
 
@@ -151,13 +152,12 @@ nginx (HTTPS, reverse proxy)
 
 ### What exists now vs. what's needed
 
-| Exists (Phases 1–3) | Needs to be added |
+| Exists (Phases 1–5) | Needs to be added |
 |---|---|
 | Docker infrastructure (5 containers, nginx proxy) | — |
-| Python RAG service (generate, ingest, query, documents, models) | Wire into Spring Boot via `RagProxyService` (Phase 4) |
-| Spring Security + JWT auth, `User`/`Role` entities, `owner_id` on materials | Frontend auth views + interceptor (Phase 5) |
-| Spring Boot CRUD + Ollama proxy (legacy) | Retire `OllamaService`, add `RagProxyService` (Phase 4) |
-| Vue frontend with material wizard | Login/Register views, route guards, Documents view, Query view, Admin view |
+| Python RAG service (generate, ingest, query, documents, models) | — |
+| Spring Security + JWT, `RagProxyService`, material CRUD with ownership | `DocumentController`, `AdminController` |
+| Vue frontend: auth (login/register/guards/interceptor), material wizard + CRUD | Documents view, Query view, Admin view |
 
 ### Lightsail deployment notes (2 GB / 2 vCPU / 60 GB SSD)
 
@@ -172,5 +172,5 @@ nginx (HTTPS, reverse proxy)
 - **German strings in the DB** — material types are stored in German (`Arbeitsblatt`, `Quiz`, `Glossar`, `Präsentation`, `Grafik`, `Video-Skript`). The frontend's `typeMap` / `reverseTypeMap` in `deepinfra-api.js` handles the translation. When adding a new material type, update both maps.
 - **Code comments are in German** — much of the frontend source has German comments; keep this consistent when editing those files.
 - **`@/` path alias** — configured in `vite.config.js` to resolve to `clil-frontend/src/`.
-- **Reactive backend calls** — `OllamaService` (legacy) and the future `RagProxyService` use Project Reactor (`Mono`) and `WebClient`. Keep all new backend-to-service calls reactive.
+- **Reactive backend calls** — `RagProxyService` uses Project Reactor (`Mono`) and `WebClient`. Keep all new backend-to-service calls reactive.
 - **pgAdmin** is available at `http://localhost:5050` (login: admin@admin.com / admin) after `docker-compose up`.

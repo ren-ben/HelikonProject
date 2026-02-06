@@ -6,7 +6,7 @@ import at.technikum.clil.dto.MaterialCreateRequest;
 import at.technikum.clil.dto.MaterialRequest;
 import at.technikum.clil.dto.MaterialUpdateRequest;
 import at.technikum.clil.model.User;
-import at.technikum.clil.service.OllamaService;
+import at.technikum.clil.service.RagProxyService;
 import at.technikum.clil.service.MaterialService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,19 +20,17 @@ import java.util.List;
 @RequestMapping("/api/v1/clil")
 public class ClilController {
 
-    private final OllamaService ollamaService;
+    private final RagProxyService ragProxyService;
     private final MaterialService materialService;
 
-    public ClilController(OllamaService ollamaService, MaterialService materialService) {
-        this.ollamaService = ollamaService;
+    public ClilController(RagProxyService ragProxyService, MaterialService materialService) {
+        this.ragProxyService = ragProxyService;
         this.materialService = materialService;
     }
 
     @GetMapping("/models")
     public Mono<ResponseEntity<List<String>>> getAvailableModels() {
-        return ollamaService.listAvailableModels()
-                .doOnSuccess(models -> System.out.println("Successfully fetched " + models.size() + " models: " + models))
-                .doOnError(error -> System.err.println("Error fetching models: " + error.getMessage()))
+        return ragProxyService.listAvailableModels()
                 .map(ResponseEntity::ok)
                 .onErrorReturn(ResponseEntity.internalServerError().build());
     }
@@ -40,18 +38,7 @@ public class ClilController {
     @PostMapping("/generate")
     public Mono<ResponseEntity<ClilResponse>> generateLessonMaterial(
             @RequestBody MaterialRequest request) {
-        return ollamaService.generateMaterial(
-                        request.getModelName(),
-                        request.getMaterialType(),
-                        request.getTopic(),
-                        request.getPrompt(),
-                        request.getSubject(),
-                        request.getLanguageLevel(),
-                        request.getVocabPercentage(),
-                        request.getContentFocus(),
-                        request.getIncludeVocabList(),
-                        request.getDescription()
-                )
+        return ragProxyService.generateMaterial(request)
                 .timeout(Duration.ofSeconds(180))
                 .map(ResponseEntity::ok)
                 .onErrorReturn(ResponseEntity.internalServerError()

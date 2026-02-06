@@ -908,7 +908,7 @@ watch(currentStep, (newStep) => {
 
 // Initialize form with query parameters from Dashboard
 onMounted(async () => {
-  // Load available local LLM models
+  // Load available LLM models from RAG service
   loadingModels.value = true;
   try {
     const response = await deepinfraApi.getAvailableModels();
@@ -920,14 +920,14 @@ onMounted(async () => {
       }
     } else {
       // Fallback to default model
-      availableModels.value = ['llama3.2'];
-      form.value.model = 'llama3.2';
-      showFeedback('Konnte keine lokalen Modelle laden. Stelle sicher, dass Ollama läuft und Modelle installiert sind.', 'warning');
+      availableModels.value = ['gpt-4o-mini'];
+      form.value.model = 'gpt-4o-mini';
+      showFeedback('Konnte keine Modelle laden. Verwende Standard-Modell.', 'warning');
     }
   } catch (error) {
-    console.error('Error loading local models:', error);
-    availableModels.value = ['llama3.2'];
-    form.value.model = 'llama3.2';
+    console.error('Error loading models:', error);
+    availableModels.value = ['gpt-4o-mini'];
+    form.value.model = 'gpt-4o-mini';
     showFeedback('Fehler beim Laden der Modelle. Verwende Standard-Modell.', 'warning');
   } finally {
     loadingModels.value = false;

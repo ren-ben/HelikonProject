@@ -1,12 +1,19 @@
 <template>
   <v-app>
-    <app-layout />
+    <app-layout v-if="!$route.meta.noLayout" />
+    <router-view v-else />
   </v-app>
 </template>
 
 <script setup>
-import AppLayout from '@/components/Layout/AppLayout.vue';
-// Keine weitere Logik hier nötig, da das Layout alles handhabt
+import { onMounted } from 'vue'
+import AppLayout from '@/components/Layout/AppLayout.vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+onMounted(() => {
+  authStore.initialize()
+})
 </script>
 
 <style>

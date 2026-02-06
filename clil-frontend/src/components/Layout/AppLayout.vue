@@ -47,12 +47,16 @@
             class="ml-1 mr-2"
           >
             <v-avatar color="secondary" size="36">
-               <!-- Initialen oder Bild des Benutzers -->
-              <span class="text-subtitle-1 text-white">LS</span> 
+              <span class="text-subtitle-1 text-white">{{ authStore.userInitials }}</span>
             </v-avatar>
           </v-btn>
         </template>
         <v-list density="compact">
+          <v-list-item v-if="authStore.user" class="px-4 py-2" :ripple="false">
+            <v-list-item-title class="font-weight-medium">{{ authStore.user.username }}</v-list-item-title>
+            <v-list-item-subtitle>{{ authStore.user.email }}</v-list-item-subtitle>
+          </v-list-item>
+          <v-divider v-if="authStore.user"></v-divider>
           <v-list-item to="/settings" prepend-icon="mdi-account-cog">
             <v-list-item-title>Profil</v-list-item-title>
           </v-list-item>
@@ -148,10 +152,12 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute();
 const router = useRouter();
 const theme = useTheme();
+const authStore = useAuthStore();
 
 const drawer = ref(true); // Navigation Drawer standardmäßig offen
 const search = ref('');
@@ -185,11 +191,9 @@ function toggleTheme () {
   // localStorage.setItem('darkMode', isDarkMode.value);
 }
 
-// Funktion für Logout (Beispiel)
 function logout() {
-  console.log('Logout clicked');
-  // Hier Logik für den Logout einfügen (z.B. Token entfernen, zur Login-Seite navigieren)
-  // router.push('/login');
+  authStore.logout();
+  router.push('/login');
 }
 
 // Initialen Theme-Status laden (Beispiel)
