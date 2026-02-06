@@ -1,8 +1,10 @@
 package at.technikum.clil.repository;
 
 import at.technikum.clil.model.LessonMaterial;
+import at.technikum.clil.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,4 +26,7 @@ public interface LessonMaterialRepository extends JpaRepository<LessonMaterial, 
 
     @Query("SELECT DISTINCT lm.topic FROM LessonMaterial lm")
     List<String> findDistinctTopics();
+
+    @Query("SELECT lm FROM LessonMaterial lm WHERE lm.owner = :owner ORDER BY lm.createdAt DESC")
+    List<LessonMaterial> findByOwnerOrderByCreatedAtDesc(@Param("owner") User owner);
 }

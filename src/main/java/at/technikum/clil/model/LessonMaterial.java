@@ -16,6 +16,10 @@ public class LessonMaterial {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
     @Column(nullable = false)
     private String materialType;  // e.g., "lesson plan", "quiz", "reading exercise"
 

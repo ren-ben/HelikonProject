@@ -4,6 +4,7 @@ import at.technikum.clil.dto.LessonMaterialDto;
 import at.technikum.clil.dto.MaterialCreateRequest;
 import at.technikum.clil.dto.MaterialUpdateRequest;
 import at.technikum.clil.model.LessonMaterial;
+import at.technikum.clil.model.User;
 import at.technikum.clil.repository.LessonMaterialRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,15 +26,15 @@ public class MaterialService {
     /**
      * Erstellt ein neues Material
      */
-    public LessonMaterialDto createMaterial(MaterialCreateRequest request) {
+    public LessonMaterialDto createMaterial(MaterialCreateRequest request, User owner) {
         log.debug("Creating new material: {}", request.getTopic());
-        
+
         // Use aiResponse if provided, otherwise use content
         String content = request.getAiResponse() != null ? request.getAiResponse() : request.getContent();
-        
+
         // Validation
         validateMaterialRequest(request.getMaterialType(), request.getTopic(), content);
-        
+
         LessonMaterial material = LessonMaterial.builder()
                 .materialType(request.getMaterialType())
                 .topic(request.getTopic())
@@ -43,6 +44,7 @@ public class MaterialService {
                 .languageLevel(request.getLanguageLevel())
                 .vocabPercentage(request.getVocabPercentage())
                 .tags(request.getTags())
+                .owner(owner)
                 .build();
         
         LessonMaterial saved = repository.save(material);
@@ -59,10 +61,11 @@ public class MaterialService {
     /**
      * Aktualisiert ein bestehendes Material
      */
-    public Optional<LessonMaterialDto> updateMaterial(Long id, MaterialUpdateRequest request) {
+    public Optional<LessonMaterialDto> updateMaterial(Long id, MaterialUpdateRequest request, User owner) {
         log.debug("Updating material with ID: {}", id);
-        
+
         return repository.findById(id)
+                .filter(m -> m.getOwner() != null && m.getOwner().getId().equals(owner.getId()))
                 .map(existingMaterial -> {
                     // Update only non-null fields
                     if (request.getMaterialType() != null) {
@@ -132,10 +135,10 @@ public class MaterialService {
      * Ruft alle Materialien ab
      */
     @Transactional(readOnly = true)
-    public List<LessonMaterialDto> getAllMaterials() {
-        log.debug("Fetching all materials");
-        
-        return repository.findAllOrderByCreatedAtDesc()
+    public List<LessonMaterialDto> getAllMaterials(User owner) {
+        log.debug("Fetching all materials for user: {}", owner.getUsername());
+
+        return repository.findByOwnerOrderByCreatedAtDesc(owner)
                 .stream()
                 .map(LessonMaterialDto::fromEntity)
                 .toList();
@@ -145,26 +148,30 @@ public class MaterialService {
      * Ruft ein Material nach ID ab
      */
     @Transactional(readOnly = true)
-    public Optional<LessonMaterialDto> getMaterialById(Long id) {
+    public Optional<LessonMaterialDto> getMaterialById(Long id, User owner) {
         log.debug("Fetching material with ID: {}", id);
-        
+
         return repository.findById(id)
+                .filter(m -> m.getOwner() != null && m.getOwner().getId().equals(owner.getId()))
                 .map(LessonMaterialDto::fromEntity);
     }
 
     /**
      * Löscht ein Material
      */
-    public boolean deleteMaterial(Long id) {
+    public boolean deleteMaterial(Long id, User owner) {
         log.debug("Deleting material with ID: {}", id);
-        
-        if (repository.existsById(id)) {
+
+        Optional<LessonMaterial> material = repository.findById(id)
+                .filter(m -> m.getOwner() != null && m.getOwner().getId().equals(owner.getId()));
+
+        if (material.isPresent()) {
             repository.deleteById(id);
             log.info("Deleted material with ID: {}", id);
             return true;
         }
-        
-        log.warn("Material with ID {} not found for deletion", id);
+
+        log.warn("Material with ID {} not found or not owned by user {}", id, owner.getUsername());
         return false;
     }
 

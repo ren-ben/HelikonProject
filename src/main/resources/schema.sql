@@ -26,3 +26,23 @@ CREATE INDEX IF NOT EXISTS idx_lesson_materials_topic ON lesson_materials(topic)
 CREATE INDEX IF NOT EXISTS idx_lesson_materials_created_at ON lesson_materials(created_at);
 CREATE INDEX IF NOT EXISTS idx_lesson_materials_subject ON lesson_materials(subject);
 CREATE INDEX IF NOT EXISTS idx_lesson_materials_language_level ON lesson_materials(language_level);
+
+-- ─── Auth tables (Phase 3) ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL,
+    PRIMARY KEY (user_id, role)
+);
+
+-- owner_id FK on lesson_materials (nullable — existing rows have no owner)
+ALTER TABLE lesson_materials ADD COLUMN IF NOT EXISTS owner_id BIGINT REFERENCES users(id);
+CREATE INDEX IF NOT EXISTS idx_lesson_materials_owner ON lesson_materials(owner_id);

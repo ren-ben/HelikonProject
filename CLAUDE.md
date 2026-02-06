@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (pre-Phase 2):** generation still goes directly through `OllamaService` in Spring Boot, so Ollama must be running locally. Once the Python RAG service is wired in (Phase 4), Ollama is replaced by a cloud LLM API key — no local model needed. The `.env` file will hold `LLM_PROVIDER`, `LLM_API_KEY`, and `EMBEDDING_API_KEY`.
+**Current state (post-Phase 3):** Phases 1–3 are complete. Docker infrastructure, Python RAG service, and auth are all in place. Generation still goes through `OllamaService` until Phase 4 wires `RagProxyService`. All `/api/**` endpoints (except `/api/v1/auth/**`) require a JWT Bearer token. Frontend will get 401 on CLIL endpoints until Phase 5 adds auth views.
 
 ## Build Commands
 
@@ -57,13 +57,11 @@ npm run preview                 # Preview the production build locally
 
 Standard Spring Boot layered architecture:
 
-- **Controller** (`ClilController`) — single REST controller mounted at `/api/v1/clil`. Handles CORS. Endpoints: `GET /models`, `POST /generate`, and CRUD on `/materials` and `/materials/{id}`.
-- **Service layer** — three services:
-  - `OllamaService` — **legacy; will be retired after Phase 4.** Currently communicates with a local Ollama instance via `WebClient` / `Mono<T>`. Once the Python RAG service is wired in, a new `RagProxyService` replaces this for all generation calls.
-  - `MaterialService` — CRUD logic around `LessonMaterialRepository`.
-  - `PromptService` — loads the Bloom's Taxonomy system prompt from `src/main/resources/prompts/bloom-taxonomy-prompt.txt` at startup. This prompt is prepended to every generation request.
-- **DTOs** (`dto/`) — separate request/response records for the API contract. `MaterialRequest` is for generation; `MaterialCreateRequest` / `MaterialUpdateRequest` are for persistence.
-- **Entity** (`LessonMaterial`) — JPA entity with a `@ElementCollection` for tags. Schema is in `src/main/resources/schema.sql`; Hibernate is set to `ddl-auto=update`.
+- **Controllers** — `ClilController` (`/api/v1/clil`) for generation + material CRUD; `AuthController` (`/api/v1/auth`) for register/login/refresh.
+- **Security** (`security/`) — JWT-based stateless auth. `JwtService` (jjwt 0.12.6), `JwtAuthenticationFilter` (OncePerRequestFilter), `UserDetailsServiceImpl`. Config in `config/SecurityConfig`. All `/api/**` except `/api/v1/auth/**` require auth.
+- **Service layer** — `OllamaService` (legacy, Phase 4 replaces with `RagProxyService`), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh), `PromptService`.
+- **DTOs** (`dto/`) — `MaterialRequest` for generation; `MaterialCreateRequest` / `MaterialUpdateRequest` for persistence; `dto/auth/` subpackage for auth request/response types.
+- **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
 
 ### Frontend — `clil-frontend/src/`
 
@@ -103,10 +101,13 @@ Saved materials live in PostgreSQL. The frontend fetches them all via `GET /mate
 | Generation timeout | `application.properties` `spring.mvc.async.request-timeout` | 180000 ms |
 | Frontend API base URL | `clil-frontend/src/services/deepinfra-api.js` `API_CONFIG.baseURL` | http://localhost:8081/api/v1/clil |
 | Vuetify theme | `clil-frontend/src/plugins/vuetify.js` | Primary: #3f51b5 (Indigo) |
+| JWT secret | `application.properties` `jwt.secret` / `JWT_SECRET` env | Base64-encoded dev key |
+| JWT access TTL | `jwt.expiration-ms` / `JWT_EXPIRATION_MS` | 86400000 (24h) |
+| JWT refresh TTL | `jwt.refresh-expiration-ms` / `JWT_REFRESH_EXPIRATION_MS` | 604800000 (7d) |
 
 ## Roadmap & Scope
 
-The current codebase is a working MVP covering material generation via Ollama and CRUD persistence. The remaining objectives — vector database, RAG pipeline, document upload, user/access management, full dockerization, and Lightsail deployment — are planned in the phases below. All phases are dependency-ordered: do not start a later phase before its prerequisites are done.
+Phases 1–3 are complete (Docker, RAG service, auth). The remaining objectives are planned in the phases below. All phases are dependency-ordered: do not start a later phase before its prerequisites are done.
 
 ### Target architecture (two-backend split)
 
@@ -150,14 +151,13 @@ nginx (HTTPS, reverse proxy)
 
 ### What exists now vs. what's needed
 
-| Exists | Needs to be added |
+| Exists (Phases 1–3) | Needs to be added |
 |---|---|
-| Spring Boot CRUD + Ollama proxy | Auth (Spring Security + JWT), `User` entity, `owner_id` on materials, `RagProxyService`, `DocumentController`, `AdminController` |
-| Vue frontend with material wizard | Login/Register views, auth store + interceptor, route guards, Documents view, Query view, Admin view |
-| PostgreSQL schema (`lesson_materials`) | `users` table, `uploaded_documents` table, `owner_id` FK on `lesson_materials` |
-| docker-compose (PostgreSQL only) | Dockerfiles for all services, nginx reverse proxy, RAG service container (no Ollama container) |
-| Ollama integration (direct from Java) | Move all LLM calls to Python via LangChain + cloud API; `OllamaService` retired, `RagProxyService` added |
-| — | `rag-service/` directory: FastAPI app, ChromaDB, cloud embeddings (OpenAI), LangChain chains, ingest/query/generate routes |
+| Docker infrastructure (5 containers, nginx proxy) | — |
+| Python RAG service (generate, ingest, query, documents, models) | Wire into Spring Boot via `RagProxyService` (Phase 4) |
+| Spring Security + JWT auth, `User`/`Role` entities, `owner_id` on materials | Frontend auth views + interceptor (Phase 5) |
+| Spring Boot CRUD + Ollama proxy (legacy) | Retire `OllamaService`, add `RagProxyService` (Phase 4) |
+| Vue frontend with material wizard | Login/Register views, route guards, Documents view, Query view, Admin view |
 
 ### Lightsail deployment notes (2 GB / 2 vCPU / 60 GB SSD)
 

@@ -5,9 +5,11 @@ import at.technikum.clil.dto.LessonMaterialDto;
 import at.technikum.clil.dto.MaterialCreateRequest;
 import at.technikum.clil.dto.MaterialRequest;
 import at.technikum.clil.dto.MaterialUpdateRequest;
+import at.technikum.clil.model.User;
 import at.technikum.clil.service.OllamaService;
 import at.technikum.clil.service.MaterialService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -16,8 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/clil")
-//@CrossOrigin(origins = {"http://localhost:63342", "http://localhost:5173"})
-@CrossOrigin(origins = "*")
 public class ClilController {
 
     private final OllamaService ollamaService;
@@ -61,25 +61,27 @@ public class ClilController {
     }
 
     @GetMapping("/materials")
-    public ResponseEntity<List<LessonMaterialDto>> getAllMaterials() {
-        List<LessonMaterialDto> materials = materialService.getAllMaterials();
+    public ResponseEntity<List<LessonMaterialDto>> getAllMaterials(
+            @AuthenticationPrincipal User user) {
+        List<LessonMaterialDto> materials = materialService.getAllMaterials(user);
         return ResponseEntity.ok(materials);
     }
 
-
-
     @GetMapping("/materials/{id}")
-    public ResponseEntity<LessonMaterialDto> getMaterial(@PathVariable Long id) {
-        return materialService.getMaterialById(id)
+    public ResponseEntity<LessonMaterialDto> getMaterial(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return materialService.getMaterialById(id, user)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/materials")
     public ResponseEntity<LessonMaterialDto> createMaterial(
-            @RequestBody MaterialCreateRequest request) {
+            @RequestBody MaterialCreateRequest request,
+            @AuthenticationPrincipal User user) {
         try {
-            LessonMaterialDto created = materialService.createMaterial(request);
+            LessonMaterialDto created = materialService.createMaterial(request, user);
             return ResponseEntity.ok(created);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -89,9 +91,10 @@ public class ClilController {
     @PutMapping("/materials/{id}")
     public ResponseEntity<LessonMaterialDto> updateMaterial(
             @PathVariable Long id,
-            @RequestBody MaterialUpdateRequest request) {
+            @RequestBody MaterialUpdateRequest request,
+            @AuthenticationPrincipal User user) {
         try {
-            return materialService.updateMaterial(id, request)
+            return materialService.updateMaterial(id, request, user)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
@@ -100,8 +103,10 @@ public class ClilController {
     }
 
     @DeleteMapping("/materials/{id}")
-    public ResponseEntity<Void> deleteMaterial(@PathVariable Long id) {
-        if (materialService.deleteMaterial(id)) {
+    public ResponseEntity<Void> deleteMaterial(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        if (materialService.deleteMaterial(id, user)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

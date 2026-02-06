@@ -48,6 +48,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       RAG_SERVICE_URL: http://rag-service:8000   # consumed by RagProxyService (Phase 4)
+      JWT_SECRET: ${JWT_SECRET:-dGhpcy1pcy1hLWRldi1vbmx5LWp3dC1zZWNyZXQta2V5LXRoYXQtaXMtYXQtbGVhc3QtMjU2LWJpdHM=}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
     depends_on:
       postgres:
         condition: service_healthy
