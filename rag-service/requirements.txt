@@ -1,14 +1,20 @@
-# ─── Core (skeleton) ─────────────────────────────────────────
+# ─── Core ─────────────────────────────────────────────────────
 fastapi==0.109.1
 uvicorn[standard]==0.27.0
-pydantic-settings==2.1.0
+pydantic-settings>=2.4.0
+python-multipart==0.0.9          # required by FastAPI for file uploads
 
-# ─── Phase 2: uncomment when implementing the RAG pipeline ──
-# langchain>=0.1.0
-# langchain-openai>=0.0.1
-# langchain-groq>=0.0.1
-# langchain-community>=0.0.1
-# chromadb>=0.4.22
-# PyPDF2>=3.0.0
-# python-docx>=1.0.0
-# httpx>=0.25.0
+# ─── LLM / Embeddings (LangChain) ────────────────────────────
+# Pinned to compatible 0.3.x line — loose >=0.0.1 causes pip backtracking.
+langchain==0.3.27
+langchain-openai==0.2.14
+langchain-groq==0.3.8
+langchain-community==0.3.27
+
+# ─── Vector store ─────────────────────────────────────────────
+# Capped <1.0 — ChromaDB 1.x has breaking API changes vs 0.4/0.5.
+chromadb>=0.4.22,<1.0.0
+
+# ─── Document parsers ─────────────────────────────────────────
+PyPDF2>=3.0.0
+python-docx>=1.0.0

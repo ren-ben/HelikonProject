@@ -8,7 +8,9 @@
       "Bash(docker compose config:*)",
       "Bash(echo \"=== curl http://localhost:80/api/v1/clil/materials ===\")",
       "Bash(curl:*)",
-      "Bash(docker compose ps:*)"
+      "Bash(docker compose ps:*)",
+      "Bash(docker compose build:*)",
+      "Bash(docker stop:*)"
     ]
   }
 }
