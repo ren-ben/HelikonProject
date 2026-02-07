@@ -12,6 +12,9 @@ const NotFound = () => import('@/views/NotFound.vue')
 const MaterialsGrid = () => import('@/views/MaterialsGrid.vue') // Import hinzugefügt
 const LoginView = () => import('@/views/LoginView.vue')
 const RegisterView = () => import('@/views/RegisterView.vue')
+const DocumentsView = () => import('@/views/DocumentsView.vue')
+const QueryView = () => import('@/views/QueryView.vue')
+const AdminView = () => import('@/views/AdminView.vue')
 
 const routes = [
   {
@@ -65,6 +68,18 @@ const routes = [
     ]
   },
   {
+    path: '/documents',
+    name: 'documents',
+    component: DocumentsView,
+    meta: { title: 'Dokumente', requiresAuth: true }
+  },
+  {
+    path: '/query',
+    name: 'query',
+    component: QueryView,
+    meta: { title: 'RAG-Abfrage', requiresAuth: true }
+  },
+  {
     path: '/templates',
     name: 'templates',
     component: TemplateLibrary,
@@ -75,6 +90,12 @@ const routes = [
     name: 'settings',
     component: Settings,
     meta: { title: 'Einstellungen', requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'admin',
+    component: AdminView,
+    meta: { title: 'Administration', requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -124,6 +145,20 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAuth && !isAuthenticated) {
       next({ name: 'login', query: { redirect: to.fullPath } })
       return
+    }
+
+    // Admin-Route ohne Admin-Rolle → Dashboard
+    if (to.meta.requiresAdmin && isAuthenticated) {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+        if (!storedUser.roles || !storedUser.roles.includes('ADMIN')) {
+          next({ name: 'dashboard' })
+          return
+        }
+      } catch {
+        next({ name: 'dashboard' })
+        return
+      }
     }
 
     // Bereits eingeloggt → nicht nochmal Login/Register zeigen

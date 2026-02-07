@@ -149,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
@@ -175,13 +175,16 @@ router.afterEach(() => {
   }, 100);
 });
 
-const navigationItems = [
+const navigationItems = computed(() => [
   { title: 'Dashboard', to: '/', icon: 'mdi-view-dashboard-variant-outline', matchPrefix: false },
   { title: 'Material erstellen', to: '/create', icon: 'mdi-plus-box-outline', matchPrefix: false },
   { title: 'Meine Materialien', to: '/materials', icon: 'mdi-folder-text-outline', matchPrefix: true }, // Matcht /materials und /materials/:id
+  { title: 'Dokumente', to: '/documents', icon: 'mdi-file-upload-outline', matchPrefix: false },
+  { title: 'RAG-Abfrage', to: '/query', icon: 'mdi-chat-question-outline', matchPrefix: false },
   { title: 'Vorlagen', to: '/templates', icon: 'mdi-file-document-multiple-outline', matchPrefix: false },
-  { title: 'Einstellungen', to: '/settings', icon: 'mdi-cog-outline', matchPrefix: false }
-];
+  { title: 'Einstellungen', to: '/settings', icon: 'mdi-cog-outline', matchPrefix: false },
+  ...(authStore.isAdmin ? [{ title: 'Administration', to: '/admin', icon: 'mdi-shield-crown-outline', matchPrefix: false }] : [])
+]);
 
 // Funktion zum Umschalten des Themes
 function toggleTheme () {

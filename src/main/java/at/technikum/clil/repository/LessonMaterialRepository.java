@@ -29,4 +29,6 @@ public interface LessonMaterialRepository extends JpaRepository<LessonMaterial, 
 
     @Query("SELECT lm FROM LessonMaterial lm WHERE lm.owner = :owner ORDER BY lm.createdAt DESC")
     List<LessonMaterial> findByOwnerOrderByCreatedAtDesc(@Param("owner") User owner);
+
+    long countByOwner(User owner);
 }

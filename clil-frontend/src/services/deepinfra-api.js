@@ -344,6 +344,103 @@ export default {
     }
   },
 
+  // Upload a document for RAG ingestion
+  async uploadDocument(file) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await apiClient.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000,
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // List all uploaded documents
+  async listDocuments() {
+    try {
+      const response = await apiClient.get('/documents');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Delete documents by IDs
+  async deleteDocuments(docIds) {
+    try {
+      const response = await apiClient.delete('/documents', {
+        data: { docIds },
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Query documents via RAG
+  async queryDocuments(query, topK = 5) {
+    try {
+      const response = await apiClient.post('/query', { query, topK });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Admin: get system stats
+  async getAdminStats() {
+    try {
+      const response = await apiClient.get('/admin/stats');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Admin: list all users
+  async getAdminUsers() {
+    try {
+      const response = await apiClient.get('/admin/users');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Admin: get single user
+  async getAdminUser(id) {
+    try {
+      const response = await apiClient.get(`/admin/users/${id}`);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Admin: update user roles
+  async updateUserRoles(id, roles) {
+    try {
+      const response = await apiClient.put(`/admin/users/${id}/roles`, { roles });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Admin: delete user
+  async deleteUser(id) {
+    try {
+      await apiClient.delete(`/admin/users/${id}`);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
   // Health check for backend
   async checkConnection() {
     try {

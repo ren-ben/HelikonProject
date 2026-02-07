@@ -16,7 +16,8 @@
       "Bash(./mvnw clean package:*)",
       "Bash(java -version:*)",
       "Bash(where:*)",
-      "Bash(export JAVA_HOME=\"/c/Program Files/Java/jdk-21\")"
+      "Bash(export JAVA_HOME=\"/c/Program Files/Java/jdk-21\")",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean:*)"
     ]
   }
 }
