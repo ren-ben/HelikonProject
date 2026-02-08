@@ -23,12 +23,16 @@ export default defineConfig({
       }
     }
   },
-  server: { // Füge Server-Konfiguration hinzu
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
+    },
     fs: {
       allow: [
-        // Erlaube Zugriff auf den Projekt-Root
         __dirname,
-        // path.resolve(__dirname, 'node_modules/@mdi/font'), // Nicht mehr benötigt
       ],
     },
   },

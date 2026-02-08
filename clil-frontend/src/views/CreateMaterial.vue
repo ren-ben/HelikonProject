@@ -221,13 +221,13 @@
                 <v-select
                   v-model="form.model"
                   :items="availableModels"
-                  label="Lokales LLM-Modell"
+                  label="LLM-Modell"
                   prepend-inner-icon="mdi-brain"
                   variant="outlined"
                   density="compact"
                   :loading="loadingModels"
                   :disabled="loadingModels"
-                  hint="Wählen Sie ein lokal installiertes Modell für die Generierung"
+                  hint="Wählen Sie ein Modell für die Generierung"
                   persistent-hint
                   class="mb-4"
                 ></v-select>

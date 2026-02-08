@@ -3,8 +3,8 @@ import authService from "./authService";
 
 // Configuration for Spring Boot backend
 const API_CONFIG = {
-  baseURL: "http://localhost:8081/api/v1/clil",
-  timeout: 180000, // 180 seconds (3 minutes) timeout for local AI generation
+  baseURL: "/api/v1/clil",
+  timeout: 180000, // 180 seconds (3 minutes) timeout for AI generation
   headers: {
     "Content-Type": "application/json",
   },

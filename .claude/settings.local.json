@@ -17,7 +17,11 @@
       "Bash(java -version:*)",
       "Bash(where:*)",
       "Bash(export JAVA_HOME=\"/c/Program Files/Java/jdk-21\")",
-      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean:*)"
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean package:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
