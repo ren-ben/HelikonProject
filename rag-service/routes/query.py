@@ -10,6 +10,7 @@ class QueryRequest(BaseModel):
     query: str
     user_id: str
     top_k: int = 5
+    subject: str | None = None
 
 
 @router.post("/query")
@@ -19,4 +20,5 @@ def query(req: QueryRequest):
         query=req.query,
         user_id=req.user_id,
         top_k=req.top_k,
+        subject=req.subject,
     )

@@ -27,12 +27,17 @@ public class DocumentProxyService {
     /**
      * Uploads a document to the Python RAG service for ingestion.
      */
-    public Mono<Map<String, Object>> uploadDocument(MultipartFile file, Long userId) {
-        log.info("Proxying document upload to RAG service — file: {}, userId: {}", file.getOriginalFilename(), userId);
+    public Mono<Map<String, Object>> uploadDocument(MultipartFile file, Long userId, String subject) {
+        log.info("Proxying document upload to RAG service — file: {}, userId: {}, subject: {}",
+                file.getOriginalFilename(), userId, subject);
+
+        String metadataJson = (subject != null && !subject.isBlank())
+                ? "{\"user_id\": \"" + userId + "\", \"subject\": \"" + subject + "\"}"
+                : "{\"user_id\": \"" + userId + "\"}";
 
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("file", file.getResource());
-        builder.part("metadata", "{\"user_id\": \"" + userId + "\"}");
+        builder.part("metadata", metadataJson);
 
         return webClient.post()
                 .uri("/rag/ingest")
@@ -50,14 +55,16 @@ public class DocumentProxyService {
     /**
      * Queries documents via RAG from the Python service.
      */
-    public Mono<Map<String, Object>> queryDocuments(String query, Long userId, int topK) {
-        log.info("Proxying RAG query — userId: {}, topK: {}", userId, topK);
+    public Mono<Map<String, Object>> queryDocuments(String query, Long userId, int topK, String subject) {
+        log.info("Proxying RAG query — userId: {}, topK: {}, subject: {}", userId, topK, subject);
 
-        Map<String, Object> body = Map.of(
-                "query", query,
-                "user_id", userId.toString(),
-                "top_k", topK
-        );
+        java.util.HashMap<String, Object> body = new java.util.HashMap<>();
+        body.put("query", query);
+        body.put("user_id", userId.toString());
+        body.put("top_k", topK);
+        if (subject != null && !subject.isBlank()) {
+            body.put("subject", subject);
+        }
 
         return webClient.post()
                 .uri("/rag/query")

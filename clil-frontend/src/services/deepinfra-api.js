@@ -182,7 +182,8 @@ export default {
         contentFocus: params.contentFocus || 'balanced',
         includeVocabList: params.includeVocabList || true,
         description: params.description || '',
-        modelName: params.modelName || 'llama3.2'
+        modelName: params.modelName || 'llama3.2',
+        useDocumentContext: params.useDocumentContext || false,
       };
 
       console.log('Sending request payload:', JSON.stringify(requestPayload, null, 2));
@@ -345,10 +346,13 @@ export default {
   },
 
   // Upload a document for RAG ingestion
-  async uploadDocument(file) {
+  async uploadDocument(file, subject = '') {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      if (subject) {
+        formData.append('subject', subject);
+      }
       const response = await apiClient.post('/documents/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
@@ -382,9 +386,13 @@ export default {
   },
 
   // Query documents via RAG
-  async queryDocuments(query, topK = 5) {
+  async queryDocuments(query, topK = 5, subject = '') {
     try {
-      const response = await apiClient.post('/query', { query, topK });
+      const body = { query, topK };
+      if (subject) {
+        body.subject = subject;
+      }
+      const response = await apiClient.post('/query', body);
       return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: error.message };

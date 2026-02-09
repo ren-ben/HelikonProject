@@ -25,6 +25,7 @@ def list_documents(user_id: str = Query(...)):
                 "doc_id": doc_id,
                 "filename": meta.get("filename", ""),
                 "uploaded_at": meta.get("uploaded_at", ""),
+                "subject": meta.get("subject", ""),
                 "chunk_count": 0,
             }
         docs[doc_id]["chunk_count"] += 1

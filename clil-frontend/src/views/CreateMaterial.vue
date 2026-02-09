@@ -233,6 +233,27 @@
                 ></v-select>
               </v-col>
               <v-col cols="12">
+                <v-switch
+                  v-model="form.useDocumentContext"
+                  color="primary"
+                  label="Kontext aus hochgeladenen Dokumenten verwenden"
+                  hide-details
+                  inset
+                ></v-switch>
+                <v-alert
+                  v-if="form.useDocumentContext"
+                  color="info"
+                  variant="tonal"
+                  icon="mdi-file-document-check-outline"
+                  class="mt-2 text-body-2"
+                  density="compact"
+                >
+                  Relevante Abschnitte aus Ihren hochgeladenen Dokumenten
+                  (Fach: <strong>{{ form.subject || '—' }}</strong>) werden als
+                  zusätzlicher Kontext für die Generierung verwendet.
+                </v-alert>
+              </v-col>
+              <v-col cols="12">
                 <v-textarea
                   v-model="generatedPrompt"
                   label="Generierter Prompt"
@@ -296,6 +317,18 @@
                         {{ form.vocabPercentage }}%
                       </v-list-item-subtitle>
                     </v-list-item>
+                    <template v-if="form.useDocumentContext">
+                      <v-divider inset></v-divider>
+                      <v-list-item>
+                        <template v-slot:prepend>
+                          <v-icon color="primary">mdi-file-document-check-outline</v-icon>
+                        </template>
+                        <v-list-item-title>Dokumentkontext</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Kontext aus hochgeladenen Dokumenten wird verwendet
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </template>
                   </v-list>
                 </v-card>
                 <div class="text-center">
@@ -465,6 +498,7 @@ import { useTemplatesStore } from "@/stores/templates";
 import { useUIStore } from "@/stores/ui";
 import deepinfraApi from "@/services/deepinfra-api";
 import ExportDialog from "@/components/ExportDialog.vue";
+import { subjects } from "@/constants/subjects";
 
 const router = useRouter();
 const route = useRoute();
@@ -494,6 +528,7 @@ const form = ref({
   vocabPercentage: 30,
   contentFocus: "balanced",
   includeVocabList: true,
+  useDocumentContext: true,
   model: "",
 });
 
@@ -589,21 +624,7 @@ const materialTypes = [
   },
 ];
 
-// Subject list
-const subjects = [
-  "Deutsch",
-  "Englisch",
-  "Informatik",
-  "Elektrotechnik",
-  "Maschinenbau",
-  "Mechatronik",
-  "Netzwerktechnik",
-  "Elektronik",
-  "Datenbanken",
-  "Webentwicklung",
-  "Mathematik",
-  "Physik",
-];
+// Subject list — imported from @/constants/subjects
 
 // Language levels
 const languageLevels = [
@@ -784,7 +805,8 @@ const generateMaterialAction = async () => {
       contentFocus: form.value.contentFocus,
       includeVocabList: form.value.includeVocabList,
       description: form.value.description,
-      modelName: form.value.model
+      modelName: form.value.model,
+      useDocumentContext: form.value.useDocumentContext,
     });
 
     if (response.success) {

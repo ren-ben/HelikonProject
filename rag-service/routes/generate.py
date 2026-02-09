@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from generation import parametric_generate
+from generation import parametric_generate, rag_parametric_generate
 
 router = APIRouter()
 
@@ -18,6 +18,9 @@ class GenerateRequest(BaseModel):
     includeVocabList: bool = True
     description: str = ""
     modelName: str | None = None
+    useDocumentContext: bool = False
+    userId: str | None = None
+    contextSubject: str | None = None
 
 
 class GenerateResponse(BaseModel):
@@ -27,19 +30,24 @@ class GenerateResponse(BaseModel):
 
 @router.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest):
-    """Parametric CLIL material generation.
+    """CLIL material generation — parametric or RAG-augmented.
 
     Always returns HTTP 200.  On error the HTML error div is placed in
-    ``formattedResponse`` — matching OllamaService's ``onErrorResume`` behaviour
-    so the frontend rendering path stays identical.
+    ``formattedResponse``.
     """
     try:
-        # `req.prompt` is the user-assembled prompt from the Vue wizard Step 4;
-        # parametric_generate appends the HTML-formatting suffix internally.
-        html = parametric_generate(
-            user_prompt=req.prompt,
-            model_name=req.modelName,
-        )
+        if req.useDocumentContext and req.userId:
+            html = rag_parametric_generate(
+                user_prompt=req.prompt,
+                user_id=req.userId,
+                subject=req.contextSubject,
+                model_name=req.modelName,
+            )
+        else:
+            html = parametric_generate(
+                user_prompt=req.prompt,
+                model_name=req.modelName,
+            )
         return GenerateResponse(formattedResponse=html)
 
     except Exception as exc:

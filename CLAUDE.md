@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (post-Phase 7):** Phases 1–7 are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API. Document upload, RAG query, and admin panel are functional. Legacy Ollama code has been removed.
+**Current state (post-Phase 7b):** Phases 1–7b are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API, with optional RAG-augmented generation using uploaded document context (subject-filtered). Document upload with subject tagging, RAG query with subject filtering, and admin panel are functional. Legacy Ollama code has been removed.
 
 ## Build Commands
 
@@ -108,7 +108,7 @@ Saved materials live in PostgreSQL. The frontend fetches them all via `GET /mate
 
 ## Roadmap & Scope
 
-Phases 1–5 are complete (Docker, RAG service, auth, proxy generation, frontend auth). The remaining objectives are planned in the phases below.
+Phases 1–7b are complete (Docker, RAG service, auth, proxy generation, frontend auth, document upload + RAG query, admin panel, RAG-augmented generation with subject tagging). The remaining objectives are planned in the phases below.
 
 ### Target architecture (two-backend split)
 
@@ -147,17 +147,18 @@ nginx (HTTPS, reverse proxy)
 | 5 | Frontend auth | Phase 3 | Auth Pinia store; Login/Register views; JWT interceptor; route guards |
 | 6 | Document upload + RAG query UI | Phase 4, 5 | Upload view with drag-and-drop; query view; new API methods in deepinfra-api |
 | 7 | Admin panel | Phase 5, 6 | Admin view (user mgmt, system status); `AdminController` in Spring Boot |
-| 8 | Security hardening | Phase 3–7 | Lock CORS; rate-limit auth; file validation; remove debug logs |
+| 7b | RAG-augmented generation | Phase 6, 7 | Subject tagging on document uploads; "use document context" toggle in generation wizard; subject-filtered retrieval in query view; paginated documents table (`v-data-table`) with subject chip-filter |
+| 8 | Security hardening | Phase 3–7b | Lock CORS; rate-limit auth; file validation; remove debug logs |
 | 9 | Testing | Phase 4–8 | Unit + integration tests (Spring Boot + Python); frontend Vitest setup; E2E coverage |
 
 ### What exists now vs. what's needed
 
-| Exists (Phases 1–5) | Needs to be added |
+| Exists (Phases 1–7b) | Needs to be added |
 |---|---|
 | Docker infrastructure (5 containers, nginx proxy) | — |
-| Python RAG service (generate, ingest, query, documents, models) | — |
-| Spring Security + JWT, `RagProxyService`, material CRUD with ownership | `DocumentController`, `AdminController` |
-| Vue frontend: auth (login/register/guards/interceptor), material wizard + CRUD | Documents view, Query view, Admin view |
+| Python RAG service (generate, ingest, query, documents, models) with RAG-augmented generation + subject filtering | — |
+| Spring Security + JWT, `RagProxyService`, material CRUD with ownership, `DocumentController`, `AdminController` | — |
+| Vue frontend: auth, material wizard + CRUD, documents view (with subject tagging), query view (with subject filter), admin view, "use document context" toggle in generation wizard | Security hardening, tests |
 
 ### Lightsail deployment notes (2 GB / 2 vCPU / 60 GB SSD)
 

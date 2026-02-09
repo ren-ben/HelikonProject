@@ -26,11 +26,13 @@ public class DocumentController {
     @PostMapping("/documents/upload")
     public ResponseEntity<Map<String, Object>> uploadDocument(
             @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "subject", required = false, defaultValue = "") String subject,
             @AuthenticationPrincipal User user) {
-        log.info("Document upload request — file: {}, user: {}", file.getOriginalFilename(), user.getUsername());
+        log.info("Document upload request — file: {}, user: {}, subject: {}",
+                file.getOriginalFilename(), user.getUsername(), subject);
 
         try {
-            Map<String, Object> result = documentProxyService.uploadDocument(file, user.getId())
+            Map<String, Object> result = documentProxyService.uploadDocument(file, user.getId(), subject)
                     .block(Duration.ofSeconds(120));
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -78,11 +80,12 @@ public class DocumentController {
             @AuthenticationPrincipal User user) {
         String query = (String) body.get("query");
         int topK = body.containsKey("topK") ? ((Number) body.get("topK")).intValue() : 5;
+        String subject = (String) body.get("subject");
 
-        log.info("RAG query request — user: {}, topK: {}", user.getUsername(), topK);
+        log.info("RAG query request — user: {}, topK: {}, subject: {}", user.getUsername(), topK, subject);
 
         try {
-            Map<String, Object> result = documentProxyService.queryDocuments(query, user.getId(), topK)
+            Map<String, Object> result = documentProxyService.queryDocuments(query, user.getId(), topK, subject)
                     .block(Duration.ofSeconds(120));
             return ResponseEntity.ok(result);
         } catch (Exception e) {

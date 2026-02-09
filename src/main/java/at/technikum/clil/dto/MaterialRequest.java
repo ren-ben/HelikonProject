@@ -18,4 +18,7 @@ public class MaterialRequest {
     private Boolean includeVocabList;
     private String description;
     private String modelName;
+    private Boolean useDocumentContext;
+    private String userId;
+    private String contextSubject;
 }

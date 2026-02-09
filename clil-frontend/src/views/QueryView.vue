@@ -9,6 +9,18 @@
         Frage stellen
       </v-card-title>
       <v-card-text>
+        <v-autocomplete
+          v-model="selectedSubject"
+          :items="subjects"
+          label="Fach filtern (optional)"
+          placeholder="Alle Dokumente durchsuchen"
+          prepend-inner-icon="mdi-book-open-variant"
+          variant="outlined"
+          density="compact"
+          clearable
+          class="mb-3"
+          :disabled="loading"
+        />
         <v-textarea
           v-model="query"
           label="Stellen Sie eine Frage zu Ihren hochgeladenen Dokumenten..."
@@ -87,8 +99,10 @@
 <script setup>
 import { ref } from 'vue'
 import api from '@/services/deepinfra-api'
+import { subjects } from '@/constants/subjects'
 
 const query = ref('')
+const selectedSubject = ref('')
 const loading = ref(false)
 const answer = ref('')
 const sources = ref([])
@@ -104,7 +118,7 @@ async function handleQuery() {
   error.value = ''
   querySubmitted.value = true
 
-  const result = await api.queryDocuments(query.value)
+  const result = await api.queryDocuments(query.value, 5, selectedSubject.value || '')
 
   if (result.success && !result.data.error) {
     answer.value = result.data.answer || ''

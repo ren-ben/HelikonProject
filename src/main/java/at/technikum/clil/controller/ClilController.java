@@ -43,8 +43,17 @@ public class ClilController {
 
     @PostMapping("/generate")
     public ResponseEntity<ClilResponse> generateLessonMaterial(
-            @RequestBody MaterialRequest request) {
+            @RequestBody MaterialRequest request,
+            @AuthenticationPrincipal User user) {
         try {
+            // Inject userId server-side when RAG context is requested
+            if (Boolean.TRUE.equals(request.getUseDocumentContext()) && user != null) {
+                request.setUserId(user.getId().toString());
+                if (request.getContextSubject() == null || request.getContextSubject().isBlank()) {
+                    request.setContextSubject(request.getSubject());
+                }
+            }
+
             ClilResponse response = ragProxyService.generateMaterial(request)
                     .block(Duration.ofSeconds(180));
             return ResponseEntity.ok(response);

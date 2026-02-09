@@ -27,7 +27,14 @@ _HTML_SUFFIX = (
 )
 
 
-# Parametric generation
+def _build_filter(user_id: str, subject: str | None = None) -> dict:
+    """Build a ChromaDB where-filter, optionally scoped to a subject."""
+    if subject:
+        return {"$and": [{"user_id": user_id}, {"subject": subject}]}
+    return {"user_id": user_id}
+
+
+# Parametric generation (no retrieval)
 
 def parametric_generate(
     user_prompt: str,
@@ -48,9 +55,58 @@ def parametric_generate(
     return response.content
 
 
-# RAG generation (retrieve → context → generate)
+# RAG-augmented parametric generation (retrieve → context → Bloom prompt)
 
-def rag_generate(query: str, user_id: str, top_k: int = 5) -> dict:
+def rag_parametric_generate(
+    user_prompt: str,
+    user_id: str,
+    subject: str | None = None,
+    model_name: str | None = None,
+    top_k: int = 5,
+) -> str:
+    """Parametric generation augmented with RAG context from user's documents.
+
+    Retrieves relevant chunks filtered by user_id + optional subject,
+    injects them as context into the Bloom's Taxonomy prompt flow.
+    Returns raw HTML.
+    """
+    vs = get_vectorstore()
+    results = vs.similarity_search(
+        user_prompt,
+        k=top_k,
+        filter=_build_filter(user_id, subject),
+    )
+
+    if results:
+        context = "\n\n".join(doc.page_content for doc in results)
+        context_block = (
+            "\n\nDie folgenden Auszuege aus hochgeladenen Dokumenten sollen als "
+            "zusaetzlicher Kontext fuer die Materialerstellung dienen. "
+            "Beziehe relevante Informationen daraus ein:\n\n"
+            f"--- Dokumentkontext ---\n{context}\n--- Ende Dokumentkontext ---\n"
+        )
+    else:
+        context_block = ""
+
+    system_prompt = _load_system_prompt()
+    enhanced_prompt = user_prompt + context_block + _HTML_SUFFIX
+
+    llm = get_llm(model_name)
+    response = llm.invoke([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=enhanced_prompt),
+    ])
+    return response.content
+
+
+# RAG query generation (retrieve → context → answer)
+
+def rag_generate(
+    query: str,
+    user_id: str,
+    top_k: int = 5,
+    subject: str | None = None,
+) -> dict:
     """Retrieve chunks for user_id, inject as context, generate.
 
     Returns {"answer": str, "sources": [metadata_dict, ...]}.
@@ -59,7 +115,7 @@ def rag_generate(query: str, user_id: str, top_k: int = 5) -> dict:
     results = vs.similarity_search(
         query,
         k=top_k,
-        filter={"user_id": user_id},
+        filter=_build_filter(user_id, subject),
     )
 
     context = "\n\n".join(doc.page_content for doc in results)

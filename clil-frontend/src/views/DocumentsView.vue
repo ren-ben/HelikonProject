@@ -19,6 +19,18 @@
           :disabled="uploading"
           show-size
         />
+        <v-autocomplete
+          v-model="selectedSubject"
+          :items="subjects"
+          label="Fach (optional)"
+          placeholder="Fach zuordnen"
+          prepend-inner-icon="mdi-book-open-variant"
+          variant="outlined"
+          density="compact"
+          clearable
+          class="mt-2"
+          :disabled="uploading"
+        />
         <v-btn
           color="primary"
           :loading="uploading"
@@ -69,38 +81,62 @@
           <p class="text-body-2">Laden Sie ein PDF, DOCX oder TXT hoch, um die RAG-Abfrage zu nutzen.</p>
         </div>
 
-        <v-table v-else density="comfortable">
-          <thead>
-            <tr>
-              <th>Dateiname</th>
-              <th>Hochgeladen</th>
-              <th>Chunks</th>
-              <th class="text-right">Aktionen</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="doc in documents" :key="doc.doc_id">
-              <td>
-                <v-icon size="small" class="mr-2">{{ getFileIcon(doc.filename) }}</v-icon>
-                {{ doc.filename }}
-              </td>
-              <td>{{ formatDate(doc.uploaded_at) }}</td>
-              <td>{{ doc.chunk_count }}</td>
-              <td class="text-right">
-                <v-btn
-                  icon
-                  variant="text"
-                  size="small"
-                  color="error"
-                  :loading="deletingId === doc.doc_id"
-                  @click="confirmDelete(doc)"
-                >
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+        <template v-else>
+          <!-- Fach-Filter -->
+          <v-chip-group
+            v-if="availableSubjects.length > 0"
+            v-model="filterSubject"
+            selected-class="text-primary"
+            class="mb-4"
+          >
+            <v-chip :value="''" variant="outlined" filter>Alle</v-chip>
+            <v-chip
+              v-for="subj in availableSubjects"
+              :key="subj"
+              :value="subj"
+              variant="outlined"
+              filter
+            >
+              {{ subj }}
+            </v-chip>
+          </v-chip-group>
+
+          <v-data-table
+            :headers="headers"
+            :items="filteredDocuments"
+            :items-per-page="10"
+            items-per-page-text="Dokumente pro Seite"
+            density="comfortable"
+            item-value="doc_id"
+          >
+            <template v-slot:item.filename="{ item }">
+              <v-icon size="small" class="mr-2">{{ getFileIcon(item.filename) }}</v-icon>
+              {{ item.filename }}
+            </template>
+
+            <template v-slot:item.subject="{ item }">
+              <v-chip v-if="item.subject" size="small" color="primary" variant="tonal">{{ item.subject }}</v-chip>
+              <span v-else class="text-medium-emphasis">—</span>
+            </template>
+
+            <template v-slot:item.uploaded_at="{ item }">
+              {{ formatDate(item.uploaded_at) }}
+            </template>
+
+            <template v-slot:item.actions="{ item }">
+              <v-btn
+                icon
+                variant="text"
+                size="small"
+                color="error"
+                :loading="deletingId === item.doc_id"
+                @click="confirmDelete(item)"
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </template>
+          </v-data-table>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -123,20 +159,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/services/deepinfra-api'
+import { subjects } from '@/constants/subjects'
 
 const selectedFile = ref(null)
+const selectedSubject = ref('')
 const uploading = ref(false)
 const uploadMessage = ref('')
 const uploadSuccess = ref(false)
 
 const documents = ref([])
 const loadingDocs = ref(false)
+const filterSubject = ref('')
 
 const deleteDialog = ref(false)
 const deleteTarget = ref(null)
 const deletingId = ref(null)
+
+const headers = [
+  { title: 'Dateiname', key: 'filename', sortable: true },
+  { title: 'Fach', key: 'subject', sortable: true },
+  { title: 'Hochgeladen', key: 'uploaded_at', sortable: true },
+  { title: 'Chunks', key: 'chunk_count', sortable: true },
+  { title: 'Aktionen', key: 'actions', sortable: false, align: 'end' },
+]
+
+const availableSubjects = computed(() => {
+  const unique = new Set(documents.value.map(d => d.subject).filter(Boolean))
+  return [...unique].sort()
+})
+
+const filteredDocuments = computed(() => {
+  if (!filterSubject.value) return documents.value
+  return documents.value.filter(d => d.subject === filterSubject.value)
+})
 
 onMounted(() => {
   fetchDocuments()
@@ -157,12 +214,13 @@ async function handleUpload() {
   uploading.value = true
   uploadMessage.value = ''
 
-  const result = await api.uploadDocument(selectedFile.value)
+  const result = await api.uploadDocument(selectedFile.value, selectedSubject.value || '')
 
   if (result.success && !result.data.error) {
     uploadSuccess.value = true
     uploadMessage.value = `"${result.data.filename}" erfolgreich hochgeladen (${result.data.chunk_count} Chunks).`
     selectedFile.value = null
+    selectedSubject.value = ''
     await fetchDocuments()
   } else {
     uploadSuccess.value = false
