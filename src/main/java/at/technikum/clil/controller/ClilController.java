@@ -8,14 +8,15 @@ import at.technikum.clil.dto.MaterialUpdateRequest;
 import at.technikum.clil.model.User;
 import at.technikum.clil.service.RagProxyService;
 import at.technikum.clil.service.MaterialService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/clil")
 public class ClilController {
@@ -29,22 +30,31 @@ public class ClilController {
     }
 
     @GetMapping("/models")
-    public Mono<ResponseEntity<List<String>>> getAvailableModels() {
-        return ragProxyService.listAvailableModels()
-                .map(ResponseEntity::ok)
-                .onErrorReturn(ResponseEntity.internalServerError().build());
+    public ResponseEntity<List<String>> getAvailableModels() {
+        try {
+            List<String> models = ragProxyService.listAvailableModels()
+                    .block(Duration.ofSeconds(30));
+            return ResponseEntity.ok(models);
+        } catch (Exception e) {
+            log.error("Error fetching models: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PostMapping("/generate")
-    public Mono<ResponseEntity<ClilResponse>> generateLessonMaterial(
+    public ResponseEntity<ClilResponse> generateLessonMaterial(
             @RequestBody MaterialRequest request) {
-        return ragProxyService.generateMaterial(request)
-                .timeout(Duration.ofSeconds(180))
-                .map(ResponseEntity::ok)
-                .onErrorReturn(ResponseEntity.internalServerError()
-                        .body(ClilResponse.builder()
-                                .formattedResponse("<div class='error'>Failed to generate content</div>")
-                                .build()));
+        try {
+            ClilResponse response = ragProxyService.generateMaterial(request)
+                    .block(Duration.ofSeconds(180));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error generating material: {}", e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(ClilResponse.builder()
+                            .formattedResponse("<div class='error'>Failed to generate content</div>")
+                            .build());
+        }
     }
 
     @GetMapping("/materials")

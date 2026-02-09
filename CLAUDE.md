@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (post-Phase 5):** Phases 1–5 are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API. Legacy Ollama code has been removed.
+**Current state (post-Phase 7):** Phases 1–7 are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API. Document upload, RAG query, and admin panel are functional. Legacy Ollama code has been removed.
 
 ## Build Commands
 
@@ -172,5 +172,29 @@ nginx (HTTPS, reverse proxy)
 - **German strings in the DB** — material types are stored in German (`Arbeitsblatt`, `Quiz`, `Glossar`, `Präsentation`, `Grafik`, `Video-Skript`). The frontend's `typeMap` / `reverseTypeMap` in `deepinfra-api.js` handles the translation. When adding a new material type, update both maps.
 - **Code comments are in German** — much of the frontend source has German comments; keep this consistent when editing those files.
 - **`@/` path alias** — configured in `vite.config.js` to resolve to `clil-frontend/src/`.
-- **Reactive backend calls** — `RagProxyService` uses Project Reactor (`Mono`) and `WebClient`. Keep all new backend-to-service calls reactive.
+- **Synchronous controllers, reactive services** — `RagProxyService` and `DocumentProxyService` use `WebClient` + `Mono` internally, but **controllers must call `.block()` and return plain `ResponseEntity`**. See "Known Pitfalls" below for why.
 - **pgAdmin** is available at `http://localhost:5050` (login: admin@admin.com / admin) after `docker-compose up`.
+
+## Known Pitfalls
+
+### Do NOT return `Mono<ResponseEntity<...>>` from Spring MVC controllers
+
+This project runs on Spring MVC (servlet-based), not Spring WebFlux. Returning `Mono` from a `@RestController` method triggers Servlet 3.0+ async dispatch. Spring Security's `SecurityContext` (set by `JwtAuthenticationFilter`) is not reliably propagated across the async dispatch boundary. The result: the backend authenticates the request successfully (JWT filter logs confirm it), but the response that reaches the browser is `401 Unauthorized` — because the `AuthorizationFilter` re-runs on the async dispatch without a security context.
+
+**Symptoms:** Synchronous endpoints (`/materials`) return 200, while `Mono`-returning endpoints (`/models`, `/generate`) return 401 or 502 — even with a valid JWT and identical interceptor logic on the frontend.
+
+**Fix:** Service classes (`RagProxyService`, `DocumentProxyService`) keep their reactive `Mono`-based WebClient calls. Controllers call `.block(Duration)` and return plain `ResponseEntity<T>`. This keeps the entire request on the servlet thread where Spring Security's `ThreadLocal`-based context lives.
+
+```java
+// WRONG — triggers async dispatch, breaks Spring Security context
+@GetMapping("/models")
+public Mono<ResponseEntity<List<String>>> getModels() { ... }
+
+// CORRECT — blocks on the Mono, stays on the servlet thread
+@GetMapping("/models")
+public ResponseEntity<List<String>> getModels() {
+    List<String> models = ragProxyService.listAvailableModels()
+            .block(Duration.ofSeconds(30));
+    return ResponseEntity.ok(models);
+}
+```
