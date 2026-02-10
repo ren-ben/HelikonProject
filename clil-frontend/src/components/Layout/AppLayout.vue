@@ -3,22 +3,8 @@
     <!-- App Bar -->
     <v-app-bar color="primary" app elevation="1">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-app-bar-title>CLIL-KI-Tool</v-app-bar-title>
-      <v-spacer></v-spacer>
-
-      <!-- Suchfeld -->
-      <v-text-field
-        v-model="search"
-        prepend-inner-icon="mdi-magnify"
-        label="Suchen..."
-        hide-details
-        density="compact"
-        variant="solo-filled"
-        rounded
-        class="mt-n2 mr-4 hidden-sm-and-down" 
-        style="max-width: 250px;"
-      ></v-text-field>
-
+      <img src="/helikonlogo.png" alt="Helikon" style="height: 32px; width: 32px; margin-right: 8px;" />
+      <v-app-bar-title>Helikon</v-app-bar-title>
       <v-spacer></v-spacer>
 
        <!-- Dark Mode Toggle -->
@@ -189,7 +175,7 @@
     <!-- 
     <v-footer app height="40" class="text-caption">
       <v-spacer></v-spacer>
-      <span>&copy; {{ new Date().getFullYear() }} CLIL-KI-Tool</span>
+      <span>&copy; {{ new Date().getFullYear() }} Helikon</span>
     </v-footer>
      -->
 
@@ -215,7 +201,6 @@ const subjectStore = useSubjectStore();
 subjectStore.fetchSubjects();
 
 const drawer = ref(true); // Navigation Drawer standardmäßig offen
-const search = ref('');
 const isDarkMode = ref(false);
 const isNavigating = ref(false);
 

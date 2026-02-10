@@ -130,7 +130,7 @@ router.onError((error) => {
 router.beforeEach(async (to, from, next) => {
   try {
     // Dynamischen Titel setzen
-    document.title = to.meta.title ? `${to.meta.title} | CLIL-KI-Tool` : 'CLIL-KI-Tool'
+    document.title = to.meta.title ? `${to.meta.title} | Helikon` : 'Helikon'
 
     // Überprüfe ob die Route existiert
     if (!to.matched.length) {
