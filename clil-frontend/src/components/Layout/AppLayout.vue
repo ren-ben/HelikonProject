@@ -3,7 +3,7 @@
     <!-- App Bar -->
     <v-app-bar color="primary" app elevation="1">
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <img src="/helikonlogo.png" alt="Helikon" style="height: 32px; width: 32px; margin-right: 8px;" />
+      <img src="/helikonlogowhite.png" alt="Helikon" style="height: 32px; width: 32px; margin-right: -13px;" />
       <v-app-bar-title>Helikon</v-app-bar-title>
       <v-spacer></v-spacer>
 
@@ -110,7 +110,7 @@
       v-model="drawer"
       app
       :width="260"
-      color="surface" 
+      color="surface"
     >
       <v-list nav density="compact">
         <v-list-item
@@ -146,7 +146,7 @@
           color="primary"
           class="mb-4"
         ></v-progress-linear>
-        
+
         <!-- Hier wird der Inhalt der jeweiligen Route angezeigt -->
         <router-view v-slot="{ Component, route }">
           <transition name="fade" mode="out-in">
@@ -172,7 +172,7 @@
     </v-main>
 
     <!-- Optional: Footer -->
-    <!-- 
+    <!--
     <v-footer app height="40" class="text-caption">
       <v-spacer></v-spacer>
       <span>&copy; {{ new Date().getFullYear() }} Helikon</span>
@@ -285,4 +285,4 @@ function logout() {
 .router-view-container {
   width: 100%;
 }
-</style> 
+</style>
