@@ -60,7 +60,11 @@ export const useAuthStore = defineStore('auth', () => {
       _saveAuth(response)
       return true
     } catch (err) {
-      error.value = err.response?.data?.message || 'Anmeldung fehlgeschlagen'
+      if (err.response?.status === 403) {
+        error.value = err.response?.data?.message || 'Ihr Konto wurde noch nicht freigegeben. Bitte warten Sie auf die Freigabe durch einen Administrator.'
+      } else {
+        error.value = err.response?.data?.message || 'Anmeldung fehlgeschlagen'
+      }
       return false
     } finally {
       loading.value = false
@@ -72,11 +76,11 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const response = await authService.register(username, email, password)
-      _saveAuth(response)
-      return true
+      // Registration no longer returns tokens — user must be approved first
+      return { success: true, message: response.message }
     } catch (err) {
       error.value = err.response?.data?.message || 'Registrierung fehlgeschlagen'
-      return false
+      return { success: false }
     } finally {
       loading.value = false
     }

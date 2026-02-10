@@ -22,7 +22,60 @@
           </v-card-text>
         </v-card>
       </v-col>
+      <v-col cols="12" sm="6" md="3">
+        <v-card variant="outlined">
+          <v-card-text class="text-center">
+            <v-icon size="40" color="warning" class="mb-2">mdi-account-clock</v-icon>
+            <div class="text-h4 font-weight-bold">{{ stats.pendingApprovals ?? '—' }}</div>
+            <div class="text-body-2 text-medium-emphasis">Ausstehend</div>
+          </v-card-text>
+        </v-card>
+      </v-col>
     </v-row>
+
+    <!-- Ausstehende Registrierungen -->
+    <v-card v-if="pendingUsers.length > 0" variant="outlined" class="mb-6">
+      <v-card-title class="text-h6">
+        <v-icon class="mr-2" color="warning">mdi-account-clock</v-icon>
+        Ausstehende Registrierungen
+        <v-badge :content="pendingUsers.length" color="warning" inline class="ml-2" />
+        <v-spacer />
+        <v-btn icon variant="text" size="small" :loading="loadingPending" @click="fetchPendingUsers">
+          <v-icon>mdi-refresh</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text>
+        <v-table density="comfortable">
+          <thead>
+            <tr>
+              <th>Benutzername</th>
+              <th>E-Mail</th>
+              <th>Registriert</th>
+              <th class="text-right">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in pendingUsers" :key="user.id">
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ formatDate(user.createdAt) }}</td>
+              <td class="text-right">
+                <v-btn
+                  color="success"
+                  variant="tonal"
+                  size="small"
+                  :loading="approvingId === user.id"
+                  @click="handleApprove(user)"
+                >
+                  <v-icon start>mdi-check</v-icon>
+                  Freigeben
+                </v-btn>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-card-text>
+    </v-card>
 
     <!-- Benutzerverwaltung -->
     <v-card variant="outlined">
@@ -150,15 +203,18 @@ const currentUserId = computed(() => {
 
 const stats = ref({})
 const users = ref([])
+const pendingUsers = ref([])
 const loadingUsers = ref(false)
+const loadingPending = ref(false)
 const error = ref('')
 const updatingId = ref(null)
 const deletingId = ref(null)
+const approvingId = ref(null)
 const deleteDialog = ref(false)
 const deleteTarget = ref(null)
 
 onMounted(async () => {
-  await Promise.all([fetchStats(), fetchUsers()])
+  await Promise.all([fetchStats(), fetchUsers(), fetchPendingUsers()])
 })
 
 async function fetchStats() {
@@ -178,6 +234,26 @@ async function fetchUsers() {
     error.value = result.error || 'Fehler beim Laden der Benutzer.'
   }
   loadingUsers.value = false
+}
+
+async function fetchPendingUsers() {
+  loadingPending.value = true
+  const result = await api.getAdminPendingUsers()
+  if (result.success) {
+    pendingUsers.value = result.data
+  }
+  loadingPending.value = false
+}
+
+async function handleApprove(user) {
+  approvingId.value = user.id
+  const result = await api.approveUser(user.id)
+  if (result.success) {
+    await Promise.all([fetchPendingUsers(), fetchUsers(), fetchStats()])
+  } else {
+    error.value = result.error || 'Fehler beim Freigeben des Benutzers.'
+  }
+  approvingId.value = null
 }
 
 async function promoteUser(user) {

@@ -35,12 +35,6 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log(
-      "API Request:",
-      config.method?.toUpperCase(),
-      config.url,
-      config.data
-    );
     return config;
   },
   (error) => {
@@ -52,7 +46,6 @@ apiClient.interceptors.request.use(
 // Response interceptor — handle errors + 401 token refresh
 apiClient.interceptors.response.use(
   (response) => {
-    console.log("API Response:", response.status, response.data);
     return response;
   },
   async (error) => {
@@ -148,7 +141,6 @@ export default {
   // Get available LLM models from RAG service
   async getAvailableModels() {
     try {
-      console.log('Fetching available LLM models');
       const response = await apiClient.get('/models');
       return {
         success: true,
@@ -167,10 +159,6 @@ export default {
   // Main method to generate lesson materials
   async generateMaterial(materialType, params = {}) {
     try {
-      console.log(
-        `Generating material: ${materialType} for topic: ${params.topic}`
-      );
-
       // Request payload matching the Spring Boot MaterialRequest DTO
       const requestPayload = {
         materialType: typeMap[materialType] || materialType,
@@ -185,8 +173,6 @@ export default {
         modelName: params.modelName || 'llama3.2',
         useDocumentContext: params.useDocumentContext || false,
       };
-
-      console.log('Sending request payload:', JSON.stringify(requestPayload, null, 2));
 
       // Call Spring Boot endpoint
       const response = await apiClient.post("/generate", requestPayload);
@@ -252,11 +238,8 @@ export default {
 
   // Get specific material by ID
   async getMaterial(id) {
-    console.log('API Request: GET /materials/' + id);
     try {
       const response = await apiClient.get(`/materials/${id}`);
-      console.log('API Response:', response.status, response.data);
-      console.log('Raw API response:', response.data);
       
       // Transformiere die API-Antwort in das erwartete Format
       return {
@@ -280,7 +263,6 @@ export default {
   // Create new material
   async createMaterial(materialData) {
     try {
-      console.log('[deepinfra-api] createMaterial sending to backend:', JSON.stringify(materialData, null, 2));
       const response = await apiClient.post("/materials", materialData);
       // Die Backend-Antwort sollte bereits das transformierte Material im `data`-Feld haben
       return {
@@ -301,9 +283,7 @@ export default {
   // Update existing material
   async updateMaterial(id, materialData) {
     try {
-      console.log('Updating material with data:', materialData);
       const response = await apiClient.put(`/materials/${id}`, materialData);
-      console.log('Update response:', response.data);
       return {
         success: true,
         data: {
@@ -444,6 +424,26 @@ export default {
     try {
       await apiClient.delete(`/admin/users/${id}`);
       return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Admin: get pending (unapproved) users
+  async getAdminPendingUsers() {
+    try {
+      const response = await apiClient.get('/admin/users/pending');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  // Admin: approve a user
+  async approveUser(id) {
+    try {
+      const response = await apiClient.put(`/admin/users/${id}/approve`);
+      return { success: true, data: response.data };
     } catch (error) {
       return { success: false, error: error.message };
     }

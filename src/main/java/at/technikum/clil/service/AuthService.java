@@ -29,7 +29,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
 
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username already taken");
         }
@@ -42,11 +42,10 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(Role.USER))
+                .approved(false)
                 .build();
 
         userRepository.save(user);
-
-        return buildAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {

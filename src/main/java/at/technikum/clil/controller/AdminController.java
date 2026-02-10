@@ -68,6 +68,18 @@ public class AdminController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/users/pending")
+    public ResponseEntity<List<UserDto>> getPendingUsers() {
+        return ResponseEntity.ok(adminService.getPendingUsers());
+    }
+
+    @PutMapping("/users/{id}/approve")
+    public ResponseEntity<UserDto> approveUser(@PathVariable Long id) {
+        return adminService.approveUser(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getSystemStats() {
         return ResponseEntity.ok(adminService.getSystemStats());

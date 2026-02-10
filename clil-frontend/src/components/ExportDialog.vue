@@ -367,8 +367,6 @@ const generatePreview = async () => {
   previewLoading.value = true;
   previewError.value = false;
   previewContent.value = '';
-  console.log("Generating preview with options:", { format: formatOption.value, layout: layoutOption.value, color: colorScheme.value });
-
   try {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500));
@@ -399,7 +397,6 @@ const generatePreview = async () => {
 const exportMaterialAction = async () => {
   if (!materialData.value) return;
   exporting.value = true;
-  console.log("Exporting with options:", { format: formatOption.value, layout: layoutOption.value, filename: finalFilename.value });
 
   try {
     // Erstelle den HTML-Inhalt für den Export mit verbessertem Layout

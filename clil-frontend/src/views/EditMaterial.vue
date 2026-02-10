@@ -231,7 +231,6 @@ const languageLevels = [
 // Watch für Route-Änderungen
 watch(() => route.params.id, async (newId, oldId) => {
   if (newId && newId !== oldId) {
-    console.log('Route ID changed from', oldId, 'to', newId);
     // Lade das neue Material
     await loadMaterial(newId);
   }
@@ -246,14 +245,11 @@ const loadMaterial = async (materialId) => {
     
     // Wenn nicht im Store, lade vom Backend
     if (!material.value) {
-      console.log(`Material with ID ${materialId} not found in store, fetching from backend...`);
       const fetchedMaterial = await materialsStore.fetchMaterialById(materialId);
-      console.log('Fetched material from backend:', fetchedMaterial);
       material.value = fetchedMaterial;
     }
     
     if (material.value) {
-      console.log('Setting material data:', material.value);
       editableContent.value = material.value.content || '';
       editableTitle.value = material.value.title || '';
       editableType.value = material.value.type || '';
@@ -262,15 +258,6 @@ const loadMaterial = async (materialId) => {
       editableVocabPercentage.value = material.value.vocabPercentage || 30;
       editableTags.value = material.value.tags || [];
       
-      console.log('Mapped fields:', {
-        content: editableContent.value,
-        title: editableTitle.value,
-        type: editableType.value,
-        subject: editableSubject.value,
-        languageLevel: editableLanguageLevel.value,
-        vocabPercentage: editableVocabPercentage.value,
-        tags: editableTags.value
-      });
     } else {
       console.error('No material data available after fetch');
       showFeedback('Material konnte nicht gefunden werden', 'error');

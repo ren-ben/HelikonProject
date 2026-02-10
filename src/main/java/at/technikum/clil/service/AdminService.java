@@ -59,13 +59,38 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
+    public List<UserDto> getPendingUsers() {
+        return userRepository.findByApprovedFalseOrderByCreatedAtAsc().stream()
+                .map(user -> UserDto.fromEntity(user, materialRepository.countByOwner(user)))
+                .toList();
+    }
+
+    @Transactional
+    public Optional<UserDto> approveUser(Long userId) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    log.info("Approving user {} (id={})", user.getUsername(), userId);
+                    user.setApproved(true);
+                    User saved = userRepository.save(user);
+                    return UserDto.fromEntity(saved, materialRepository.countByOwner(saved));
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public long getPendingCount() {
+        return userRepository.countByApprovedFalse();
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, Object> getSystemStats() {
         long totalUsers = userRepository.count();
         long totalMaterials = materialRepository.count();
+        long pendingApprovals = userRepository.countByApprovedFalse();
 
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("totalUsers", totalUsers);
         stats.put("totalMaterials", totalMaterials);
+        stats.put("pendingApprovals", pendingApprovals);
         return stats;
     }
 }

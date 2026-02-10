@@ -174,9 +174,4 @@ router.beforeEach(async (to, from, next) => {
   }
 })
 
-// Globaler after hook für debugging
-router.afterEach((to, from) => {
-  console.log('Navigation completed:', from.path, '->', to.path)
-})
-
 export default router

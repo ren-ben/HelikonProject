@@ -982,8 +982,7 @@ const pageCount = computed(() => {
 
 // Data Table Server loading (placeholder for actual server-side)
 const loadItems = ({ page, itemsPerPage, sortBy }) => {
- console.log('Load items (server-side placeholder):', { page, itemsPerPage, sortBy });
- // In a real server-side scenario, you'd fetch data here based on options
+ // Placeholder for actual server-side fetching
 };
 
 // Reset filters

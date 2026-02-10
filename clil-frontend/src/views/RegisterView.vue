@@ -10,6 +10,16 @@
 
           <v-card-text class="px-6 pb-2">
             <v-alert
+              v-if="successMessage"
+              type="success"
+              variant="tonal"
+              density="compact"
+              class="mb-4"
+            >
+              {{ successMessage }}
+            </v-alert>
+
+            <v-alert
               v-if="authStore.error"
               type="error"
               variant="tonal"
@@ -21,7 +31,7 @@
               {{ authStore.error }}
             </v-alert>
 
-            <v-form ref="formRef" @submit.prevent="handleRegister" lazy-validation>
+            <v-form v-if="!successMessage" ref="formRef" @submit.prevent="handleRegister" lazy-validation>
               <v-text-field
                 v-model="username"
                 label="Benutzername"
@@ -106,10 +116,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
 const authStore = useAuthStore()
 
 const formRef = ref(null)
@@ -119,6 +127,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const successMessage = ref('')
 
 const rules = {
   required: v => !!v || 'Pflichtfeld',
@@ -132,9 +141,9 @@ async function handleRegister() {
   const { valid } = await formRef.value.validate()
   if (!valid) return
 
-  const success = await authStore.register(username.value, email.value, password.value)
-  if (success) {
-    router.push('/')
+  const result = await authStore.register(username.value, email.value, password.value)
+  if (result.success) {
+    successMessage.value = result.message || 'Registrierung erfolgreich. Bitte warten Sie auf die Freigabe durch einen Administrator.'
   }
 }
 </script>

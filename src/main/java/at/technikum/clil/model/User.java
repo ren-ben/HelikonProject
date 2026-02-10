@@ -46,6 +46,10 @@ public class User implements UserDetails {
     @Column
     private LocalDateTime modifiedAt;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean approved = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -70,6 +74,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.approved;
     }
 }

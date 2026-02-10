@@ -31,9 +31,7 @@ class MaterialsService {
    */
   async getMaterialById(id) {
     try {
-      console.log('MaterialsService.getMaterialById: Fetching material with ID', id);
       const response = await apiClient.getMaterial(id);
-      console.log('MaterialsService.getMaterialById: API response:', response);
       
       if (!response) {
         throw new Error('Material nicht gefunden');
@@ -53,7 +51,6 @@ class MaterialsService {
         tags: response.tags
       };
 
-      console.log('MaterialsService.getMaterialById: Transformed material:', material);
       return material;
     } catch (error) {
       console.error('MaterialsService.getMaterialById: Error:', error);
@@ -66,17 +63,12 @@ class MaterialsService {
    */
   async createMaterial(materialData) {
     try {
-      console.log('[materialsService] createMaterial received data:', JSON.stringify(materialData, null, 2));
-      
       // Validate input (ggf. erweitern)
       // this.validateMaterialData(materialData) // Momentan validiert nur Basis-Felder
       
       // Transform to API format
       const apiData = this.transformMaterialToAPI(materialData);
-      console.log('[materialsService] Transformed apiData to send:', JSON.stringify(apiData, null, 2));
-      
       const response = await apiClient.createMaterial(apiData);
-      console.log('[materialsService] API response for createMaterial:', JSON.stringify(response, null, 2));
       
       if (!response.success) {
         throw new Error(response.error || 'Fehler beim Erstellen des Materials im Service');
@@ -103,7 +95,6 @@ class MaterialsService {
       // Transform to API format
       const apiData = this.transformMaterialToAPI(materialData)
       
-      console.log('Updating material with ID:', materialData.id);
       const response = await apiClient.updateMaterial(materialData.id, apiData)
       
       if (!response.success) {
@@ -188,7 +179,6 @@ class MaterialsService {
    * Transformiert Material von Frontend-Format zu API-Format
    */
   transformMaterialToAPI(frontendMaterial) {
-    console.log('[materialsService] transformMaterialToAPI input:', JSON.stringify(frontendMaterial, null, 2));
     const apiData = {
       materialType: frontendMaterial.type || frontendMaterial.materialType,
       topic: frontendMaterial.title || frontendMaterial.topic,
@@ -217,7 +207,6 @@ class MaterialsService {
       // delete apiData.content; 
     }
     
-    console.log('[materialsService] transformMaterialToAPI output:', JSON.stringify(apiData, null, 2));
     return apiData;
   }
 

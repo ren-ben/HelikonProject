@@ -25,6 +25,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -32,6 +33,9 @@ import java.util.List;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:5173,http://localhost:80}")
+    private String allowedOrigins;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
@@ -45,7 +49,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info", "/health").permitAll()
+                        .requestMatchers("/actuator/health", "/health").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
@@ -85,9 +89,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("*"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedOriginPatterns(
+                Arrays.asList(allowedOrigins.split("\\s*,\\s*")));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

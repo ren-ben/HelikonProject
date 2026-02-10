@@ -277,18 +277,11 @@ function navigateToCreate(type, templateId = null) {
 // Materialien und Templates beim Laden der Komponente abrufen
 onMounted(async () => {
   if (materialsStore.materials.length === 0) {
-    console.log('Lade Materialien...');
     await materialsStore.fetchMaterials();
-    console.log('Materialien geladen:', materialsStore.materials);
   }
   if (templatesStore.templates.length === 0) {
-    console.log('Lade Templates...');
     await templatesStore.fetchTemplates();
-    console.log('Templates geladen:', templatesStore.templates);
   }
-  
-  // Debug-Ausgabe für Statistiken
-  console.log('Material Stats:', materialStats.value);
 });
 
 </script>

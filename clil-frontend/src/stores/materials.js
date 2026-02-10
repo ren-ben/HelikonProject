@@ -70,12 +70,8 @@ export const useMaterialsStore = defineStore('materials', {
       this.loading = true;
       this.error = null;
       
-      console.log('[materialsStore] addMaterial received data:', JSON.stringify(materialData, null, 2));
-      
       try {
         const newMaterial = await materialsService.createMaterial(materialData);
-        
-        console.log('[materialsStore] Material created by service:', JSON.stringify(newMaterial, null, 2));
         
         this.materials.unshift(newMaterial); // Add to beginning for visibility
         return newMaterial;
@@ -96,9 +92,7 @@ export const useMaterialsStore = defineStore('materials', {
       this.error = null
       
       try {
-        console.log('Store: Updating material:', materialData);
         const updatedMaterial = await materialsService.updateMaterial(materialData)
-        console.log('Store: Received updated material:', updatedMaterial);
         
         // Update in store
         const index = this.materials.findIndex(m => m.id === materialData.id)

@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS user_roles (
     PRIMARY KEY (user_id, role)
 );
 
+-- Registration approval (Phase 8b) — new users default to unapproved
+ALTER TABLE users ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT false NOT NULL;
+
 -- owner_id FK on lesson_materials (nullable — existing rows have no owner)
 ALTER TABLE lesson_materials ADD COLUMN IF NOT EXISTS owner_id BIGINT REFERENCES users(id);
 CREATE INDEX IF NOT EXISTS idx_lesson_materials_owner ON lesson_materials(owner_id);

@@ -897,12 +897,8 @@ const saveMaterial = async () => {
       },
     };
 
-    console.log('[CreateMaterial.vue] newMaterialData before sending to store:', JSON.stringify(newMaterialData, null, 2));
-
     const savedMaterial = await materialsStore.addMaterial(newMaterialData);
-    
-    console.log('[CreateMaterial.vue] Successfully saved material:', JSON.stringify(savedMaterial, null, 2));
-    
+
     uiStore.setLastCreatedMaterial(savedMaterial.id);
     previewDialog.value = false;
     showFeedback("Material erfolgreich gespeichert!", "success");

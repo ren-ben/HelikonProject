@@ -12,7 +12,8 @@ public record UserDto(
         String email,
         Set<String> roles,
         String createdAt,
-        long materialCount
+        long materialCount,
+        boolean approved
 ) {
     public static UserDto fromEntity(User user, long materialCount) {
         Set<String> roleNames = user.getRoles().stream()
@@ -24,7 +25,8 @@ public record UserDto(
                 user.getEmail(),
                 roleNames,
                 user.getCreatedAt() != null ? user.getCreatedAt().toString() : null,
-                materialCount
+                materialCount,
+                user.isApproved()
         );
     }
 }

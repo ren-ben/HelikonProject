@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (post-Phase 7b):** Phases 1–7b are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API, with optional RAG-augmented generation using uploaded document context (subject-filtered). Document upload with subject tagging, RAG query with subject filtering, and admin panel are functional. Per-user subjects are stored in PostgreSQL (`Subject` entity) with lazy default seeding, manageable from Settings → "Meine Fächer". Legacy Ollama code has been removed.
+**Current state (post-Phase 8b):** Phases 1–8b are complete (Phase 9 testing deferred). Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Registration requires admin approval — new users are unapproved by default and cannot log in until an admin approves them via the Admin panel. A default admin user (`admin` / `admin123`) is seeded on first startup when the DB has zero users. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API, with optional RAG-augmented generation using uploaded document context (subject-filtered). Document upload with subject tagging, RAG query with subject filtering, and admin panel are functional. Per-user subjects are stored in PostgreSQL (`Subject` entity) with lazy default seeding, manageable from Settings → "Meine Fächer". Phase 8 security hardening applied: CORS locked to env-driven origins, nginx rate-limiting on auth/upload endpoints, security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy), file upload magic-byte + size validation, debug logging stripped from frontend and reduced in backend, Docker ports restricted for production.
 
 ## Build Commands
 
@@ -61,7 +61,8 @@ Standard Spring Boot layered architecture:
 - **Security** (`security/`) — JWT-based stateless auth. `JwtService` (jjwt 0.12.6), `JwtAuthenticationFilter` (OncePerRequestFilter), `UserDetailsServiceImpl`. Config in `config/SecurityConfig`. All `/api/**` except `/api/v1/auth/**` require auth.
 - **Service layer** — `RagProxyService` (proxies generation + models to Python via WebClient), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh), `SubjectService` (per-user subject list with lazy default seeding).
 - **DTOs** (`dto/`) — `MaterialRequest` for generation; `MaterialCreateRequest` / `MaterialUpdateRequest` for persistence; `dto/auth/` subpackage for auth request/response types.
-- **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles), `Subject` (per-user subject list, unique constraint on `(name, owner_id)`, lazy-seeded with 12 defaults on first access), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
+- **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles, `approved` boolean — `isEnabled()` returns `this.approved`), `Subject` (per-user subject list, unique constraint on `(name, owner_id)`, lazy-seeded with 12 defaults on first access), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
+- **Config** — `DataInitializer` (`CommandLineRunner`) seeds a default admin user (`admin` / `admin123` / `admin@helikon.at`, approved, ADMIN role) when the DB has zero users.
 
 ### Frontend — `clil-frontend/src/`
 
@@ -150,17 +151,20 @@ nginx (HTTPS, reverse proxy)
 | 6 | Document upload + RAG query UI | Phase 4, 5 | Upload view with drag-and-drop; query view; new API methods in deepinfra-api |
 | 7 | Admin panel | Phase 5, 6 | Admin view (user mgmt, system status); `AdminController` in Spring Boot |
 | 7b | RAG-augmented generation | Phase 6, 7 | Subject tagging on document uploads; "use document context" toggle in generation wizard; subject-filtered retrieval in query view; paginated documents table (`v-data-table`) with subject chip-filter |
-| 8 | Security hardening | Phase 3–7b | Lock CORS; rate-limit auth; file validation; remove debug logs |
-| 9 | Testing | Phase 4–8 | Unit + integration tests (Spring Boot + Python); frontend Vitest setup; E2E coverage |
+| 8 | Security hardening | Phase 3–7b | CORS locked to env origins; nginx rate-limiting (auth 5r/m, upload 10r/m); security headers; magic-byte + size file validation; debug logging stripped; Docker ports restricted |
+| 8b | Registration approval | Phase 3, 7 | `approved` field on User; `DataInitializer` seeds default admin; register returns message (no tokens); admin approval endpoints + UI; login rejects unapproved users (403) |
+| 9 | Testing | Phase 4–8b | Unit + integration tests (Spring Boot + Python); frontend Vitest setup; E2E coverage |
 
 ### What exists now vs. what's needed
 
-| Exists (Phases 1–7b) | Needs to be added |
+| Exists (Phases 1–8b) | Needs to be added |
 |---|---|
 | Docker infrastructure (5 containers, nginx proxy) | — |
 | Python RAG service (generate, ingest, query, documents, models) with RAG-augmented generation + subject filtering | — |
 | Spring Security + JWT, `RagProxyService`, material CRUD with ownership, `DocumentController`, `AdminController` | — |
-| Vue frontend: auth, material wizard + CRUD, documents view (with subject tagging), query view (with subject filter), admin view, "use document context" toggle in generation wizard | Security hardening, tests |
+| Vue frontend: auth, material wizard + CRUD, documents view (with subject tagging), query view (with subject filter), admin view, "use document context" toggle in generation wizard | — |
+| Security hardening: CORS, rate limiting, file validation, security headers, debug log cleanup, Docker port lockdown | — |
+| Registration approval: default admin seeded on first startup, new users require admin approval, pending approvals UI in admin panel | Tests |
 
 ### Lightsail deployment notes (2 GB / 2 vCPU / 60 GB SSD)
 
