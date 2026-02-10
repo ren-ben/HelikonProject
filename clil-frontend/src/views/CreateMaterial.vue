@@ -81,11 +81,11 @@
                 <h3 class="text-h6 mb-4">Thema und Fach</h3>
               </v-col>
               <v-col cols="12" md="6">
-                <v-autocomplete
+                <v-combobox
                   v-model="form.subject"
                   :items="subjects"
                   label="Fach"
-                  placeholder="Wählen Sie ein Fach"
+                  placeholder="Wählen oder eingeben"
                   prepend-inner-icon="mdi-book-open-variant"
                   :error-messages="v$.subject.$errors.map((e) => e.$message)"
                   @blur="v$.subject.$touch()"
@@ -93,7 +93,7 @@
                   density="compact"
                   chips
                   clearable
-                ></v-autocomplete>
+                ></v-combobox>
               </v-col>
               <v-col cols="12" md="6">
                 <v-text-field
@@ -498,13 +498,17 @@ import { useTemplatesStore } from "@/stores/templates";
 import { useUIStore } from "@/stores/ui";
 import deepinfraApi from "@/services/deepinfra-api";
 import ExportDialog from "@/components/ExportDialog.vue";
-import { subjects } from "@/constants/subjects";
+import { useSubjectStore } from "@/stores/subjects";
+import { useNotificationStore } from "@/stores/notifications";
 
 const router = useRouter();
 const route = useRoute();
 const materialsStore = useMaterialsStore();
 const templatesStore = useTemplatesStore();
+const subjectStore = useSubjectStore();
+const subjects = computed(() => subjectStore.subjectNames());
 const uiStore = useUIStore();
+const notificationStore = useNotificationStore();
 
 const snackbar = ref({ show: false, message: "", color: "success" });
 const exportDialog = ref(false);
@@ -812,6 +816,7 @@ const generateMaterialAction = async () => {
     if (response.success) {
       generatedMaterial.value = response.data;
       previewDialog.value = true;
+      notificationStore.add({ title: 'Material generiert', message: `"${form.value.topic}" wurde erstellt`, type: 'success', icon: 'mdi-creation' })
     } else {
       generationError.value =
         response.error || "Unbekannter Fehler bei der Generierung.";
@@ -901,6 +906,7 @@ const saveMaterial = async () => {
     uiStore.setLastCreatedMaterial(savedMaterial.id);
     previewDialog.value = false;
     showFeedback("Material erfolgreich gespeichert!", "success");
+    notificationStore.add({ title: 'Material gespeichert', message: `"${form.value.topic}" wurde gespeichert`, type: 'success', icon: 'mdi-content-save' })
     router.push(`/edit/${savedMaterial.id}`);
   } catch (error) {
     console.error('[CreateMaterial.vue] Error in saveMaterial:', error);

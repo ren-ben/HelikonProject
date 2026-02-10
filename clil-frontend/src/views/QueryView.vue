@@ -9,7 +9,7 @@
         Frage stellen
       </v-card-title>
       <v-card-text>
-        <v-autocomplete
+        <v-combobox
           v-model="selectedSubject"
           :items="subjects"
           label="Fach filtern (optional)"
@@ -97,9 +97,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import api from '@/services/deepinfra-api'
-import { subjects } from '@/constants/subjects'
+import { useSubjectStore } from '@/stores/subjects'
+
+const subjectStore = useSubjectStore()
+const subjects = computed(() => subjectStore.subjectNames())
 
 const query = ref('')
 const selectedSubject = ref('')

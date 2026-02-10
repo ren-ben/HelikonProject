@@ -68,14 +68,15 @@
                 density="compact"
                 class="mb-3"
               ></v-select>
-               <v-select
+               <v-combobox
                 v-model="editableSubject"
                 :items="subjects"
                 label="Fach"
+                placeholder="Wählen oder eingeben"
                 variant="outlined"
                 density="compact"
                 class="mb-3"
-              ></v-select>
+              ></v-combobox>
 
                <v-divider class="my-3"></v-divider>
                 <h4 class="text-subtitle-2 mb-2">CLIL-Parameter</h4>
@@ -183,6 +184,8 @@ import { useMaterialsStore } from '@/stores/materials';
 import { useUIStore } from '@/stores/ui';
 import MaterialEditor from '@/components/Editor/MaterialEditor.vue';
 import ExportDialog from '@/components/ExportDialog.vue';
+import { useNotificationStore } from '@/stores/notifications';
+import { useSubjectStore } from '@/stores/subjects';
 import {
   getIconForType,
   getIconColor,
@@ -195,6 +198,8 @@ const route = useRoute();
 const router = useRouter();
 const materialsStore = useMaterialsStore();
 const uiStore = useUIStore();
+const notificationStore = useNotificationStore();
+const subjectStore = useSubjectStore();
 
 const loading = ref(true);
 const material = ref(null);
@@ -218,9 +223,7 @@ const snackbar = ref({ show: false, text: '', color: 'success' });
 const materialTypes = computed(() =>
   Object.entries(MATERIAL_TYPES).map(([id, config]) => ({ id, title: config.title }))
 );
-const subjects = [
-  'Informatik', 'Elektrotechnik', 'Maschinenbau', 'Mechatronik', 'Netzwerktechnik', 'Elektronik', 'Datenbanken', 'Webentwicklung', 'Mathematik', 'Physik'
-];
+const subjects = computed(() => subjectStore.subjectNames());
 const languageLevels = [
   { title: 'A1', value: 'A1' }, { title: 'A2', value: 'A2' }, { title: 'B1', value: 'B1' }, { title: 'B2', value: 'B2' }, { title: 'C1', value: 'C1' }
 ];
@@ -403,6 +406,7 @@ const forceSave = async () => {
         
         saveStatus.value = 'saved';
         showFeedback('Material gespeichert', 'success');
+        notificationStore.add({ title: 'Material aktualisiert', message: `"${editableTitle.value}" wurde aktualisiert`, type: 'success', icon: 'mdi-pencil' })
         uiStore.setLastEditedMaterial(material.value.id);
     } catch (error) {
         console.error('Error force saving:', error);

@@ -82,6 +82,64 @@
               </v-card-text>
             </v-card>
 
+            <!-- Meine Fächer -->
+            <v-card class="mb-5" variant="outlined">
+              <v-card-title class="settings-section-title">
+                <v-icon start color="primary">mdi-book-open-variant</v-icon>
+                Meine Fächer
+              </v-card-title>
+              <v-card-text>
+                <v-progress-linear v-if="subjectStore.loading" indeterminate color="primary" class="mb-4" />
+
+                <div v-if="subjectStore.subjects.length > 0" class="d-flex flex-wrap ga-2 mb-4">
+                  <v-chip
+                    v-for="s in subjectStore.subjects"
+                    :key="s.id || s.name"
+                    closable
+                    color="primary"
+                    variant="tonal"
+                    @click:close="handleDeleteSubject(s)"
+                  >
+                    {{ s.name }}
+                  </v-chip>
+                </div>
+                <div v-else-if="!subjectStore.loading" class="text-medium-emphasis mb-4">
+                  Noch keine Fächer vorhanden.
+                </div>
+
+                <v-row align="center">
+                  <v-col cols="12" md="8">
+                    <v-text-field
+                      v-model="newSubjectName"
+                      label="Neues Fach hinzufügen"
+                      prepend-inner-icon="mdi-plus"
+                      variant="solo"
+                      color="primary"
+                      rounded
+                      density="comfortable"
+                      hide-details
+                      :disabled="addingSubject"
+                      @keyup.enter="handleAddSubject"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-btn
+                      color="primary"
+                      :loading="addingSubject"
+                      :disabled="!newSubjectName.trim() || addingSubject"
+                      @click="handleAddSubject"
+                    >
+                      <v-icon start>mdi-plus</v-icon>
+                      Hinzufügen
+                    </v-btn>
+                  </v-col>
+                </v-row>
+                <v-alert v-if="subjectError" type="error" variant="tonal" density="compact" class="mt-3" closable @click:close="subjectError = ''">
+                  {{ subjectError }}
+                </v-alert>
+              </v-card-text>
+            </v-card>
+
             <!-- KI/API -->
             <v-card class="mb-5" variant="outlined">
               <v-card-title class="settings-section-title">
@@ -188,15 +246,52 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useUIStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
+import { useSubjectStore } from '@/stores/subjects'
 
 const uiStore = useUIStore()
+const authStore = useAuthStore()
+const subjectStore = useSubjectStore()
 
-// Dummy-Profil (kann später aus Auth-Store kommen)
-const profile = reactive({
-  name: 'Max Mustermann',
-  email: 'max@schule.de'
+// Profil aus Auth-Store
+const profile = computed(() => ({
+  name: authStore.user?.username || 'Unbekannt',
+  email: authStore.user?.email || ''
+}))
+
+// Fächer
+const newSubjectName = ref('')
+const addingSubject = ref(false)
+const subjectError = ref('')
+
+async function handleAddSubject() {
+  const name = newSubjectName.value.trim()
+  if (!name) return
+  addingSubject.value = true
+  subjectError.value = ''
+  const result = await subjectStore.addSubject(name)
+  if (result.success) {
+    newSubjectName.value = ''
+  } else {
+    subjectError.value = result.error || 'Fach konnte nicht hinzugefügt werden.'
+  }
+  addingSubject.value = false
+}
+
+async function handleDeleteSubject(subject) {
+  if (!subject.id) return
+  const result = await subjectStore.deleteSubject(subject.id)
+  if (!result.success) {
+    subjectError.value = result.error || 'Fach konnte nicht gelöscht werden.'
+  }
+}
+
+onMounted(() => {
+  if (subjectStore.subjects.length === 0) {
+    subjectStore.fetchSubjects()
+  }
 })
 
 // UI-Einstellungen

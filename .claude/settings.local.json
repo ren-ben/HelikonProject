@@ -21,7 +21,9 @@
       "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean package:*)",
       "Bash(npm run build:*)",
       "Bash(npx vite build:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean compile:*)",
+      "Bash(./mvnw compile:*)"
     ]
   }
 }

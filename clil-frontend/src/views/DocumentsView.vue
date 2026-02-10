@@ -19,11 +19,11 @@
           :disabled="uploading"
           show-size
         />
-        <v-autocomplete
+        <v-combobox
           v-model="selectedSubject"
           :items="subjects"
           label="Fach (optional)"
-          placeholder="Fach zuordnen"
+          placeholder="Fach wählen oder eingeben"
           prepend-inner-icon="mdi-book-open-variant"
           variant="outlined"
           density="compact"
@@ -161,7 +161,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/deepinfra-api'
-import { subjects } from '@/constants/subjects'
+import { useSubjectStore } from '@/stores/subjects'
+import { useNotificationStore } from '@/stores/notifications'
+
+const subjectStore = useSubjectStore()
+const subjects = computed(() => subjectStore.subjectNames())
+
+const notificationStore = useNotificationStore()
 
 const selectedFile = ref(null)
 const selectedSubject = ref('')
@@ -219,6 +225,7 @@ async function handleUpload() {
   if (result.success && !result.data.error) {
     uploadSuccess.value = true
     uploadMessage.value = `"${result.data.filename}" erfolgreich hochgeladen (${result.data.chunk_count} Chunks).`
+    notificationStore.add({ title: 'Dokument hochgeladen', message: `"${result.data.filename}" (${result.data.chunk_count} Chunks)`, type: 'success', icon: 'mdi-file-upload' })
     selectedFile.value = null
     selectedSubject.value = ''
     await fetchDocuments()
@@ -242,9 +249,11 @@ async function handleDelete() {
   deleteDialog.value = false
   deletingId.value = docId
 
+  const deletedFilename = deleteTarget.value.filename
   const result = await api.deleteDocuments([docId])
 
   if (result.success) {
+    notificationStore.add({ title: 'Dokument gelöscht', message: `"${deletedFilename}" wurde entfernt`, type: 'info', icon: 'mdi-delete' })
     await fetchDocuments()
   }
 

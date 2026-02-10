@@ -126,7 +126,7 @@ apiClient.interceptors.response.use(
     }
 
     throw new Error(
-      error.response?.data?.message || error.message || "Unknown error occurred"
+      error.response?.data?.message || error.response?.data?.error || error.message || "Unknown error occurred"
     );
   }
 );
@@ -462,6 +462,35 @@ export default {
         success: false,
         message: `Cannot connect to backend: ${error.message}`,
       };
+    }
+  },
+
+  // --- Subjects ---
+
+  async getSubjects() {
+    try {
+      const response = await apiClient.get('/subjects');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  async createSubject(name) {
+    try {
+      const response = await apiClient.post('/subjects', { name });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.error || error.message };
+    }
+  },
+
+  async deleteSubject(id) {
+    try {
+      await apiClient.delete(`/subjects/${id}`);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   },
 };

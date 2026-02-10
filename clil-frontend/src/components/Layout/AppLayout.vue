@@ -27,16 +27,64 @@
        </v-btn>
 
       <!-- Benachrichtigungen -->
-      <v-badge
-        content="2" 
-        color="error"
-        overlap
-        class="mr-2"
-      >
-        <v-btn icon>
-          <v-icon>mdi-bell</v-icon>
-        </v-btn>
-      </v-badge>
+      <v-menu :close-on-content-click="false" location="bottom end" max-height="420" min-width="360" max-width="360">
+        <template v-slot:activator="{ props }">
+          <v-badge
+            :content="notificationStore.unreadCount"
+            :model-value="notificationStore.unreadCount > 0"
+            color="error"
+            overlap
+            class="mr-2"
+          >
+            <v-btn icon v-bind="props">
+              <v-icon>mdi-bell</v-icon>
+            </v-btn>
+          </v-badge>
+        </template>
+        <v-card>
+          <v-card-title class="d-flex align-center text-subtitle-1 py-2 px-4">
+            Benachrichtigungen
+            <v-spacer />
+            <v-btn
+              v-if="notificationStore.unreadCount > 0"
+              variant="text"
+              density="compact"
+              size="small"
+              @click="notificationStore.markAllRead()"
+            >
+              Alle gelesen
+            </v-btn>
+          </v-card-title>
+          <v-divider />
+          <v-list v-if="notificationStore.notifications.length > 0" density="compact" class="py-0" style="max-height: 340px; overflow-y: auto;">
+            <v-list-item
+              v-for="n in notificationStore.notifications"
+              :key="n.id"
+              @click="notificationStore.markRead(n.id)"
+              :class="{ 'bg-grey-lighten-4': !n.read }"
+              class="py-2"
+            >
+              <template #prepend>
+                <v-icon :color="typeColor[n.type] || 'grey'" size="small" class="mr-3">{{ n.icon }}</v-icon>
+              </template>
+              <v-list-item-title class="text-body-2 font-weight-medium">{{ n.title }}</v-list-item-title>
+              <v-list-item-subtitle class="text-caption">
+                {{ n.message }}
+                <span class="text-disabled ml-1">{{ formatTimeAgo(n.createdAt) }}</span>
+              </v-list-item-subtitle>
+              <template #append>
+                <v-btn icon variant="text" size="x-small" @click.stop="notificationStore.remove(n.id)">
+                  <v-icon size="small">mdi-close</v-icon>
+                </v-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+          <div v-else class="text-center py-8 text-medium-emphasis">
+            <v-icon size="32" color="grey-lighten-1" class="mb-2">mdi-bell-off-outline</v-icon>
+            <p class="text-body-2">Keine Benachrichtigungen</p>
+          </div>
+        </v-card>
+      </v-menu>
 
       <!-- Benutzermenü -->
       <v-menu offset-y>
@@ -153,11 +201,18 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/auth'
+import { useNotificationStore } from '@/stores/notifications'
+import { useSubjectStore } from '@/stores/subjects'
 
 const route = useRoute();
 const router = useRouter();
 const theme = useTheme();
 const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
+const subjectStore = useSubjectStore();
+
+// Fächer beim App-Start laden
+subjectStore.fetchSubjects();
 
 const drawer = ref(true); // Navigation Drawer standardmäßig offen
 const search = ref('');
@@ -193,6 +248,18 @@ function toggleTheme () {
   // Optional: Theme im localStorage speichern
   // localStorage.setItem('darkMode', isDarkMode.value);
 }
+
+function formatTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000)
+  if (seconds < 60) return 'Gerade eben'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `vor ${minutes} Min.`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `vor ${hours} Std.`
+  return `vor ${Math.floor(hours / 24)} Tag(en)`
+}
+
+const typeColor = { success: 'success', info: 'info', warning: 'warning', error: 'error' }
 
 function logout() {
   authStore.logout();

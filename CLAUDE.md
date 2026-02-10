@@ -25,7 +25,7 @@ npm install
 npm run dev                     # Runs on port 5173 (Vite default)
 ```
 
-**Current state (post-Phase 7b):** Phases 1–7b are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API, with optional RAG-augmented generation using uploaded document context (subject-filtered). Document upload with subject tagging, RAG query with subject filtering, and admin panel are functional. Legacy Ollama code has been removed.
+**Current state (post-Phase 7b):** Phases 1–7b are complete. Full auth flow works end-to-end: frontend Login/Register → JWT tokens → protected API calls. Generation goes through `RagProxyService` → Python RAG service → cloud LLM API, with optional RAG-augmented generation using uploaded document context (subject-filtered). Document upload with subject tagging, RAG query with subject filtering, and admin panel are functional. Per-user subjects are stored in PostgreSQL (`Subject` entity) with lazy default seeding, manageable from Settings → "Meine Fächer". Legacy Ollama code has been removed.
 
 ## Build Commands
 
@@ -57,11 +57,11 @@ npm run preview                 # Preview the production build locally
 
 Standard Spring Boot layered architecture:
 
-- **Controllers** — `ClilController` (`/api/v1/clil`) for generation + material CRUD; `AuthController` (`/api/v1/auth`) for register/login/refresh.
+- **Controllers** — `ClilController` (`/api/v1/clil`) for generation + material CRUD; `AuthController` (`/api/v1/auth`) for register/login/refresh; `SubjectController` (`/api/v1/clil/subjects`) for per-user subject CRUD.
 - **Security** (`security/`) — JWT-based stateless auth. `JwtService` (jjwt 0.12.6), `JwtAuthenticationFilter` (OncePerRequestFilter), `UserDetailsServiceImpl`. Config in `config/SecurityConfig`. All `/api/**` except `/api/v1/auth/**` require auth.
-- **Service layer** — `RagProxyService` (proxies generation + models to Python via WebClient), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh).
+- **Service layer** — `RagProxyService` (proxies generation + models to Python via WebClient), `MaterialService` (CRUD with `User` owner param for ownership isolation), `AuthService` (register/login/refresh), `SubjectService` (per-user subject list with lazy default seeding).
 - **DTOs** (`dto/`) — `MaterialRequest` for generation; `MaterialCreateRequest` / `MaterialUpdateRequest` for persistence; `dto/auth/` subpackage for auth request/response types.
-- **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
+- **Entities** — `LessonMaterial` (JPA, `@ElementCollection` for tags, `@ManyToOne User owner`), `User` (implements `UserDetails`, `@ElementCollection` for roles), `Subject` (per-user subject list, unique constraint on `(name, owner_id)`, lazy-seeded with 12 defaults on first access), `Role` enum (USER, ADMIN). Schema in `schema.sql`; Hibernate `ddl-auto=update`.
 
 ### Frontend — `clil-frontend/src/`
 
@@ -72,6 +72,8 @@ Vue 3 SPA with Vuetify 3 component library and Pinia state management:
   - `auth.js` — auth state (user, tokens), actions (login, register, logout, refresh, initialize from localStorage). Tokens persist in localStorage.
   - `materials.js` — central store for the materials list. All views read/write through this store; it calls the API service layer.
   - `ui.js` — tracks UI state (theme, sidebar, last created/edited material — used for post-action redirects).
+  - `notifications.js` — in-memory notification history (add/markRead/markAllRead/remove/clear). Bell icon in `AppLayout` shows unread badge + dropdown panel. Triggers fire from document upload/delete, material generation/save/edit.
+  - `subjects.js` — per-user subject list from PostgreSQL. Fetched on app mount (AppLayout). Actions: fetchSubjects, addSubject, deleteSubject. Falls back to static defaults if API fails. Used by all subject comboboxes. Managed in Settings → "Meine Fächer".
 - **API layer** (`services/deepinfra-api.js`) — Axios client for `/api/v1/clil`. Attaches JWT from localStorage on every request. 401 response interceptor attempts token refresh (via `authService.js`) with request queuing, then redirects to `/login` on failure. `authService.js` is a separate Axios client for `/api/v1/auth` endpoints. Type mapping (`typeMap`/`reverseTypeMap`) translates frontend English keys to German DB strings.
 - **Views** — the bulk of the app logic. `CreateMaterial.vue` (~1000 lines) implements the 5-step generation wizard. `MaterialsGrid.vue` (~1300 lines) is the main materials list/table.
 - **Editor** (`components/Editor/`) — TipTap rich-text editor used in `EditMaterial.vue`, with custom extensions for language help and vocabulary highlighting.
