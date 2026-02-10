@@ -25,7 +25,8 @@
       "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw clean compile:*)",
       "Bash(./mvnw compile:*)",
       "Bash(find:*)",
-      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw compile:*)"
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-21\" ./mvnw compile:*)",
+      "Bash(findstr:*)"
     ]
   }
 }
