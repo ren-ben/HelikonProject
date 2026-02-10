@@ -1,0 +1,3 @@
+helikonproject.com, www.helikonproject.com {
+    reverse_proxy frontend:80
+}
