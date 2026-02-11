@@ -172,6 +172,7 @@ export default {
         description: params.description || '',
         modelName: params.modelName || 'llama3.2',
         useDocumentContext: params.useDocumentContext || false,
+        citationStyle: params.citationStyle || 'numbered',
       };
 
       // Call Spring Boot endpoint
@@ -184,10 +185,11 @@ export default {
           title: params.topic,
           content:
             response.data.formattedResponse || "<p>No content generated</p>",
+          sources: response.data.sources || [],
         },
         metadata: {
-          generationTime: null, // Spring Boot doesn't return this yet
-          tokensUsed: null, // Spring Boot doesn't return this yet
+          generationTime: null,
+          tokensUsed: null,
           model: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
         },
       };

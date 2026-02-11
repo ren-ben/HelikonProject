@@ -65,15 +65,25 @@
             Quellen ({{ sources.length }})
           </div>
           <v-list density="compact" variant="tonal" rounded>
-            <v-list-item v-for="(source, i) in sources" :key="i">
+            <v-list-item v-for="(source, i) in sources" :key="i" class="mb-1">
               <template #prepend>
                 <v-icon size="small">mdi-file-document-outline</v-icon>
               </template>
-              <v-list-item-title class="text-body-2">{{ source.filename }}</v-list-item-title>
+              <v-list-item-title class="text-body-2 font-weight-medium">
+                {{ source.filename }}
+              </v-list-item-title>
               <v-list-item-subtitle class="text-caption">
-                Chunk {{ source.chunk_index != null ? source.chunk_index + 1 : '—' }}
+                <span v-if="source.page_number">Seite {{ source.page_number }}</span>
+                <span v-else>Abschnitt {{ (source.chunk_index || 0) + 1 }}</span>
+                <span v-if="source.subject"> · {{ source.subject }}</span>
                 <span v-if="source.score"> · Relevanz: {{ (source.score * 100).toFixed(0) }}%</span>
               </v-list-item-subtitle>
+              <div
+                v-if="source.snippet"
+                class="text-caption text-medium-emphasis mt-1 snippet-text"
+              >
+                "{{ source.snippet }}"
+              </div>
             </v-list-item>
           </v-list>
         </div>
@@ -133,3 +143,12 @@ async function handleQuery() {
   loading.value = false
 }
 </script>
+
+<style scoped>
+.snippet-text {
+  font-style: italic;
+  max-height: 60px;
+  overflow: hidden;
+  line-height: 1.4;
+}
+</style>

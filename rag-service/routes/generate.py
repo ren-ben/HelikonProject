@@ -21,11 +21,24 @@ class GenerateRequest(BaseModel):
     useDocumentContext: bool = False
     userId: str | None = None
     contextSubject: str | None = None
+    citationStyle: str = "numbered"
+
+
+class SourceInfo(BaseModel):
+    ref_number: int | None = None
+    filename: str = ""
+    doc_id: str = ""
+    chunk_index: int | None = None
+    page_number: int | None = None
+    subject: str = ""
+    score: float = 0.0
+    snippet: str = ""
 
 
 class GenerateResponse(BaseModel):
-    """Mirrors Java ClilResponse — single key."""
+    """Mirrors Java ClilResponse."""
     formattedResponse: str
+    sources: list[SourceInfo] = []
 
 
 @router.post("/generate", response_model=GenerateResponse)
@@ -37,18 +50,22 @@ def generate(req: GenerateRequest):
     """
     try:
         if req.useDocumentContext and req.userId:
-            html = rag_parametric_generate(
+            result = rag_parametric_generate(
                 user_prompt=req.prompt,
                 user_id=req.userId,
                 subject=req.contextSubject,
                 model_name=req.modelName,
+                citation_style=req.citationStyle,
             )
         else:
-            html = parametric_generate(
+            result = parametric_generate(
                 user_prompt=req.prompt,
                 model_name=req.modelName,
             )
-        return GenerateResponse(formattedResponse=html)
+        return GenerateResponse(
+            formattedResponse=result["formattedResponse"],
+            sources=result.get("sources", []),
+        )
 
     except Exception as exc:
         error_html = (

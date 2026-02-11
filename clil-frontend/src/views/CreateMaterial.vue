@@ -411,6 +411,32 @@
             v-html="generatedMaterial.content"
             class="preview-content"
           ></div>
+
+          <!-- Quellen aus RAG-Kontext -->
+          <div v-if="generatedMaterial?.sources?.length > 0" class="mt-4 px-4 pb-2">
+            <v-divider class="mb-3" />
+            <div class="text-subtitle-2 font-weight-bold mb-2">
+              <v-icon size="small" class="mr-1">mdi-link-variant</v-icon>
+              Verwendete Quellen ({{ generatedMaterial.sources.length }})
+            </div>
+            <v-list density="compact" variant="tonal" rounded>
+              <v-list-item v-for="(source, i) in generatedMaterial.sources" :key="i">
+                <template #prepend>
+                  <v-avatar size="24" color="primary" variant="tonal" class="mr-2">
+                    <span class="text-caption">{{ source.ref_number || i + 1 }}</span>
+                  </v-avatar>
+                </template>
+                <v-list-item-title class="text-body-2 font-weight-medium">
+                  {{ source.filename }}
+                </v-list-item-title>
+                <v-list-item-subtitle class="text-caption">
+                  <span v-if="source.page_number">Seite {{ source.page_number }}</span>
+                  <span v-else>Abschnitt {{ (source.chunk_index || 0) + 1 }}</span>
+                  <span v-if="source.score"> · Relevanz: {{ (source.score * 100).toFixed(0) }}%</span>
+                </v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
+          </div>
         </v-card-text>
 
         <v-divider></v-divider>
@@ -800,6 +826,8 @@ const generateMaterialAction = async () => {
 
   try {
     // Direkt die API verwenden, nicht die Store-Funktion
+    // Read citation style from localStorage
+    const citationPrefs = JSON.parse(localStorage.getItem('citationFormat') || '{}')
     const response = await deepinfraApi.generateMaterial(form.value.type, {
       topic: form.value.topic,
       prompt: generatedPrompt.value,
@@ -811,6 +839,7 @@ const generateMaterialAction = async () => {
       description: form.value.description,
       modelName: form.value.model,
       useDocumentContext: form.value.useDocumentContext,
+      citationStyle: citationPrefs.style || 'numbered',
     });
 
     if (response.success) {

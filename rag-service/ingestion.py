@@ -10,23 +10,32 @@ from vector_store import get_vectorstore
 _splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
 
 
-# Text extraction
+# Text extraction — page-aware for PDFs
 
-def extract_text(file_bytes: bytes, filename: str) -> str:
+def extract_pages(file_bytes: bytes, filename: str) -> list[tuple[int | None, str]]:
+    """Return list of (page_number, text) tuples.
+
+    PDFs get real 1-based page numbers; DOCX/TXT get page_number=None.
+    """
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
     if ext == "pdf":
         import PyPDF2
         reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
-        return "\n".join(page.extract_text() or "" for page in reader.pages)
+        pages = []
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text() or ""
+            if text.strip():
+                pages.append((i + 1, text))
+        return pages if pages else [(None, "")]
 
     if ext == "docx":
         from docx import Document as DocxDocument
         doc = DocxDocument(io.BytesIO(file_bytes))
-        return "\n".join(p.text for p in doc.paragraphs)
+        return [(None, "\n".join(p.text for p in doc.paragraphs))]
 
     if ext == "txt":
-        return file_bytes.decode("utf-8")
+        return [(None, file_bytes.decode("utf-8"))]
 
     raise ValueError(f"Unsupported file type: .{ext}  (allowed: .pdf, .docx, .txt)")
 
@@ -40,14 +49,12 @@ def ingest_document(
     metadata: dict | None = None,
 ) -> dict:
     """Extract, chunk, embed, store. Returns {doc_id, chunk_count, filename}."""
-    text = extract_text(file_bytes, filename)
-    chunks = _splitter.split_text(text)
+    pages = extract_pages(file_bytes, filename)
 
     doc_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
 
     # chroma metadata values must be str, int, float, bool.
-    # flat any list fields
     base_meta: dict = {
         "user_id": user_id,
         "doc_id": doc_id,
@@ -58,14 +65,17 @@ def ingest_document(
         for key, val in metadata.items():
             base_meta[key] = ",".join(val) if isinstance(val, list) else val
 
-    documents = [
-        Document(
-            page_content=chunk,
-            metadata={**base_meta, "chunk_index": i},
-        )
-        for i, chunk in enumerate(chunks)
-    ]
+    documents = []
+    chunk_idx = 0
+    for page_num, page_text in pages:
+        page_chunks = _splitter.split_text(page_text)
+        for chunk in page_chunks:
+            meta = {**base_meta, "chunk_index": chunk_idx}
+            if page_num is not None:
+                meta["page_number"] = page_num
+            documents.append(Document(page_content=chunk, metadata=meta))
+            chunk_idx += 1
 
     get_vectorstore().add_documents(documents)
 
-    return {"doc_id": doc_id, "chunk_count": len(chunks), "filename": filename}
+    return {"doc_id": doc_id, "chunk_count": len(documents), "filename": filename}

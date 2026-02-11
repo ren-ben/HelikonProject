@@ -34,15 +34,77 @@ def _build_filter(user_id: str, subject: str | None = None) -> dict:
     return {"user_id": user_id}
 
 
+def _truncate_snippet(text: str, max_len: int = 200) -> str:
+    """Truncate text at a word boundary, append ellipsis."""
+    if len(text) <= max_len:
+        return text
+    cut = text[:max_len].rsplit(" ", 1)[0]
+    return cut + "..."
+
+
+def _build_source(doc, distance: float, ref_number: int | None = None) -> dict:
+    """Build a source dict from a LangChain Document + cosine distance."""
+    relevance = max(0.0, min(1.0, 1.0 - distance))
+    meta = doc.metadata
+    source = {
+        "filename": meta.get("filename", ""),
+        "doc_id": meta.get("doc_id", ""),
+        "chunk_index": meta.get("chunk_index"),
+        "subject": meta.get("subject", ""),
+        "score": round(relevance, 4),
+        "snippet": _truncate_snippet(doc.page_content),
+    }
+    page = meta.get("page_number")
+    if page is not None:
+        source["page_number"] = page
+    if ref_number is not None:
+        source["ref_number"] = ref_number
+    return source
+
+
+def _source_label(doc, ref_num: int) -> str:
+    """Human-readable label for a source reference in the context block."""
+    meta = doc.metadata
+    name = meta.get("filename", "Dokument")
+    page = meta.get("page_number")
+    if page is not None:
+        return f"[{ref_num}] (Datei: {name}, Seite {page})"
+    chunk = meta.get("chunk_index")
+    if chunk is not None:
+        return f"[{ref_num}] (Datei: {name}, Abschnitt {chunk + 1})"
+    return f"[{ref_num}] (Datei: {name})"
+
+
+_CITATION_INSTRUCTIONS = {
+    "numbered": (
+        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
+        "nummerierte Inline-Zitationen ein (z.B. [1], [2]). Am Ende des "
+        "Materials fuege einen Abschnitt <h3>Quellen</h3> mit einer "
+        "nummerierten Liste (<ol>) der verwendeten Quellen hinzu."
+    ),
+    "apa": (
+        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
+        "Zitationen im Format (Dateiname, Seite) ein. Am Ende des Materials "
+        "fuege einen Abschnitt <h3>Quellenverzeichnis</h3> hinzu."
+    ),
+    "simple": (
+        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
+        "den Dateinamen in Klammern als Quellenangabe ein. Am Ende des "
+        "Materials fuege einen Abschnitt <h3>Quellen</h3> hinzu."
+    ),
+    "none": "",
+}
+
+
 # Parametric generation (no retrieval)
 
 def parametric_generate(
     user_prompt: str,
     model_name: str | None = None,
-) -> str:
+) -> dict:
     """Generate material using system prompt.
 
-    Returns raw HTML that becomes a formattedResponse.
+    Returns {"formattedResponse": str, "sources": []}.
     """
     system_prompt = _load_system_prompt()
     enhanced_prompt = user_prompt + _HTML_SUFFIX
@@ -52,7 +114,7 @@ def parametric_generate(
         SystemMessage(content=system_prompt),
         HumanMessage(content=enhanced_prompt),
     ])
-    return response.content
+    return {"formattedResponse": response.content, "sources": []}
 
 
 # RAG-augmented parametric generation (retrieve → context → Bloom prompt)
@@ -63,27 +125,37 @@ def rag_parametric_generate(
     subject: str | None = None,
     model_name: str | None = None,
     top_k: int = 5,
-) -> str:
-    """Parametric generation augmented with RAG context from user's documents.
+    citation_style: str = "numbered",
+) -> dict:
+    """Parametric generation augmented with RAG context.
 
-    Retrieves relevant chunks filtered by user_id + optional subject,
-    injects them as context into the Bloom's Taxonomy prompt flow.
-    Returns raw HTML.
+    Returns {"formattedResponse": str, "sources": [...]}.
     """
     vs = get_vectorstore()
-    results = vs.similarity_search(
+    results_with_score = vs.similarity_search_with_score(
         user_prompt,
         k=top_k,
         filter=_build_filter(user_id, subject),
     )
 
-    if results:
-        context = "\n\n".join(doc.page_content for doc in results)
+    sources = []
+    if results_with_score:
+        # Build numbered context block with source labels
+        context_parts = []
+        for i, (doc, dist) in enumerate(results_with_score):
+            ref_num = i + 1
+            label = _source_label(doc, ref_num)
+            context_parts.append(f"{label}:\n{doc.page_content}")
+            sources.append(_build_source(doc, dist, ref_number=ref_num))
+
+        context = "\n\n".join(context_parts)
+        citation_instr = _CITATION_INSTRUCTIONS.get(citation_style, "")
         context_block = (
             "\n\nDie folgenden Auszuege aus hochgeladenen Dokumenten sollen als "
             "zusaetzlicher Kontext fuer die Materialerstellung dienen. "
             "Beziehe relevante Informationen daraus ein:\n\n"
-            f"--- Dokumentkontext ---\n{context}\n--- Ende Dokumentkontext ---\n"
+            f"--- Dokumentkontext ---\n{context}\n--- Ende Dokumentkontext ---"
+            f"{citation_instr}\n"
         )
     else:
         context_block = ""
@@ -96,7 +168,7 @@ def rag_parametric_generate(
         SystemMessage(content=system_prompt),
         HumanMessage(content=enhanced_prompt),
     ])
-    return response.content
+    return {"formattedResponse": response.content, "sources": sources}
 
 
 # RAG query generation (retrieve → context → answer)
@@ -109,20 +181,23 @@ def rag_generate(
 ) -> dict:
     """Retrieve chunks for user_id, inject as context, generate.
 
-    Returns {"answer": str, "sources": [metadata_dict, ...]}.
+    Returns {"answer": str, "sources": [enriched source dicts]}.
     """
     vs = get_vectorstore()
-    results = vs.similarity_search(
+    results_with_score = vs.similarity_search_with_score(
         query,
         k=top_k,
         filter=_build_filter(user_id, subject),
     )
 
-    context = "\n\n".join(doc.page_content for doc in results)
+    context = "\n\n".join(doc.page_content for doc, _ in results_with_score)
     prompt = f"Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
 
     llm = get_llm()
     response = llm.invoke([HumanMessage(content=prompt)])
 
-    sources = [doc.metadata for doc in results]
+    sources = [
+        _build_source(doc, dist)
+        for doc, dist in results_with_score
+    ]
     return {"answer": response.content, "sources": sources}

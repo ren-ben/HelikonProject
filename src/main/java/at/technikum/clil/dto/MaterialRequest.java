@@ -21,4 +21,5 @@ public class MaterialRequest {
     private Boolean useDocumentContext;
     private String userId;
     private String contextSubject;
+    private String citationStyle;
 }

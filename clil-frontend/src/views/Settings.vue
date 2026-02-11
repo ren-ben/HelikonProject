@@ -185,6 +185,69 @@
               </v-card-text>
             </v-card>
 
+            <!-- Zitierformat -->
+            <v-card class="mb-5" variant="outlined">
+              <v-card-title class="settings-section-title">
+                <v-icon start color="primary">mdi-format-quote-close</v-icon>
+                Zitierformat
+              </v-card-title>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="citation.style"
+                      :items="citationStyles"
+                      item-title="title"
+                      item-value="value"
+                      label="Zitierstil"
+                      prepend-inner-icon="mdi-format-quote-close"
+                      append-inner-icon="mdi-chevron-down"
+                      variant="solo"
+                      color="primary"
+                      rounded
+                      density="comfortable"
+                      hide-details
+                    />
+                  </v-col>
+                </v-row>
+                <v-row class="mt-2">
+                  <v-col cols="12" md="4">
+                    <v-switch
+                      v-model="citation.inlineCitations"
+                      label="Inline-Zitationen"
+                      color="primary"
+                      inset
+                      hide-details
+                      density="compact"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-switch
+                      v-model="citation.showRelevanceScore"
+                      label="Relevanz anzeigen"
+                      color="primary"
+                      inset
+                      hide-details
+                      density="compact"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-switch
+                      v-model="citation.showSnippets"
+                      label="Textauszuege anzeigen"
+                      color="primary"
+                      inset
+                      hide-details
+                      density="compact"
+                    />
+                  </v-col>
+                </v-row>
+                <v-alert type="info" variant="tonal" density="compact" class="mt-4">
+                  Der Zitierstil beeinflusst, wie Quellen in generierten Materialien mit Dokumentkontext referenziert werden.
+                </v-alert>
+              </v-card-text>
+            </v-card>
+
             <!-- Export -->
             <v-card class="mb-5" variant="outlined">
               <v-card-title class="settings-section-title">
@@ -319,6 +382,15 @@ const api = reactive({
 })
 const showApiKey = ref(false)
 
+// Zitierformat
+const citationStyles = [
+  { title: 'Nummeriert — [1], [2], [3]', value: 'numbered' },
+  { title: 'APA — (Dateiname, Seite)', value: 'apa' },
+  { title: 'Einfach — (Dateiname)', value: 'simple' },
+  { title: 'Keine Inline-Zitationen', value: 'none' },
+]
+const citation = reactive({ ...uiStore.citationFormat })
+
 // Export-Voreinstellungen
 const exportFormats = [
   { title: 'PDF', value: 'pdf' },
@@ -346,7 +418,11 @@ const initialSettings = JSON.stringify({
   geminiKey: api.geminiKey,
   defaultLevel: api.defaultLevel,
   format: exportSettings.format,
-  layout: exportSettings.layout
+  layout: exportSettings.layout,
+  citationStyle: citation.style,
+  citationInline: citation.inlineCitations,
+  citationScore: citation.showRelevanceScore,
+  citationSnippets: citation.showSnippets,
 })
 const settingsChanged = computed(() =>
   JSON.stringify({
@@ -356,14 +432,23 @@ const settingsChanged = computed(() =>
     geminiKey: api.geminiKey,
     defaultLevel: api.defaultLevel,
     format: exportSettings.format,
-    layout: exportSettings.layout
+    layout: exportSettings.layout,
+    citationStyle: citation.style,
+    citationInline: citation.inlineCitations,
+    citationScore: citation.showRelevanceScore,
+    citationSnippets: citation.showSnippets,
   }) !== initialSettings
 )
 
 function saveSettings() {
   uiStore.currentTheme = ui.theme
   uiStore.sidebarExpanded = ui.sidebarExpanded
-  // Sprache, API-Key, Export etc. ggf. in weiteren Stores oder localStorage persistieren
+  uiStore.setCitationFormat({
+    style: citation.style,
+    showRelevanceScore: citation.showRelevanceScore,
+    showSnippets: citation.showSnippets,
+    inlineCitations: citation.inlineCitations,
+  })
   snackbar.text = 'Einstellungen gespeichert!'
   snackbar.color = 'success'
   snackbar.show = true
@@ -393,4 +478,4 @@ function saveSettings() {
 .v-avatar {
   margin-bottom: 8px;
 }
-</style> 
+</style>
