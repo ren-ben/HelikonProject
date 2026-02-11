@@ -213,7 +213,7 @@
                   class="mb-4 text-body-2"
                   density="compact"
                 >
-                  Sie können den generierten Prompt anpassen und/oder ein spezifisches Model auswählen. Beide Schritte sind optional. 
+                  Sie können den generierten Prompt anpassen und/oder ein spezifisches Model auswählen. Beide Schritte sind optional.
                   Wenn Sie keine Änderungen wünschen, klicken Sie einfach auf 'Weiter'.
                 </v-alert>
               </v-col>
@@ -408,7 +408,7 @@
 
           <div
             v-else-if="generatedMaterial"
-            v-html="generatedMaterial.content"
+            v-html="previewContent"
             class="preview-content"
           ></div>
 
@@ -679,6 +679,17 @@ const generating = ref(false);
 const saving = ref(false);
 const previewDialog = ref(false);
 const generatedMaterial = ref(null);
+
+const previewContent = computed(() => {
+  const mat = generatedMaterial.value
+  if (!mat) return ''
+  let html = mat.content || ''
+  if (mat.sources?.length > 0) {
+    html = html.replace(/<h[23][^>]*>\s*(Quellen|Quellenverzeichnis)\s*<\/h[23]>[\s\S]*$/i, '')
+  }
+  return html
+})
+
 const editPrompt = ref(false);
 const isGeneratingPrompt = ref(false);
 const generationError = ref(null);

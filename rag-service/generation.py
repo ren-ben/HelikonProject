@@ -77,20 +77,24 @@ def _source_label(doc, ref_num: int) -> str:
 
 _CITATION_INSTRUCTIONS = {
     "numbered": (
-        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
-        "nummerierte Inline-Zitationen ein (z.B. [1], [2]). Am Ende des "
-        "Materials fuege einen Abschnitt <h3>Quellen</h3> mit einer "
-        "nummerierten Liste (<ol>) der verwendeten Quellen hinzu."
+        "\n\nWICHTIG zu Zitationen: Jeder Kontext-Abschnitt oben hat eine eigene "
+        "Nummer [1], [2], [3] usw. — auch wenn mehrere Abschnitte aus derselben "
+        "Datei stammen. Verwende diese Nummern als Inline-Zitationen im Text "
+        "(z.B. [1], [3]). Fuege KEINEN eigenen Quellen-Abschnitt am Ende hinzu "
+        "— die Quellenangaben werden automatisch vom System angezeigt."
     ),
     "apa": (
-        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
-        "Zitationen im Format (Dateiname, Seite) ein. Am Ende des Materials "
-        "fuege einen Abschnitt <h3>Quellenverzeichnis</h3> hinzu."
+        "\n\nWICHTIG zu Zitationen: Jeder Kontext-Abschnitt hat eine Quellenangabe "
+        "mit Dateiname und Seite/Abschnitt. Zitiere im Text im Format "
+        "(Dateiname, Seite X) bzw. (Dateiname, Abschnitt X). "
+        "Fuege KEINEN eigenen Quellen-Abschnitt am Ende hinzu — die "
+        "Quellenangaben werden automatisch vom System angezeigt."
     ),
     "simple": (
-        "\n\nWenn du Informationen aus dem Dokumentkontext verwendest, fuege "
-        "den Dateinamen in Klammern als Quellenangabe ein. Am Ende des "
-        "Materials fuege einen Abschnitt <h3>Quellen</h3> hinzu."
+        "\n\nWICHTIG zu Zitationen: Wenn du Informationen aus dem Dokumentkontext "
+        "verwendest, fuege den Dateinamen in Klammern als Quellenangabe ein. "
+        "Fuege KEINEN eigenen Quellen-Abschnitt am Ende hinzu — die "
+        "Quellenangaben werden automatisch vom System angezeigt."
     ),
     "none": "",
 }
