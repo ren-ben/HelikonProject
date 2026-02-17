@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helikon — Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #06070a;
+    --surface: #0e1015;
+    --surface-2: #141720;
+    --border: #1c1f2a;
+    --text: #e8eaef;
+    --text-dim: #5c6170;
+    --text-mid: #8b90a0;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Grain ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Progress ── */
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--purple), var(--pink));
+    z-index: 1001;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 0%;
+  }
+
+  /* ── Slide counter ── */
+  #counter {
+    position: fixed;
+    bottom: 20px;
+    right: 28px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    z-index: 1000;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Nav dots ── */
+  #slide-nav {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+  }
+  .nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: none;
+    padding: 0;
+  }
+  .nav-dot.active {
+    background: var(--blue);
+    box-shadow: 0 0 10px rgba(59,130,246,0.4);
+    transform: scale(1.5);
+  }
+
+  /* ── Slides ── */
+  .slide {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    z-index: 2;
+  }
+  .slide.exit-up {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  /* ── Staggered children ── */
+  .slide .anim {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active .anim { opacity: 1; transform: translateY(0); }
+  .slide.active .anim.d1 { transition-delay: 0.08s; }
+  .slide.active .anim.d2 { transition-delay: 0.16s; }
+  .slide.active .anim.d3 { transition-delay: 0.24s; }
+  .slide.active .anim.d4 { transition-delay: 0.32s; }
+  .slide.active .anim.d5 { transition-delay: 0.40s; }
+  .slide.active .anim.d6 { transition-delay: 0.48s; }
+  .slide.active .anim.d7 { transition-delay: 0.56s; }
+
+  /* Scale variant */
+  .anim-s {
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .slide.active .anim-s { opacity: 1; transform: scale(1); }
+  .slide.active .anim-s.d3 { transition-delay: 0.24s; }
+
+  /* ── Glow orbs ── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    opacity: 0.12;
+  }
+
+  /* ── Typography ── */
+  .overline {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 16px;
+  }
+  .big-title {
+    font-size: clamp(56px, 9vw, 110px);
+    font-weight: 900;
+    letter-spacing: -3px;
+    line-height: 0.95;
+    background: linear-gradient(135deg, #fff 0%, #64748b 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .s-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .s-title {
+    font-size: clamp(34px, 4.5vw, 54px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    margin-bottom: 10px;
+  }
+  .s-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    max-width: 560px;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  /* ═════════ HERO ═════════ */
+  .hero-orb1 {
+    position: absolute;
+    top: 15%;
+    left: 30%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%);
+    animation: f1 14s ease-in-out infinite;
+  }
+  .hero-orb2 {
+    position: absolute;
+    bottom: 15%;
+    right: 20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%);
+    animation: f2 18s ease-in-out infinite;
+  }
+  @keyframes f1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(25px,-15px)} }
+  @keyframes f2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,12px)} }
+
+  .hero-logo {
+    width: 68px;
+    height: 68px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .hero-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-tagline {
+    font-size: 17px;
+    color: var(--text-mid);
+    margin-top: 18px;
+    max-width: 500px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .hero-chips {
+    margin-top: 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .hero-chips span {
+    padding: 5px 14px;
+    border-radius: 18px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+  }
+  .scroll-cue {
+    position: absolute;
+    bottom: 28px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    animation: bob 2.5s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100%{opacity:.3;transform:translateY(0)} 50%{opacity:1;transform:translateY(5px)} }
+
+  /* ═════════ TEAM ═════════ */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 880px;
+    width: 100%;
+    margin-top: 40px;
+  }
+  .team-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px 16px 22px;
+    text-align: center;
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .team-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.08); }
+  .team-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+  }
+  .team-card:nth-child(1)::before { background: var(--blue); }
+  .team-card:nth-child(2)::before { background: var(--purple); }
+  .team-card:nth-child(3)::before { background: var(--green); }
+  .team-card:nth-child(4)::before { background: var(--cyan); }
+
+  .t-photo {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+  }
+  .t-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .t-ph {
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:800; color:#fff;
+  }
+  .team-card:nth-child(1) .t-ph { background:linear-gradient(135deg,#1e40af,#3b82f6); }
+  .team-card:nth-child(2) .t-ph { background:linear-gradient(135deg,#5b21b6,#8b5cf6); }
+  .team-card:nth-child(3) .t-ph { background:linear-gradient(135deg,#065f46,#10b981); }
+  .team-card:nth-child(4) .t-ph { background:linear-gradient(135deg,#0e7490,#06b6d4); }
+  .t-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .t-role { font-size: 11px; color: var(--text-dim); }
+  .t-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .team-card:nth-child(1) .t-badge { background:rgba(59,130,246,0.1); color:var(--blue); }
+  .team-card:nth-child(2) .t-badge { background:rgba(139,92,246,0.1); color:var(--purple); }
+  .team-card:nth-child(3) .t-badge { background:rgba(16,185,129,0.1); color:var(--green); }
+  .team-card:nth-child(4) .t-badge { background:rgba(6,182,212,0.1); color:var(--cyan); }
+
+  /* ═════════ FEATURE CARDS ═════════ */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    max-width: 920px;
+    margin-top: 40px;
+  }
+  .feat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .feat:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.06); }
+  .feat-icon { font-size: 26px; margin-bottom: 12px; }
+  .feat h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .feat p { font-size: 12px; color: var(--text-mid); line-height: 1.55; }
+
+  /* ═════════ DIFF LIST ═════════ */
+  .diff-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 680px;
+    width: 100%;
+    margin-top: 40px;
+  }
+  .diff-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: transform 0.3s;
+  }
+  .diff-item:hover { transform: translateX(6px); }
+  .diff-n {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+    background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12));
+    color: var(--blue);
+  }
+  .diff-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .diff-item p { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+
+  /* ═════════ THEORY: RAG VISUAL ═════════ */
+  .rag-flow {
+    display: flex;
+    gap: 0;
+    max-width: 960px;
+    margin-top: 40px;
+  }
+  .rag-step {
+    flex: 1;
+    padding: 24px 16px;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    transition: transform 0.3s;
+  }
+  .rag-step:first-child { border-radius: 16px 0 0 16px; }
+  .rag-step:last-child { border-radius: 0 16px 16px 0; }
+  .rag-step:not(:last-child) { border-right: none; }
+  .rag-step:hover { transform: translateY(-3px); z-index: 2; border-radius: 16px; border: 1px solid rgba(59,130,246,0.25); }
+  .rag-step .num { font-size: 9px; font-weight: 700; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; }
+  .rag-step .ico { font-size: 28px; margin-bottom: 10px; }
+  .rag-step h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rag-step p { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+  .rag-arr {
+    position: absolute;
+    right: -10px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px;
+    background: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 3;
+    font-size: 10px; color: var(--blue);
+    border: 1px solid var(--border);
+  }
+
+  /* ═════════ THEORY: DIAGRAM ═════════ */
+  .theory-diagram {
+    max-width: 700px;
+    width: 100%;
+    margin-top: 40px;
+  }
+  .td-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .td-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    text-align: center;
+    flex: 1;
+    max-width: 300px;
+    transition: transform 0.3s;
+  }
+  .td-box:hover { transform: translateY(-2px); }
+  .td-box .ico { font-size: 22px; margin-bottom: 6px; display: block; }
+  .td-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .td-box p { font-size: 10px; color: var(--text-dim); }
+  .td-conn {
+    display: flex; justify-content: center; padding: 4px 0;
+  }
+  .td-conn-line {
+    width: 1px; height: 20px;
+    background: linear-gradient(180deg, var(--border), rgba(59,130,246,0.2), var(--border));
+  }
+  .td-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-dim);
+    padding: 2px 10px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--surface);
+  }
+
+  /* ═════════ ARCH CARDS ═════════ */
+  .arch-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin-top: 36px;
+  }
+  .ac {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px 18px;
+    flex: 1;
+    min-width: 200px;
+    max-width: 380px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+  }
+  .ac:hover { transform: translateY(-3px); }
+  .ac::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--_a);
+  }
+  .ac .ico { font-size: 20px; margin-bottom: 8px; display: block; }
+  .ac h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .ac .tech { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); margin-bottom: 8px; }
+  .ac li {
+    list-style: none; font-size: 12px; color: var(--text-mid); line-height: 1.6;
+    padding-left: 12px; position: relative;
+  }
+  .ac li::before {
+    content: ''; position: absolute; left: 0; top: 8px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--_a); opacity: .5;
+  }
+  .ac .port {
+    position: absolute; top: 12px; right: 12px;
+    font-size: 10px; font-weight: 600; color: var(--text-dim);
+    font-family: monospace;
+    background: rgba(255,255,255,0.03);
+    padding: 2px 8px; border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .ac .badge {
+    display: inline-block; margin-top: 8px;
+    padding: 2px 8px; border-radius: 6px;
+    font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  }
+  .arch-conn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0;
+  }
+  .arch-conn-l { width: 1px; height: 20px; background: linear-gradient(180deg, var(--border), rgba(59,130,246,0.2), var(--border)); }
+  .arch-lbl {
+    font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-dim); padding: 3px 10px; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--surface);
+  }
+  .docker-wrap {
+    border: 1px dashed rgba(59,130,246,0.2);
+    border-radius: 20px;
+    padding: 32px 20px 20px;
+    position: relative;
+    max-width: 800px;
+    width: 100%;
+  }
+  .docker-wrap-label {
+    position: absolute; top: -10px; left: 24px;
+    background: var(--bg); padding: 2px 14px;
+    font-size: 10px; font-weight: 700; color: var(--blue);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+
+  /* ═════════ BROWSER FRAME ═════════ */
+  .browser-frame {
+    max-width: 960px; width: 100%;
+    margin-top: 36px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .browser-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .bd { width: 10px; height: 10px; border-radius: 50%; }
+  .bd.r { background: #ef4444; }
+  .bd.y { background: #f59e0b; }
+  .bd.g { background: #10b981; }
+  .browser-url {
+    flex: 1; margin-left: 10px;
+    padding: 5px 14px;
+    background: var(--bg); border-radius: 8px;
+    font-size: 12px; color: var(--text-mid);
+    font-family: monospace;
+    border: 1px solid var(--border);
+  }
+  .browser-body {
+    width: 100%; height: 520px;
+    border: none; display: block; background: #fff;
+  }
+
+  /* ═════════ THANKS ═════════ */
+  .thanks-t {
+    font-size: clamp(52px, 8vw, 100px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .thanks-s {
+    font-size: 18px; color: var(--text-dim);
+    text-align: center; margin-top: 12px; margin-bottom: 32px;
+  }
+  .thanks-url {
+    font-size: 20px; font-weight: 700; color: var(--blue);
+    text-decoration: none;
+    padding: 10px 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(59,130,246,0.3);
+    background: rgba(59,130,246,0.06);
+    transition: background 0.3s;
+  }
+
+  /* ═════════ Key hint ═════════ */
+  .key-hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; color: var(--text-dim); letter-spacing: 1px; opacity: .4; z-index: 1000;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .key-hint kbd {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 3px; padding: 1px 5px; font-family: inherit;
+  }
+
+  /* ═════════ Infra bar ═════════ */
+  .infra-bar {
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+    padding: 14px 28px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px;
+    margin-top: 32px;
+  }
+  .infra-stat { text-align: center; }
+  .infra-v { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+  .infra-l { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .infra-d { width: 1px; height: 32px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<nav id="slide-nav"></nav>
+<div id="counter"></div>
+<div class="key-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate</div>
+
+<!-- ══════════════════════════════════════════
+     S0: HERO
+     ══════════════════════════════════════════ -->
+<section class="slide active" data-title="Helikon">
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-logo anim">
+    <img src="../clil-frontend/public/helikonlogo.png" alt="H" onerror="this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff&quot;>H</div>'">
+  </div>
+  <div class="overline anim d1">Diploma Project 2024/25</div>
+  <h1 class="big-title anim d2">Helikon</h1>
+  <p class="hero-tagline anim d3">AI-powered CLIL material generation with Retrieval-Augmented Generation, built for teachers.</p>
+  <div class="hero-chips anim d4">
+    <span>Vue 3</span><span>Spring Boot</span><span>FastAPI</span><span>LangChain</span><span>OpenAI</span>
+  </div>
+  <div class="scroll-cue anim d5">↓</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S1: TEAM
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Team">
+  <div class="s-num anim">Our Team</div>
+  <h2 class="s-title anim d1">The People Behind It</h2>
+  <p class="s-sub anim d2">Four developers, one mission — better teaching materials through AI</p>
+  <div class="team-grid">
+    <div class="team-card anim d3">
+      <div class="t-photo">
+        <img src="photos/danilo.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="t-ph" style="display:none">DS</div>
+      </div>
+      <div class="t-name">Danilo Stoilovski</div>
+      <div class="t-role">Frontend Development</div>
+      <div class="t-badge">Frontend</div>
+    </div>
+    <div class="team-card anim d4">
+      <div class="t-photo">
+        <img src="photos/alexander.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="t-ph" style="display:none">AH</div>
+      </div>
+      <div class="t-name">Alexander Hiroma</div>
+      <div class="t-role">Backend Development</div>
+      <div class="t-badge">Backend</div>
+    </div>
+    <div class="team-card anim d5">
+      <div class="t-photo">
+        <img src="photos/bernhard.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="t-ph" style="display:none">BA</div>
+      </div>
+      <div class="t-name">Bernhard Aichinger</div>
+      <div class="t-role">Frontend Development</div>
+      <div class="t-badge">Frontend</div>
+    </div>
+    <div class="team-card anim d6">
+      <div class="t-photo">
+        <img src="photos/oliwier.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="t-ph" style="display:none">OP</div>
+      </div>
+      <div class="t-name">Oliwier Przewlocki</div>
+      <div class="t-role">Backend · Project Lead</div>
+      <div class="t-badge">Lead</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S2: WHAT IS HELIKON
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="The Project">
+  <div class="glow" style="width:400px;height:400px;background:var(--purple);top:8%;right:8%;"></div>
+  <div class="s-num anim">The Project</div>
+  <h2 class="s-title anim d1">What is Helikon?</h2>
+  <p class="s-sub anim d2">A web application that helps teachers create CLIL materials using AI</p>
+  <div class="feat-grid">
+    <div class="feat anim d3"><div class="feat-icon">🎓</div><h4>CLIL Methodology</h4><p>Content and Language Integrated Learning — subject teaching in a foreign language, structured by Bloom's Taxonomy</p></div>
+    <div class="feat anim d4"><div class="feat-icon">🤖</div><h4>AI Generation</h4><p>5-step wizard generates worksheets, quizzes, glossaries and more via cloud LLM APIs</p></div>
+    <div class="feat anim d5"><div class="feat-icon">📚</div><h4>Document Context</h4><p>Upload your own documents — the AI uses them as context for more relevant, source-based materials</p></div>
+    <div class="feat anim d3"><div class="feat-icon">✏️</div><h4>Rich-Text Editor</h4><p>Edit generated materials directly in the browser with TipTap rich-text editing</p></div>
+    <div class="feat anim d4"><div class="feat-icon">📤</div><h4>Professional Export</h4><p>Export materials as styled PDFs or HTML files for classroom use</p></div>
+    <div class="feat anim d5"><div class="feat-icon">🔐</div><h4>Multi-User System</h4><p>User management with registration, admin approval, and personal material libraries</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S3: DIFFERENTIATORS
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Differentiators">
+  <div class="glow" style="width:350px;height:350px;background:var(--green);bottom:12%;left:5%;"></div>
+  <div class="s-num anim">Key Differentiators</div>
+  <h2 class="s-title anim d1">What Sets Us Apart</h2>
+  <p class="s-sub anim d2">Not a ChatGPT wrapper — a specialized tool purpose-built for teachers</p>
+  <div class="diff-list">
+    <div class="diff-item anim d3"><div class="diff-n">1</div><div><h4>Bloom's Taxonomy Prompt Engineering</h4><p>Every material is structured by cognitive levels — remember, understand, apply, analyze, evaluate, create.</p></div></div>
+    <div class="diff-item anim d4"><div class="diff-n">2</div><div><h4>RAG with Your Own Documents</h4><p>Teachers upload subject materials. The AI generates content grounded in those documents — with automatic source citations.</p></div></div>
+    <div class="diff-item anim d5"><div class="diff-n">3</div><div><h4>CLIL-Specific Parameterization</h4><p>Language level (CEFR A1–C1), vocabulary ratio, subject, content/language focus — all configurable per material.</p></div></div>
+    <div class="diff-item anim d6"><div class="diff-n">4</div><div><h4>Provider-Agnostic</h4><p>OpenAI, Groq, or local Ollama — one environment variable switch. No vendor lock-in.</p></div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S4: THEORY — CLIL + BLOOM
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="CLIL & Bloom's">
+  <div class="glow" style="width:400px;height:400px;background:var(--amber);top:15%;left:10%;"></div>
+  <div class="s-num anim">Theory</div>
+  <h2 class="s-title anim d1">CLIL & Bloom's Taxonomy</h2>
+  <p class="s-sub anim d2">The pedagogical foundation behind every generated material</p>
+  <div style="display:flex; gap:28px; margin-top:40px; max-width:900px; width:100%;">
+    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;">
+      <div style="font-size:24px; margin-bottom:10px;">🎓</div>
+      <h4 style="font-size:16px; font-weight:700; margin-bottom:8px;">CLIL</h4>
+      <p style="font-size:12px; color:var(--text-mid); line-height:1.6;">Content and Language Integrated Learning integrates subject matter with a foreign language. Students learn <strong style="color:var(--text);">both</strong> — the subject content and the language — simultaneously.</p>
+      <div style="margin-top:14px; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);"></div><span style="font-size:11px; color:var(--text-mid);">Content — subject knowledge</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div><span style="font-size:11px; color:var(--text-mid);">Communication — language skills</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div><span style="font-size:11px; color:var(--text-mid);">Cognition — thinking skills</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></div><span style="font-size:11px; color:var(--text-mid);">Culture — intercultural awareness</span></div>
+      </div>
+    </div>
+    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;">
+      <div style="font-size:24px; margin-bottom:10px;">🧠</div>
+      <h4 style="font-size:16px; font-weight:700; margin-bottom:8px;">Bloom's Taxonomy</h4>
+      <p style="font-size:12px; color:var(--text-mid); line-height:1.6; margin-bottom:14px;">Six cognitive levels, from basic recall to creative synthesis. Helikon's prompt engine structures materials across these levels.</p>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(236,72,153,0.1); color:var(--pink); border-left:3px solid var(--pink);">Create — design, construct, produce</div>
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(139,92,246,0.08); color:var(--purple); border-left:3px solid var(--purple);">Evaluate — judge, justify, critique</div>
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(59,130,246,0.08); color:var(--blue); border-left:3px solid var(--blue);">Analyze — compare, organize, deconstruct</div>
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(6,182,212,0.08); color:var(--cyan); border-left:3px solid var(--cyan);">Apply — use, implement, execute</div>
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(16,185,129,0.08); color:var(--green); border-left:3px solid var(--green);">Understand — explain, classify, summarize</div>
+        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(245,158,11,0.08); color:var(--amber); border-left:3px solid var(--amber);">Remember — recall, list, define</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S5: THEORY — WHAT IS RAG
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="What is RAG?">
+  <div class="glow" style="width:500px;height:500px;background:var(--cyan);top:20%;left:50%;transform:translateX(-50%);"></div>
+  <div class="s-num anim">Theory</div>
+  <h2 class="s-title anim d1">What is RAG?</h2>
+  <p class="s-sub anim d2">Retrieval-Augmented Generation combines document knowledge with AI generation</p>
+  <div style="display:flex; gap:20px; margin-top:36px; max-width:800px;">
+    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; text-align:center;">
+      <div style="font-size:28px; margin-bottom:8px;">💬</div>
+      <h4 style="font-size:14px; font-weight:700; margin-bottom:6px;">Without RAG</h4>
+      <p style="font-size:11px; color:var(--text-dim); line-height:1.5;">LLM generates from training data only. May hallucinate. No grounding in your specific documents.</p>
+      <div style="margin-top:12px; padding:8px; border-radius:8px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.12); font-size:10px; color:var(--red);">Generic · Unverifiable · No sources</div>
+    </div>
+    <div style="display:flex; align-items:center; font-size:24px; color:var(--text-dim);">→</div>
+    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; text-align:center;">
+      <div style="font-size:28px; margin-bottom:8px;">📚</div>
+      <h4 style="font-size:14px; font-weight:700; margin-bottom:6px;">With RAG</h4>
+      <p style="font-size:11px; color:var(--text-dim); line-height:1.5;">Relevant document chunks are retrieved and injected as context. LLM answers grounded in real sources.</p>
+      <div style="margin-top:12px; padding:8px; border-radius:8px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.12); font-size:10px; color:var(--green);">Grounded · Cited · Verifiable</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S6: THEORY — RAG PIPELINE
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="RAG Pipeline">
+  <div class="s-num anim">Theory</div>
+  <h2 class="s-title anim d1">The RAG Pipeline</h2>
+  <p class="s-sub anim d2">From document upload to cited, AI-generated material</p>
+  <div class="rag-flow">
+    <div class="rag-step anim d2"><div class="num">01</div><div class="ico">📄</div><h4>Upload</h4><p>PDF/DOCX uploaded. Split into text chunks per page.</p><div class="rag-arr">→</div></div>
+    <div class="rag-step anim d3"><div class="num">02</div><div class="ico">🧮</div><h4>Embed</h4><p>Each chunk → vector via OpenAI embedding model.</p><div class="rag-arr">→</div></div>
+    <div class="rag-step anim d4"><div class="num">03</div><div class="ico">💾</div><h4>Store</h4><p>Vectors stored in ChromaDB with metadata (page, file, subject).</p><div class="rag-arr">→</div></div>
+    <div class="rag-step anim d5"><div class="num">04</div><div class="ico">🔍</div><h4>Retrieve</h4><p>Query → cosine similarity search finds top-k relevant chunks.</p><div class="rag-arr">→</div></div>
+    <div class="rag-step anim d6"><div class="num">05</div><div class="ico">🧠</div><h4>Generate</h4><p>Chunks injected as context → LLM generates with inline citations.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S7: ARCH — CLIENT
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Arch: Frontend">
+  <div class="s-num anim">Architecture — Layer 1</div>
+  <h2 class="s-title anim d1">Frontend</h2>
+  <p class="s-sub anim d2">Single-page application served as static files</p>
+  <div class="arch-row">
+    <div class="ac anim-s d3" style="--_a:var(--blue); max-width:480px;">
+      <span class="ico">🌐</span>
+      <h4>Vue 3 SPA</h4>
+      <div class="tech">Vuetify 3 · Pinia · TipTap · Vite</div>
+      <ul>
+        <li>5-Step Generation Wizard (Bloom's Taxonomy)</li>
+        <li>Material CRUD + Rich-Text Editor</li>
+        <li>Document Upload & RAG Query Interface</li>
+        <li>JWT Auth with Automatic Token Refresh</li>
+        <li>PDF / HTML Export (jsPDF + html2canvas)</li>
+        <li>Admin Panel, Citation & Subject Settings</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S8: ARCH — PROXY
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Arch: Proxy">
+  <div class="s-num anim">Architecture — Layer 2</div>
+  <h2 class="s-title anim d1">Reverse Proxy</h2>
+  <p class="s-sub anim d2">TLS termination, routing, and security hardening</p>
+  <div class="arch-row">
+    <div class="ac anim-s d3" style="--_a:var(--green); max-width:460px;">
+      <span class="port">:80 / :443</span>
+      <span class="ico">🔀</span>
+      <h4>Nginx + Caddy</h4>
+      <div class="tech">Reverse Proxy · TLS · Rate Limiting</div>
+      <ul>
+        <li><code style="color:var(--green)">/</code> → Vue static files (built at deploy)</li>
+        <li><code style="color:var(--green)">/api/**</code> → Spring Boot backend</li>
+        <li>Rate limits: auth 5r/m, upload 10r/m</li>
+        <li>Security headers: X-Frame, X-Content-Type, Referrer-Policy</li>
+        <li>Let's Encrypt TLS certificates via Caddy</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S9: ARCH — SERVICES
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Arch: Services">
+  <div class="s-num anim">Architecture — Layer 3</div>
+  <h2 class="s-title anim d1">Application Services</h2>
+  <p class="s-sub anim d2">Two backend services — Java gateway + Python AI engine</p>
+  <div class="arch-row">
+    <div class="ac anim d3" style="--_a:var(--purple);">
+      <span class="port">:8081</span>
+      <span class="ico">☕</span>
+      <h4>Spring Boot</h4>
+      <div class="tech">Java 21 · Spring Security · JPA</div>
+      <ul>
+        <li>API Gateway — JWT Authentication</li>
+        <li>Material CRUD + Ownership Isolation</li>
+        <li>User Management & Approval Flow</li>
+        <li>Proxies generation/query → Python</li>
+        <li>Per-User Subject Management</li>
+      </ul>
+      <span class="badge" style="background:rgba(139,92,246,0.1);color:var(--purple);">internal</span>
+    </div>
+    <div class="ac anim d4" style="--_a:var(--cyan);">
+      <span class="port">:8000</span>
+      <span class="ico">🐍</span>
+      <h4>Python RAG Service</h4>
+      <div class="tech">FastAPI · LangChain · ChromaDB</div>
+      <ul>
+        <li>Document Ingestion (PDF/DOCX/TXT)</li>
+        <li>Page-Aware Chunking + Embedding</li>
+        <li>Similarity Search with Scoring</li>
+        <li>RAG Query with Source Citations</li>
+        <li>Bloom's Taxonomy Prompt Engine</li>
+      </ul>
+      <span class="badge" style="background:rgba(6,182,212,0.08);color:var(--cyan);">internal only</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S10: ARCH — DATA
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Arch: Data">
+  <div class="s-num anim">Architecture — Layer 4</div>
+  <h2 class="s-title anim d1">Data Stores</h2>
+  <p class="s-sub anim d2">Relational database for structured data, vector database for semantic search</p>
+  <div class="arch-row">
+    <div class="ac anim d3" style="--_a:var(--amber);">
+      <span class="port">:5432</span>
+      <span class="ico">🐘</span>
+      <h4>PostgreSQL</h4>
+      <div class="tech">Relational Database</div>
+      <ul>
+        <li>Users, Roles, Approval Status</li>
+        <li>Lesson Materials + Tags</li>
+        <li>Subjects (per-user, lazy-seeded)</li>
+        <li>Upload Metadata</li>
+      </ul>
+      <span class="badge" style="background:rgba(245,158,11,0.08);color:var(--amber);">docker volume</span>
+    </div>
+    <div class="ac anim d4" style="--_a:var(--amber);">
+      <span class="ico">🔮</span>
+      <h4>ChromaDB</h4>
+      <div class="tech">Vector Database · Cosine Distance</div>
+      <ul>
+        <li>Document Chunks + Embeddings</li>
+        <li>Metadata: page, filename, subject</li>
+        <li>User-Scoped Similarity Search</li>
+        <li>Relevance Scoring & Ranking</li>
+      </ul>
+      <span class="badge" style="background:rgba(245,158,11,0.08);color:var(--amber);">persistent volume</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S11: ARCH — EXTERNAL + INFRA
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Arch: External">
+  <div class="s-num anim">Architecture — Layer 5</div>
+  <h2 class="s-title anim d1">External Services & Deployment</h2>
+  <p class="s-sub anim d2">Swappable LLM providers via environment variable — zero code changes</p>
+  <div class="arch-row">
+    <div class="ac anim d3" style="--_a:var(--red); max-width:220px;">
+      <span class="ico">🤖</span>
+      <h4>OpenAI API</h4>
+      <div class="tech">Default Provider</div>
+      <ul><li>gpt-4o-mini</li><li>text-embedding-3-small</li></ul>
+    </div>
+    <div class="ac anim d4" style="--_a:var(--red); max-width:220px;">
+      <span class="ico">⚡</span>
+      <h4>Groq API</h4>
+      <div class="tech">Dev Alternative</div>
+      <ul><li>Free tier</li><li>LLM_PROVIDER=groq</li></ul>
+    </div>
+    <div class="ac anim d5" style="--_a:var(--red); max-width:220px; opacity:.4; border-style:dashed;">
+      <span class="ico">🦙</span>
+      <h4>Ollama</h4>
+      <div class="tech">Planned · Local</div>
+      <ul><li>LLM_PROVIDER=ollama</li><li>GPU server</li></ul>
+    </div>
+  </div>
+  <div class="infra-bar anim d6">
+    <div class="infra-stat"><div class="infra-v">2 GB</div><div class="infra-l">RAM</div></div>
+    <div class="infra-d"></div>
+    <div class="infra-stat"><div class="infra-v">2 vCPU</div><div class="infra-l">Compute</div></div>
+    <div class="infra-d"></div>
+    <div class="infra-stat"><div class="infra-v">60 GB</div><div class="infra-l">SSD</div></div>
+    <div class="infra-d"></div>
+    <div class="infra-stat"><div class="infra-v" style="color:var(--amber);">AWS</div><div class="infra-l">Lightsail</div></div>
+    <div class="infra-d"></div>
+    <div class="infra-stat"><div class="infra-v">5</div><div class="infra-l">Containers</div></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S12: LIVE DEMO
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Live Demo">
+  <div class="s-num anim">Demo</div>
+  <h2 class="s-title anim d1">helikonproject.com</h2>
+  <p class="s-sub anim d2">The application running in production</p>
+  <div class="browser-frame anim-s d3">
+    <div class="browser-bar">
+      <div class="bd r"></div><div class="bd y"></div><div class="bd g"></div>
+      <div class="browser-url">https://helikonproject.com</div>
+    </div>
+    <iframe class="browser-body" src="https://helikonproject.com" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S13: THANK YOU
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Thank You">
+  <div class="glow" style="width:600px;height:600px;background:var(--purple);top:30%;left:50%;transform:translateX(-50%);opacity:.08;"></div>
+  <div class="thanks-t anim">Thank You.</div>
+  <div class="thanks-s anim d1">Questions? We'd love to hear your feedback.</div>
+  <div class="thanks-url anim d2">helikonproject.com</div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════════════ -->
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const nav = document.getElementById('slide-nav');
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  let current = 0;
+  let locked = false;
+
+  // Build nav dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    nav.appendChild(d);
+  });
+  const dots = nav.querySelectorAll('.nav-dot');
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= slides.length || idx === current || locked) return;
+    locked = true;
+
+    const prev = slides[current];
+    const next = slides[idx];
+    const goingDown = idx > current;
+
+    // Exit current
+    prev.classList.remove('active');
+    prev.classList.add(goingDown ? 'exit-up' : '');
+    prev.style.transform = goingDown ? 'translateY(-30px)' : 'translateY(30px)';
+    prev.style.opacity = '0';
+
+    // Reset anim children on exit
+    setTimeout(() => {
+      prev.classList.remove('exit-up');
+      prev.style.transform = '';
+      prev.querySelectorAll('.anim, .anim-s').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = el.classList.contains('anim-s') ? 'scale(0.92)' : 'translateY(30px)';
+      });
+    }, 300);
+
+    // Prepare next
+    next.style.transform = goingDown ? 'translateY(30px)' : 'translateY(-30px)';
+    next.style.opacity = '0';
+    next.style.pointerEvents = 'auto';
+
+    // Activate next after tiny delay
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        next.classList.add('active');
+        next.style.transform = 'translateY(0)';
+        next.style.opacity = '1';
+      });
+    });
+
+    current = idx;
+    updateUI();
+    setTimeout(() => { locked = false; }, 500);
+  }
+
+  function updateUI() {
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    progress.style.width = (current / (slides.length - 1) * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + slides.length;
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)) {
+      e.preventDefault();
+      goTo(current + 1);
+    } else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) {
+      e.preventDefault();
+      goTo(current - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      goTo(slides.length - 1);
+    }
+  });
+
+  // Mouse wheel
+  let wheelTimeout;
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (wheelTimeout) return;
+    wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 600);
+    if (e.deltaY > 0) goTo(current + 1);
+    else if (e.deltaY < 0) goTo(current - 1);
+  }, { passive: false });
+
+  // Touch swipe
+  let touchY = 0;
+  document.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; });
+  document.addEventListener('touchend', (e) => {
+    const dy = touchY - e.changedTouches[0].clientY;
+    if (Math.abs(dy) > 50) {
+      dy > 0 ? goTo(current + 1) : goTo(current - 1);
+    }
+  });
+
+  // Init
+  updateUI();
+  // Reset all non-active slide animations
+  slides.forEach((s, i) => {
+    if (i !== 0) {
+      s.querySelectorAll('.anim, .anim-s').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = el.classList.contains('anim-s') ? 'scale(0.92)' : 'translateY(30px)';
+      });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

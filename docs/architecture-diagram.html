@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helikon — Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #08090c;
+    --surface: #111318;
+    --border: #1e2028;
+    --text: #e4e6eb;
+    --text-dim: #6e7380;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-cyan: #06b6d4;
+    --glow-blue: rgba(59, 130, 246, 0.15);
+    --glow-purple: rgba(139, 92, 246, 0.15);
+    --glow-green: rgba(16, 185, 129, 0.12);
+    --glow-amber: rgba(245, 158, 11, 0.12);
+    --glow-red: rgba(239, 68, 68, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #1e2028 transparent;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Sections ── */
+  section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 40px;
+    position: relative;
+  }
+
+  /* ── Scroll-triggered fade ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(60px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.12s; }
+  .reveal-delay-2 { transition-delay: 0.24s; }
+  .reveal-delay-3 { transition-delay: 0.36s; }
+  .reveal-delay-4 { transition-delay: 0.48s; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-overline {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 96px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 500px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulse-down 2s ease-in-out infinite;
+  }
+  .scroll-hint .chevron {
+    width: 20px;
+    height: 20px;
+    border-right: 2px solid var(--text-dim);
+    border-bottom: 2px solid var(--text-dim);
+    transform: rotate(45deg);
+  }
+  @keyframes pulse-down {
+    0%, 100% { opacity: 0.4; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(6px); }
+  }
+
+  /* ── Section headers ── */
+  .section-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .section-number {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .section-subtitle {
+    font-size: 16px;
+    color: var(--text-dim);
+    font-weight: 400;
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* ── Cards ── */
+  .card-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1100px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    min-width: 280px;
+    max-width: 380px;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent-blue)), transparent);
+    opacity: 0.6;
+  }
+  .card-glow {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  .card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+  .card-tech {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .card ul {
+    list-style: none;
+  }
+  .card li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #b0b4bc;
+    padding-left: 16px;
+    position: relative;
+  }
+  .card li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--card-accent, var(--accent-blue));
+    opacity: 0.5;
+  }
+
+  .card-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 12px;
+  }
+
+  .card-port {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--text-dim);
+  }
+
+  /* ── Color variants ── */
+  .card-blue { --card-accent: var(--accent-blue); }
+  .card-blue .card-glow { background: var(--accent-blue); }
+  .card-blue .card-icon { background: var(--glow-blue); color: var(--accent-blue); }
+  .card-blue:hover { border-color: rgba(59,130,246,0.3); }
+
+  .card-green { --card-accent: var(--accent-green); }
+  .card-green .card-glow { background: var(--accent-green); }
+  .card-green .card-icon { background: var(--glow-green); color: var(--accent-green); }
+  .card-green:hover { border-color: rgba(16,185,129,0.3); }
+
+  .card-purple { --card-accent: var(--accent-purple); }
+  .card-purple .card-glow { background: var(--accent-purple); }
+  .card-purple .card-icon { background: var(--glow-purple); color: var(--accent-purple); }
+  .card-purple:hover { border-color: rgba(139,92,246,0.3); }
+
+  .card-cyan { --card-accent: var(--accent-cyan); }
+  .card-cyan .card-glow { background: var(--accent-cyan); }
+  .card-cyan .card-icon { background: rgba(6,182,212,0.12); color: var(--accent-cyan); }
+  .card-cyan:hover { border-color: rgba(6,182,212,0.3); }
+
+  .card-amber { --card-accent: var(--accent-amber); }
+  .card-amber .card-glow { background: var(--accent-amber); }
+  .card-amber .card-icon { background: var(--glow-amber); color: var(--accent-amber); }
+  .card-amber:hover { border-color: rgba(245,158,11,0.3); }
+
+  .card-red { --card-accent: var(--accent-red); }
+  .card-red .card-glow { background: var(--accent-red); }
+  .card-red .card-icon { background: var(--glow-red); color: var(--accent-red); }
+  .card-red:hover { border-color: rgba(239,68,68,0.3); }
+
+  /* ── Connector lines between sections ── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+  }
+  .connector-line {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(180deg, var(--border), rgba(59,130,246,0.3), var(--border));
+  }
+  .connector-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+  }
+  .connector-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    box-shadow: 0 0 10px var(--accent-blue);
+  }
+
+  /* ── Docker boundary ── */
+  .docker-boundary {
+    border: 1px dashed rgba(59,130,246,0.2);
+    border-radius: 24px;
+    padding: 40px 30px 30px;
+    position: relative;
+    max-width: 1100px;
+    width: 100%;
+  }
+  .docker-label {
+    position: absolute;
+    top: -12px;
+    left: 32px;
+    background: var(--bg);
+    padding: 2px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 6px;
+  }
+  .docker-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+  }
+
+  /* ── Planned card ── */
+  .card-planned {
+    opacity: 0.45;
+    border-style: dashed;
+  }
+  .card-planned h3::after {
+    content: 'planned';
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* ── Flow diagram (data flow section) ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 1000px;
+  }
+  .flow-step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    text-align: center;
+    min-width: 140px;
+    transition: transform 0.3s;
+  }
+  .flow-step:hover { transform: scale(1.04); }
+  .flow-step-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  .flow-step-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .flow-step-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  /* ── Infra bar ── */
+  .infra-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 16px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 700px;
+    margin-top: 40px;
+  }
+  .infra-stat {
+    text-align: center;
+  }
+  .infra-stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .infra-stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .infra-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border);
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<section class="hero">
+  <div class="reveal hero-overline">System Architecture</div>
+  <h1 class="reveal reveal-delay-1">Helikon</h1>
+  <p class="reveal reveal-delay-2">
+    AI-powered CLIL material generation with Retrieval-Augmented Generation, built for teachers.
+  </p>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="chevron"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CLIENT ═══════════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <div class="section-number">01 — Client</div>
+    <h2 class="section-title">Frontend</h2>
+    <p class="section-subtitle">Single-page application served as static files through Nginx</p>
+  </div>
+  <div class="card-row">
+    <div class="card card-blue reveal reveal-delay-1" style="max-width: 520px;">
+      <div class="card-glow"></div>
+      <div class="card-icon">🌐</div>
+      <h3>Vue 3 SPA</h3>
+      <div class="card-tech">Vuetify 3 · Pinia · Vite · TipTap</div>
+      <ul>
+        <li>5-Step Generation Wizard (Bloom's Taxonomy)</li>
+        <li>Material CRUD with Rich-Text Editor</li>
+        <li>Document Upload &amp; RAG Query Interface</li>
+        <li>JWT Auth with Automatic Token Refresh</li>
+        <li>PDF / HTML Export (jsPDF + html2canvas)</li>
+        <li>Admin Panel, Citation &amp; Subject Settings</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Connector -->
+<div class="connector reveal">
+  <div class="connector-line"></div>
+  <div class="connector-label">HTTPS</div>
+  <div class="connector-line"></div>
+</div>
+
+<!-- ═══════════════════════ DOCKER ═══════════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <div class="section-number">02 — Infrastructure</div>
+    <h2 class="section-title">Docker Compose</h2>
+    <p class="section-subtitle">Five containers on a shared bridge network, deployed on AWS Lightsail</p>
+  </div>
+
+  <div class="docker-boundary reveal">
+    <div class="docker-label">🐳 helikon bridge network</div>
+    <div class="docker-inner">
+
+      <!-- Proxy -->
+      <div class="card-row">
+        <div class="card card-green reveal reveal-delay-1" style="max-width: 460px;">
+          <div class="card-glow"></div>
+          <div class="card-port">:80 / :443</div>
+          <div class="card-icon">🔀</div>
+          <h3>Nginx + Caddy</h3>
+          <div class="card-tech">Reverse Proxy · TLS · Rate Limiting</div>
+          <ul>
+            <li><code>/</code> → Vue static files</li>
+            <li><code>/api/**</code> → Spring Boot</li>
+            <li>Rate limits: auth 5r/m, upload 10r/m</li>
+            <li>Security headers &amp; Let's Encrypt TLS</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="connector reveal" style="padding: 10px 0;">
+        <div class="connector-dot"></div>
+        <div class="connector-line" style="height: 30px;"></div>
+        <div class="connector-label">/api/v1/*</div>
+        <div class="connector-line" style="height: 30px;"></div>
+        <div class="connector-dot"></div>
+      </div>
+
+      <!-- Services -->
+      <div class="card-row">
+        <div class="card card-purple reveal reveal-delay-1">
+          <div class="card-glow"></div>
+          <div class="card-port">:8081</div>
+          <div class="card-icon">☕</div>
+          <h3>Spring Boot</h3>
+          <div class="card-tech">Java 21 · Spring Security · JPA</div>
+          <ul>
+            <li>API Gateway — JWT Authentication</li>
+            <li>Material CRUD + Ownership Isolation</li>
+            <li>User Management &amp; Approval Flow</li>
+            <li>Proxies generation/query → Python</li>
+            <li>Per-User Subject Management</li>
+          </ul>
+          <div class="card-badge" style="background: rgba(139,92,246,0.15); color: var(--accent-purple); border: 1px solid rgba(139,92,246,0.25);">internal</div>
+        </div>
+
+        <div class="card card-cyan reveal reveal-delay-2">
+          <div class="card-glow"></div>
+          <div class="card-port">:8000</div>
+          <div class="card-icon">🐍</div>
+          <h3>Python RAG Service</h3>
+          <div class="card-tech">FastAPI · LangChain · ChromaDB</div>
+          <ul>
+            <li>Document Ingestion (PDF/DOCX/TXT)</li>
+            <li>Page-Aware Chunking + Embedding</li>
+            <li>Similarity Search with Scoring</li>
+            <li>RAG Query with Source Citations</li>
+            <li>Bloom's Taxonomy Prompt Engine</li>
+          </ul>
+          <div class="card-badge" style="background: rgba(6,182,212,0.12); color: var(--accent-cyan); border: 1px solid rgba(6,182,212,0.2);">internal only</div>
+        </div>
+      </div>
+
+      <!-- Connector -->
+      <div class="connector reveal" style="padding: 10px 0;">
+        <div class="connector-dot"></div>
+        <div class="connector-line" style="height: 20px;"></div>
+        <div style="display: flex; gap: 80px;">
+          <div class="connector-label">JDBC</div>
+          <div class="connector-label">Embedded</div>
+        </div>
+        <div class="connector-line" style="height: 20px;"></div>
+        <div class="connector-dot"></div>
+      </div>
+
+      <!-- Data -->
+      <div class="card-row">
+        <div class="card card-amber reveal reveal-delay-1">
+          <div class="card-glow"></div>
+          <div class="card-port">:5432</div>
+          <div class="card-icon">🐘</div>
+          <h3>PostgreSQL</h3>
+          <div class="card-tech">Relational Database</div>
+          <ul>
+            <li>Users, Roles, Approval Status</li>
+            <li>Lesson Materials + Tags</li>
+            <li>Subjects (per-user)</li>
+          </ul>
+          <div class="card-badge" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.2);">docker volume</div>
+        </div>
+
+        <div class="card card-amber reveal reveal-delay-2">
+          <div class="card-glow"></div>
+          <div class="card-icon">🔮</div>
+          <h3>ChromaDB</h3>
+          <div class="card-tech">Vector Database · Cosine Distance</div>
+          <ul>
+            <li>Document Chunks + Embeddings</li>
+            <li>Metadata: page, filename, subject</li>
+            <li>User-Scoped Similarity Search</li>
+          </ul>
+          <div class="card-badge" style="background: rgba(245,158,11,0.12); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.2);">persistent volume</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Connector -->
+<div class="connector reveal">
+  <div class="connector-line"></div>
+  <div class="connector-label">Cloud API Calls</div>
+  <div class="connector-line"></div>
+</div>
+
+<!-- ═══════════════════════ EXTERNAL ═══════════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <div class="section-number">03 — External Services</div>
+    <h2 class="section-title">LLM Providers</h2>
+    <p class="section-subtitle">Swappable via environment variable — zero code changes</p>
+  </div>
+  <div class="card-row">
+    <div class="card card-red reveal reveal-delay-1">
+      <div class="card-glow"></div>
+      <div class="card-icon">🤖</div>
+      <h3>OpenAI API</h3>
+      <div class="card-tech">Default Provider</div>
+      <ul>
+        <li>gpt-4o-mini (generation)</li>
+        <li>text-embedding-3-small (RAG)</li>
+      </ul>
+    </div>
+
+    <div class="card card-red reveal reveal-delay-2">
+      <div class="card-glow"></div>
+      <div class="card-icon">⚡</div>
+      <h3>Groq API</h3>
+      <div class="card-tech">Alternative Provider</div>
+      <ul>
+        <li>Free tier for development</li>
+        <li>LLM_PROVIDER=groq</li>
+      </ul>
+    </div>
+
+    <div class="card card-red card-planned reveal reveal-delay-3">
+      <div class="card-glow"></div>
+      <div class="card-icon">🦙</div>
+      <h3>Ollama</h3>
+      <div class="card-tech">Local LLM · GPU Server</div>
+      <ul>
+        <li>LLM_PROVIDER=ollama</li>
+        <li>Zero code change swap</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ DATA FLOW ═══════════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <div class="section-number">04 — Data Flow</div>
+    <h2 class="section-title">Generation Pipeline</h2>
+    <p class="section-subtitle">From teacher input to AI-generated CLIL material</p>
+  </div>
+  <div class="flow reveal reveal-delay-1">
+    <div class="flow-step">
+      <div class="flow-step-icon">✏️</div>
+      <div class="flow-step-title">Wizard</div>
+      <div class="flow-step-sub">5-step form</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-icon">☕</div>
+      <div class="flow-step-title">Spring Boot</div>
+      <div class="flow-step-sub">JWT + proxy</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-icon">🔍</div>
+      <div class="flow-step-title">RAG Retrieval</div>
+      <div class="flow-step-sub">ChromaDB search</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-icon">🧠</div>
+      <div class="flow-step-title">LLM</div>
+      <div class="flow-step-sub">Bloom's prompt</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-icon">📄</div>
+      <div class="flow-step-title">HTML + Citations</div>
+      <div class="flow-step-sub">with sources</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-step-icon">💾</div>
+      <div class="flow-step-title">PostgreSQL</div>
+      <div class="flow-step-sub">persist + export</div>
+    </div>
+  </div>
+
+  <!-- Infra bar -->
+  <div class="infra-bar reveal reveal-delay-2">
+    <div class="infra-stat">
+      <div class="infra-stat-value">2 GB</div>
+      <div class="infra-stat-label">RAM</div>
+    </div>
+    <div class="infra-divider"></div>
+    <div class="infra-stat">
+      <div class="infra-stat-value">2 vCPU</div>
+      <div class="infra-stat-label">Compute</div>
+    </div>
+    <div class="infra-divider"></div>
+    <div class="infra-stat">
+      <div class="infra-stat-value">60 GB</div>
+      <div class="infra-stat-label">SSD</div>
+    </div>
+    <div class="infra-divider"></div>
+    <div class="infra-stat">
+      <div class="infra-stat-value" style="color: var(--accent-amber);">AWS</div>
+      <div class="infra-stat-label">Lightsail</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Helikon — Diploma Project · 2025
+</footer>
+
+<!-- ═══════════════════════ SCROLL REVEAL JS ═══════════════════════ -->
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -60px 0px'
+  });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
