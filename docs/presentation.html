@@ -307,16 +307,12 @@
     overflow: hidden;
     border: 2px solid var(--border);
   }
-  .t-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .t-photo svg { width:100%; height:100%; display:block; }
   .t-ph {
     width:100%; height:100%;
     display:flex; align-items:center; justify-content:center;
     font-size:22px; font-weight:800; color:#fff;
   }
-  .team-card:nth-child(1) .t-ph { background:linear-gradient(135deg,#1e40af,#3b82f6); }
-  .team-card:nth-child(2) .t-ph { background:linear-gradient(135deg,#5b21b6,#8b5cf6); }
-  .team-card:nth-child(3) .t-ph { background:linear-gradient(135deg,#065f46,#10b981); }
-  .team-card:nth-child(4) .t-ph { background:linear-gradient(135deg,#0e7490,#06b6d4); }
   .t-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
   .t-role { font-size: 11px; color: var(--text-dim); }
   .t-badge {
@@ -386,81 +382,518 @@
   .diff-item h4 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
   .diff-item p { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
 
-  /* ═════════ THEORY: RAG VISUAL ═════════ */
-  .rag-flow {
+  /* ═════════ THEORY: RAG COMPARISON ═════════ */
+  .rag-compare {
     display: flex;
-    gap: 0;
+    gap: 32px;
+    margin-top: 36px;
     max-width: 960px;
-    margin-top: 40px;
+    width: 100%;
   }
-  .rag-step {
+  .rag-compare-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .rag-side {
     flex: 1;
-    padding: 24px 16px;
-    text-align: center;
     background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 26px;
     position: relative;
-    transition: transform 0.3s;
+    overflow: hidden;
   }
-  .rag-step:first-child { border-radius: 16px 0 0 16px; }
-  .rag-step:last-child { border-radius: 0 16px 16px 0; }
-  .rag-step:not(:last-child) { border-right: none; }
-  .rag-step:hover { transform: translateY(-3px); z-index: 2; border-radius: 16px; border: 1px solid rgba(59,130,246,0.25); }
-  .rag-step .num { font-size: 9px; font-weight: 700; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; }
-  .rag-step .ico { font-size: 28px; margin-bottom: 10px; }
-  .rag-step h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-  .rag-step p { font-size: 10px; color: var(--text-dim); line-height: 1.4; }
-  .rag-arr {
+  .rag-side::before {
+    content: '';
     position: absolute;
-    right: -10px; top: 50%; transform: translateY(-50%);
-    width: 20px; height: 20px;
-    background: var(--bg);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 3;
-    font-size: 10px; color: var(--blue);
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 20px 20px 0 0;
+  }
+  .rag-side.bad::before { background: var(--red); }
+  .rag-side.good::before { background: var(--green); }
+  .rag-side-icon { font-size: 32px; margin-bottom: 12px; }
+  .rag-side h4 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+  .rag-side p { font-size: 14px; color: var(--text-mid); line-height: 1.7; margin-bottom: 16px; }
+  .rag-side-flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .rag-flow-node {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface-2);
     border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .rag-flow-arrow { font-size: 14px; color: var(--text-dim); }
+  .rag-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .rag-tag {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rag-tag.red { background: rgba(239,68,68,0.08); color: var(--red); border: 1px solid rgba(239,68,68,0.15); }
+  .rag-tag.green { background: rgba(16,185,129,0.08); color: var(--green); border: 1px solid rgba(16,185,129,0.15); }
+
+  /* ═════════ THEORY: RAG PIPELINE ═════════ */
+  .pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    max-width: 1100px;
+    width: 100%;
+    margin-top: 32px;
+    position: relative;
+  }
+  .pipe-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 16px 18px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .pipe-card:first-child { border-radius: 18px 0 0 18px; }
+  .pipe-card:last-child { border-radius: 0 18px 18px 0; }
+  .pipe-card:not(:last-child) { border-right: none; }
+  .pipe-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .pipe-card:nth-child(1)::before { background: var(--blue); }
+  .pipe-card:nth-child(2)::before { background: var(--purple); }
+  .pipe-card:nth-child(3)::before { background: var(--cyan); }
+  .pipe-card:nth-child(4)::before { background: var(--amber); }
+  .pipe-card:nth-child(5)::before { background: var(--green); }
+  .pipe-num {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .pipe-ico {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .pipe-card:nth-child(1) .pipe-ico { background: rgba(59,130,246,0.1); }
+  .pipe-card:nth-child(2) .pipe-ico { background: rgba(139,92,246,0.1); }
+  .pipe-card:nth-child(3) .pipe-ico { background: rgba(6,182,212,0.1); }
+  .pipe-card:nth-child(4) .pipe-ico { background: rgba(245,158,11,0.1); }
+  .pipe-card:nth-child(5) .pipe-ico { background: rgba(16,185,129,0.1); }
+  .pipe-card h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+  .pipe-card p { font-size: 12px; color: var(--text-mid); line-height: 1.5; margin-bottom: 10px; }
+  .pipe-detail {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: var(--surface-2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    width: 100%;
+    line-height: 1.4;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .pipe-arrow {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pipe-arrow svg {
+    width: 12px;
+    height: 12px;
   }
 
-  /* ═════════ THEORY: DIAGRAM ═════════ */
-  .theory-diagram {
-    max-width: 700px;
+  /* Pipeline data flow bar */
+  .pipe-flow-bar {
+    max-width: 1100px;
     width: 100%;
-    margin-top: 40px;
-  }
-  .td-row {
+    margin-top: 16px;
     display: flex;
-    gap: 14px;
+    align-items: center;
     justify-content: center;
+    gap: 6px;
+  }
+  .pfb-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pfb-track {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pfb-track::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    animation: pipeFlow 2.5s ease-in-out infinite;
+  }
+  @keyframes pipeFlow {
+    0% { background: var(--blue); width: 0%; }
+    20% { background: var(--purple); width: 25%; }
+    40% { background: var(--cyan); width: 50%; }
+    60% { background: var(--amber); width: 75%; }
+    80%, 100% { background: var(--green); width: 100%; }
+  }
+
+  /* ═════════ CODE TERMINAL ═════════ */
+  .terminal {
+    width: 100%;
+    max-width: 900px;
+    background: #0d1117;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #21262d;
+    margin-top: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .terminal-bar {
+    height: 36px;
+    background: #161b22;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 8px;
+  }
+  .terminal-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    color: #484f58;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .terminal-body {
+    padding: 20px 22px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 300px;
+    position: relative;
+    overflow: hidden;
+  }
+  .code-line {
+    opacity: 0;
+    transform: translateY(6px);
+    white-space: pre;
+  }
+  .code-line.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .code-line .comment { color: #8b949e; }
+  .code-line .keyword { color: #ff7b72; }
+  .code-line .func { color: #d2a8ff; }
+  .code-line .string { color: #a5d6ff; }
+  .code-line .param { color: #ffa657; }
+  .code-line .var { color: #79c0ff; }
+  .code-line .op { color: #c9d1d9; }
+  .code-line .num { color: #79c0ff; }
+  .code-line .cls { color: #7ee787; }
+  .terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: #58a6ff;
+    animation: cursorBlink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+  }
+  @keyframes cursorBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* ═════════ EMBEDDING VIZ ═════════ */
+  .embed-viz {
+    width: 100%;
+    max-width: 960px;
+    margin-top: 28px;
+    position: relative;
+    height: 380px;
+  }
+  .embed-viz canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .embed-phase-strip {
+    display: flex;
+    gap: 8px;
+    max-width: 960px;
+    width: 100%;
+    margin-top: 14px;
+  }
+  .embed-phase-chip {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    opacity: 0.4;
+    transition: all 0.5s;
+  }
+  .embed-phase-chip.active {
+    opacity: 1;
+    color: var(--text);
+    border-color: var(--blue);
+    background: rgba(59,130,246,0.06);
+  }
+  .embed-phase-chip.done {
+    opacity: 0.7;
+    color: var(--text-mid);
+  }
+
+  /* ═════════ VECTOR SPACE ═════════ */
+  .vecspace-wrap {
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 28px;
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .vecspace-canvas-wrap {
+    flex: 1.4;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    min-height: 380px;
+  }
+  .vecspace-canvas-wrap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .vecspace-legend {
+    flex: 0.6;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vec-stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    opacity: 0.3;
+    transition: opacity 0.6s, border-color 0.6s, transform 0.4s;
+    transform: translateX(10px);
+  }
+  .vec-stage.active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .vec-stage.active.s1 { border-color: var(--blue); }
+  .vec-stage.active.s2 { border-color: var(--purple); }
+  .vec-stage.active.s3 { border-color: var(--amber); }
+  .vec-stage.active.s4 { border-color: var(--green); }
+  .vec-stage h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .vec-stage p { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+  .vec-stage .step-num {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-dim);
     margin-bottom: 6px;
   }
-  .td-box {
+
+  /* ═════════ TECHNICAL DEEP-DIVE ═════════ */
+  .pillar-row {
+    display: flex;
+    gap: 18px;
+    max-width: 920px;
+    width: 100%;
+    margin-top: 32px;
+  }
+  .pillar {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .pillar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .pillar:nth-child(1)::before { background: var(--blue); }
+  .pillar:nth-child(2)::before { background: var(--purple); }
+  .pillar:nth-child(3)::before { background: var(--green); }
+  .pillar .p-ico { font-size: 26px; margin-bottom: 10px; }
+  .pillar h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+  .pillar p { font-size: 12px; color: var(--text-mid); line-height: 1.55; }
+
+  .td-grid {
+    display: grid;
+    gap: 12px;
+    max-width: 940px;
+    width: 100%;
+    margin-top: 28px;
+  }
+  .td-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .td-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .td-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .td-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    position: relative;
+  }
+  .td-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+  .td-card p { font-size: 12px; color: var(--text-mid); line-height: 1.5; }
+  .td-card .td-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 700px;
+    width: 100%;
+    margin-top: 28px;
+  }
+  .layer-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 16px 20px;
-    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .layer-bar::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .layer-bar .l-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+  }
+  .layer-bar h4 { font-size: 14px; font-weight: 700; }
+  .layer-bar p { font-size: 12px; color: var(--text-mid); line-height: 1.4; margin-top: 2px; }
+
+  .metric-strip {
+    display: flex;
+    gap: 10px;
+    max-width: 880px;
+    width: 100%;
+    margin-top: 24px;
+  }
+  .metric-chip {
     flex: 1;
-    max-width: 300px;
-    transition: transform 0.3s;
+    padding: 14px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-align: center;
   }
-  .td-box:hover { transform: translateY(-2px); }
-  .td-box .ico { font-size: 22px; margin-bottom: 6px; display: block; }
-  .td-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-  .td-box p { font-size: 10px; color: var(--text-dim); }
-  .td-conn {
-    display: flex; justify-content: center; padding: 4px 0;
+  .metric-chip h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .metric-chip p { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+  .takeaway-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 760px;
+    width: 100%;
+    margin-top: 32px;
   }
-  .td-conn-line {
-    width: 1px; height: 20px;
-    background: linear-gradient(180deg, var(--border), rgba(59,130,246,0.2), var(--border));
+  .takeaway-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
   }
-  .td-label {
-    font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--text-dim);
-    padding: 2px 10px; border: 1px solid var(--border);
-    border-radius: 10px; background: var(--surface);
+  .takeaway-item .ta-dot {
+    flex-shrink: 0;
+    width: 8px; height: 8px;
+    border-radius: 50%;
   }
+  .takeaway-item p { font-size: 14px; color: var(--text-mid); line-height: 1.5; }
 
   /* ═════════ ARCH CARDS ═════════ */
   .arch-row {
@@ -619,6 +1052,180 @@
   .infra-v { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
   .infra-l { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
   .infra-d { width: 1px; height: 32px; background: var(--border); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RESPONSIVE — TABLET (≤ 1024px)
+     ═══════════════════════════════════════════════════════════════ */
+  @media (max-width: 1024px) {
+    .slide { padding: 40px 48px; }
+
+    /* Grids → fewer columns */
+    .team-grid { grid-template-columns: repeat(2, 1fr); max-width: 520px; gap: 16px; }
+    .feat-grid { grid-template-columns: repeat(2, 1fr); max-width: 600px; gap: 14px; }
+    .pipeline-grid { grid-template-columns: repeat(3, 1fr); max-width: 700px; }
+    .pipe-card:first-child { border-radius: 14px 0 0 0; }
+    .pipe-card:last-child { border-radius: 0 0 14px 0; }
+    .pipe-card:nth-child(3) { border-radius: 0 14px 0 0; border-right: none; }
+    .pipe-arrow { display: none; }
+
+    /* RAG compare → stack */
+    .rag-compare { flex-direction: column; gap: 16px; max-width: 600px; }
+    .rag-compare-vs { display: none; }
+
+    /* Technical deep-dive */
+    .pillar-row { flex-wrap: wrap; gap: 14px; }
+    .pillar { min-width: calc(50% - 10px); }
+    .td-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .td-grid.cols-4 { grid-template-columns: 1fr 1fr; }
+    .metric-strip { flex-wrap: wrap; }
+    .metric-chip { min-width: calc(33% - 8px); }
+
+    /* Canvases */
+    .embed-viz { height: 320px; max-width: 100%; }
+    .vecspace-wrap { flex-direction: column; gap: 16px; max-width: 100%; }
+    .vecspace-canvas-wrap { min-height: 320px; }
+    .vecspace-legend { flex-direction: row; flex-wrap: wrap; }
+    .vec-stage { flex: 1; min-width: calc(50% - 8px); }
+
+    /* Architecture */
+    .arch-row { max-width: 100%; }
+    .docker-wrap { padding: 24px 16px 16px; }
+    .ac { min-width: 180px; }
+
+    /* Browser frame */
+    .browser-body { height: 400px; }
+
+    /* Terminal */
+    .terminal-body { font-size: 12px; min-height: 250px; padding: 16px 18px; }
+
+    /* Glow orbs */
+    .hero-orb1 { width: 350px; height: 350px; }
+    .hero-orb2 { width: 280px; height: 280px; }
+
+    /* Nav dots */
+    #slide-nav { gap: 6px; right: 12px; }
+    .nav-dot { width: 5px; height: 5px; }
+
+    /* Infra bar */
+    .infra-bar { flex-wrap: wrap; gap: 16px; padding: 12px 20px; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RESPONSIVE — PHONE (≤ 600px)
+     ═══════════════════════════════════════════════════════════════ */
+  @media (max-width: 600px) {
+    .slide { padding: 28px 20px; }
+
+    /* Typography scale-down */
+    .overline { font-size: 10px; letter-spacing: 3px; margin-bottom: 10px; }
+    .s-num { font-size: 9px; letter-spacing: 2px; }
+    .s-sub { font-size: 13px; max-width: 100%; }
+    .hero-tagline { font-size: 14px; }
+    .hero-chips span { font-size: 10px; padding: 4px 10px; }
+    .scroll-cue { font-size: 9px; bottom: 18px; }
+
+    /* Grids → single column */
+    .team-grid { grid-template-columns: repeat(2, 1fr); max-width: 100%; gap: 12px; margin-top: 24px; }
+    .team-card { padding: 18px 12px 16px; border-radius: 14px; }
+    .t-photo { width: 52px; height: 52px; margin-bottom: 10px; }
+    .t-name { font-size: 13px; }
+    .t-role { font-size: 10px; }
+    .t-badge { font-size: 9px; padding: 2px 8px; }
+
+    .feat-grid { grid-template-columns: 1fr; max-width: 100%; gap: 10px; margin-top: 24px; }
+    .feat { padding: 18px 16px; }
+    .feat h4 { font-size: 14px; }
+    .feat p { font-size: 11px; }
+
+    .pipeline-grid { grid-template-columns: repeat(2, 1fr); max-width: 100%; }
+    .pipe-card { padding: 14px 10px 12px; }
+    .pipe-ico { width: 40px; height: 40px; font-size: 18px; }
+    .pipe-card h4 { font-size: 13px; }
+    .pipe-card p { font-size: 11px; }
+    .pipe-detail { font-size: 9px; }
+    .pipe-flow-bar { display: none; }
+
+    /* RAG compare */
+    .rag-compare { gap: 12px; }
+    .rag-side { padding: 20px 18px; border-radius: 14px; }
+    .rag-side-icon { font-size: 24px; }
+    .rag-side h4 { font-size: 15px; }
+    .rag-side p { font-size: 12px; }
+    .rag-flow-node { padding: 4px 10px; font-size: 10px; }
+    .rag-tag { padding: 4px 10px; font-size: 10px; }
+
+    /* Diff list */
+    .diff-list { gap: 10px; margin-top: 24px; }
+    .diff-item { padding: 14px; gap: 12px; }
+    .diff-n { width: 30px; height: 30px; font-size: 13px; }
+    .diff-item h4 { font-size: 13px; }
+    .diff-item p { font-size: 11px; }
+
+    /* Terminal */
+    .terminal { margin-top: 20px; }
+    .terminal-body { font-size: 10px; line-height: 1.6; min-height: 220px; padding: 14px 12px; }
+    .code-line { white-space: pre-wrap; word-break: break-all; }
+
+    /* Canvases */
+    .embed-viz { height: 260px; }
+    .embed-phase-strip { flex-wrap: wrap; gap: 6px; }
+    .embed-phase-chip { font-size: 10px; padding: 6px 8px; min-width: calc(50% - 4px); }
+    .vecspace-canvas-wrap { min-height: 260px; }
+    .vec-stage { padding: 12px 14px; }
+    .vec-stage h4 { font-size: 12px; }
+    .vec-stage p { font-size: 10px; }
+
+    /* Technical deep-dive */
+    .pillar-row { flex-direction: column; gap: 10px; }
+    .pillar { padding: 18px 16px; }
+    .pillar h4 { font-size: 14px; }
+    .pillar p { font-size: 11px; }
+    .td-grid.cols-2, .td-grid.cols-3, .td-grid.cols-4 { grid-template-columns: 1fr; }
+    .td-card { padding: 14px 14px; }
+    .td-card h4 { font-size: 13px; }
+    .td-card p { font-size: 11px; }
+    .layer-stack { gap: 8px; }
+    .layer-bar { padding: 12px 14px; gap: 12px; }
+    .layer-bar h4 { font-size: 13px; }
+    .layer-bar p { font-size: 11px; }
+    .metric-strip { flex-wrap: wrap; gap: 8px; }
+    .metric-chip { min-width: calc(50% - 6px); padding: 10px 10px; }
+    .metric-chip h4 { font-size: 12px; }
+    .metric-chip p { font-size: 10px; }
+    .takeaway-list { gap: 8px; }
+    .takeaway-item { padding: 12px 14px; gap: 10px; }
+    .takeaway-item p { font-size: 12px; }
+
+    /* Architecture */
+    .arch-row { flex-direction: column; gap: 12px; }
+    .ac { max-width: 100%; min-width: 0; }
+    .docker-wrap { padding: 20px 12px 12px; }
+    .arch-conn { padding: 4px 0; }
+    .arch-conn-l { height: 12px; }
+
+    /* Browser */
+    .browser-body { height: 280px; }
+    .browser-url { font-size: 10px; }
+
+    /* Thanks */
+    .thanks-s { font-size: 14px; }
+    .thanks-url { font-size: 16px; padding: 8px 20px; }
+
+    /* Glow orbs → smaller */
+    .hero-orb1 { width: 250px; height: 250px; }
+    .hero-orb2 { width: 200px; height: 200px; }
+
+    /* Nav + UI chrome */
+    #slide-nav { display: none; }
+    #counter { font-size: 10px; bottom: 14px; right: 16px; }
+    .key-hint { display: none; }
+
+    /* Infra bar */
+    .infra-bar { flex-wrap: wrap; gap: 12px; padding: 10px 16px; }
+    .infra-v { font-size: 16px; }
+    .infra-l { font-size: 8px; }
+    .infra-d { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -637,7 +1244,7 @@
   <div class="hero-logo anim">
     <img src="../clil-frontend/public/helikonlogo.png" alt="H" onerror="this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;background:linear-gradient(135deg,#1e40af,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:#fff&quot;>H</div>'">
   </div>
-  <div class="overline anim d1">Diploma Project 2024/25</div>
+  <div class="overline anim d1">Diploma Project 2025/26</div>
   <h1 class="big-title anim d2">Helikon</h1>
   <p class="hero-tagline anim d3">AI-powered CLIL material generation with Retrieval-Augmented Generation, built for teachers.</p>
   <div class="hero-chips anim d4">
@@ -656,8 +1263,13 @@
   <div class="team-grid">
     <div class="team-card anim d3">
       <div class="t-photo">
-        <img src="photos/danilo.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="t-ph" style="display:none">DS</div>
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e40af"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+          <rect width="80" height="80" fill="url(#g1)"/>
+          <circle cx="40" cy="30" r="13" fill="#fff" opacity="0.9"/>
+          <ellipse cx="40" cy="72" rx="22" ry="20" fill="#fff" opacity="0.9"/>
+          <text x="40" y="35" text-anchor="middle" font-size="12" font-weight="800" fill="#1e40af" font-family="Inter,sans-serif">DS</text>
+        </svg>
       </div>
       <div class="t-name">Danilo Stoilovski</div>
       <div class="t-role">Frontend Development</div>
@@ -665,8 +1277,13 @@
     </div>
     <div class="team-card anim d4">
       <div class="t-photo">
-        <img src="photos/alexander.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="t-ph" style="display:none">AH</div>
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5b21b6"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+          <rect width="80" height="80" fill="url(#g2)"/>
+          <circle cx="40" cy="30" r="13" fill="#fff" opacity="0.9"/>
+          <ellipse cx="40" cy="72" rx="22" ry="20" fill="#fff" opacity="0.9"/>
+          <text x="40" y="35" text-anchor="middle" font-size="12" font-weight="800" fill="#5b21b6" font-family="Inter,sans-serif">AH</text>
+        </svg>
       </div>
       <div class="t-name">Alexander Hiroma</div>
       <div class="t-role">Backend Development</div>
@@ -674,8 +1291,13 @@
     </div>
     <div class="team-card anim d5">
       <div class="t-photo">
-        <img src="photos/bernhard.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="t-ph" style="display:none">BA</div>
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#065f46"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
+          <rect width="80" height="80" fill="url(#g3)"/>
+          <circle cx="40" cy="30" r="13" fill="#fff" opacity="0.9"/>
+          <ellipse cx="40" cy="72" rx="22" ry="20" fill="#fff" opacity="0.9"/>
+          <text x="40" y="35" text-anchor="middle" font-size="12" font-weight="800" fill="#065f46" font-family="Inter,sans-serif">BA</text>
+        </svg>
       </div>
       <div class="t-name">Bernhard Aichinger</div>
       <div class="t-role">Frontend Development</div>
@@ -683,8 +1305,13 @@
     </div>
     <div class="team-card anim d6">
       <div class="t-photo">
-        <img src="photos/oliwier.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="t-ph" style="display:none">OP</div>
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0e7490"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+          <rect width="80" height="80" fill="url(#g4)"/>
+          <circle cx="40" cy="30" r="13" fill="#fff" opacity="0.9"/>
+          <ellipse cx="40" cy="72" rx="22" ry="20" fill="#fff" opacity="0.9"/>
+          <text x="40" y="35" text-anchor="middle" font-size="12" font-weight="800" fill="#0e7490" font-family="Inter,sans-serif">OP</text>
+        </svg>
       </div>
       <div class="t-name">Oliwier Przewlocki</div>
       <div class="t-role">Backend · Project Lead</div>
@@ -734,30 +1361,54 @@
   <div class="glow" style="width:400px;height:400px;background:var(--amber);top:15%;left:10%;"></div>
   <div class="s-num anim">Theory</div>
   <h2 class="s-title anim d1">CLIL & Bloom's Taxonomy</h2>
-  <p class="s-sub anim d2">The pedagogical foundation behind every generated material</p>
-  <div style="display:flex; gap:28px; margin-top:40px; max-width:900px; width:100%;">
-    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;">
-      <div style="font-size:24px; margin-bottom:10px;">🎓</div>
-      <h4 style="font-size:16px; font-weight:700; margin-bottom:8px;">CLIL</h4>
-      <p style="font-size:12px; color:var(--text-mid); line-height:1.6;">Content and Language Integrated Learning integrates subject matter with a foreign language. Students learn <strong style="color:var(--text);">both</strong> — the subject content and the language — simultaneously.</p>
-      <div style="margin-top:14px; display:flex; flex-direction:column; gap:6px;">
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);"></div><span style="font-size:11px; color:var(--text-mid);">Content — subject knowledge</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div><span style="font-size:11px; color:var(--text-mid);">Communication — language skills</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div><span style="font-size:11px; color:var(--text-mid);">Cognition — thinking skills</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></div><span style="font-size:11px; color:var(--text-mid);">Culture — intercultural awareness</span></div>
+  <p class="s-sub anim d2" style="font-size:16px; max-width:720px;">The pedagogical framework that structures every material Helikon generates</p>
+  <div style="display:flex; gap:32px; margin-top:36px; max-width:1020px; width:100%;">
+    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px 26px; border-top:3px solid var(--blue);">
+      <div style="font-size:28px; margin-bottom:12px;">🎓</div>
+      <h4 style="font-size:20px; font-weight:800; margin-bottom:10px;">CLIL</h4>
+      <p style="font-size:14px; color:var(--text-mid); line-height:1.7; margin-bottom:18px;">Content and Language Integrated Learning — students learn a <strong style="color:var(--text);">subject</strong> and a <strong style="color:var(--text);">foreign language</strong> at the same time. Coyle's 4Cs framework defines the four pillars:</p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(59,130,246,0.06); border-radius:12px; border-left:3px solid var(--blue);">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0;"></div>
+          <div><strong style="font-size:14px; color:var(--text);">Content</strong><span style="font-size:13px; color:var(--text-mid);"> — the subject knowledge being taught</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(139,92,246,0.06); border-radius:12px; border-left:3px solid var(--purple);">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--purple);flex-shrink:0;"></div>
+          <div><strong style="font-size:14px; color:var(--text);">Communication</strong><span style="font-size:13px; color:var(--text-mid);"> — the target language skills</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(16,185,129,0.06); border-radius:12px; border-left:3px solid var(--green);">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>
+          <div><strong style="font-size:14px; color:var(--text);">Cognition</strong><span style="font-size:13px; color:var(--text-mid);"> — higher-order thinking skills</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(245,158,11,0.06); border-radius:12px; border-left:3px solid var(--amber);">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0;"></div>
+          <div><strong style="font-size:14px; color:var(--text);">Culture</strong><span style="font-size:13px; color:var(--text-mid);"> — intercultural awareness</span></div>
+        </div>
       </div>
     </div>
-    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;">
-      <div style="font-size:24px; margin-bottom:10px;">🧠</div>
-      <h4 style="font-size:16px; font-weight:700; margin-bottom:8px;">Bloom's Taxonomy</h4>
-      <p style="font-size:12px; color:var(--text-mid); line-height:1.6; margin-bottom:14px;">Six cognitive levels, from basic recall to creative synthesis. Helikon's prompt engine structures materials across these levels.</p>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(236,72,153,0.1); color:var(--pink); border-left:3px solid var(--pink);">Create — design, construct, produce</div>
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(139,92,246,0.08); color:var(--purple); border-left:3px solid var(--purple);">Evaluate — judge, justify, critique</div>
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(59,130,246,0.08); color:var(--blue); border-left:3px solid var(--blue);">Analyze — compare, organize, deconstruct</div>
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(6,182,212,0.08); color:var(--cyan); border-left:3px solid var(--cyan);">Apply — use, implement, execute</div>
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(16,185,129,0.08); color:var(--green); border-left:3px solid var(--green);">Understand — explain, classify, summarize</div>
-        <div style="padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; background:rgba(245,158,11,0.08); color:var(--amber); border-left:3px solid var(--amber);">Remember — recall, list, define</div>
+    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px 26px; border-top:3px solid var(--pink);">
+      <div style="font-size:28px; margin-bottom:12px;">🧠</div>
+      <h4 style="font-size:20px; font-weight:800; margin-bottom:10px;">Bloom's Taxonomy</h4>
+      <p style="font-size:14px; color:var(--text-mid); line-height:1.7; margin-bottom:18px;">Six cognitive levels from simple recall to creative synthesis. Helikon's prompt engine ensures materials span <strong style="color:var(--text);">all levels</strong>.</p>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(236,72,153,0.1); color:var(--pink); border-left:4px solid var(--pink); display:flex; justify-content:space-between; align-items:center;">
+          <span>Create</span><span style="font-size:11px; font-weight:400; opacity:0.7;">design, construct, produce</span>
+        </div>
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(139,92,246,0.08); color:var(--purple); border-left:4px solid var(--purple); display:flex; justify-content:space-between; align-items:center;">
+          <span>Evaluate</span><span style="font-size:11px; font-weight:400; opacity:0.7;">judge, justify, critique</span>
+        </div>
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(59,130,246,0.08); color:var(--blue); border-left:4px solid var(--blue); display:flex; justify-content:space-between; align-items:center;">
+          <span>Analyze</span><span style="font-size:11px; font-weight:400; opacity:0.7;">compare, organize, deconstruct</span>
+        </div>
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(6,182,212,0.08); color:var(--cyan); border-left:4px solid var(--cyan); display:flex; justify-content:space-between; align-items:center;">
+          <span>Apply</span><span style="font-size:11px; font-weight:400; opacity:0.7;">use, implement, execute</span>
+        </div>
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(16,185,129,0.08); color:var(--green); border-left:4px solid var(--green); display:flex; justify-content:space-between; align-items:center;">
+          <span>Understand</span><span style="font-size:11px; font-weight:400; opacity:0.7;">explain, classify, summarize</span>
+        </div>
+        <div style="padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; background:rgba(245,158,11,0.08); color:var(--amber); border-left:4px solid var(--amber); display:flex; justify-content:space-between; align-items:center;">
+          <span>Remember</span><span style="font-size:11px; font-weight:400; opacity:0.7;">recall, list, define</span>
+        </div>
       </div>
     </div>
   </div>
@@ -770,20 +1421,44 @@
   <div class="glow" style="width:500px;height:500px;background:var(--cyan);top:20%;left:50%;transform:translateX(-50%);"></div>
   <div class="s-num anim">Theory</div>
   <h2 class="s-title anim d1">What is RAG?</h2>
-  <p class="s-sub anim d2">Retrieval-Augmented Generation combines document knowledge with AI generation</p>
-  <div style="display:flex; gap:20px; margin-top:36px; max-width:800px;">
-    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; text-align:center;">
-      <div style="font-size:28px; margin-bottom:8px;">💬</div>
-      <h4 style="font-size:14px; font-weight:700; margin-bottom:6px;">Without RAG</h4>
-      <p style="font-size:11px; color:var(--text-dim); line-height:1.5;">LLM generates from training data only. May hallucinate. No grounding in your specific documents.</p>
-      <div style="margin-top:12px; padding:8px; border-radius:8px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.12); font-size:10px; color:var(--red);">Generic · Unverifiable · No sources</div>
+  <p class="s-sub anim d2" style="font-size:16px; max-width:700px;">Retrieval-Augmented Generation grounds AI output in your actual documents —<br>turning a generic language model into a <strong style="color:var(--text);">domain-specific expert</strong>.</p>
+  <div class="rag-compare">
+    <div class="rag-side bad anim d3">
+      <div class="rag-side-icon">💬</div>
+      <h4>Standard LLM</h4>
+      <p>The model generates answers purely from its training data. It has no knowledge of your specific curriculum, textbooks, or teaching materials.</p>
+      <div class="rag-side-flow">
+        <div class="rag-flow-node">Prompt</div>
+        <div class="rag-flow-arrow">→</div>
+        <div class="rag-flow-node">LLM</div>
+        <div class="rag-flow-arrow">→</div>
+        <div class="rag-flow-node" style="border-color:rgba(239,68,68,0.3); color:var(--red);">Generic Output</div>
+      </div>
+      <div class="rag-tags">
+        <div class="rag-tag red">May hallucinate</div>
+        <div class="rag-tag red">No sources</div>
+        <div class="rag-tag red">Generic content</div>
+      </div>
     </div>
-    <div style="display:flex; align-items:center; font-size:24px; color:var(--text-dim);">→</div>
-    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; text-align:center;">
-      <div style="font-size:28px; margin-bottom:8px;">📚</div>
-      <h4 style="font-size:14px; font-weight:700; margin-bottom:6px;">With RAG</h4>
-      <p style="font-size:11px; color:var(--text-dim); line-height:1.5;">Relevant document chunks are retrieved and injected as context. LLM answers grounded in real sources.</p>
-      <div style="margin-top:12px; padding:8px; border-radius:8px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.12); font-size:10px; color:var(--green);">Grounded · Cited · Verifiable</div>
+    <div class="rag-compare-vs anim d4">VS</div>
+    <div class="rag-side good anim d5">
+      <div class="rag-side-icon">📚</div>
+      <h4>RAG-Enhanced LLM</h4>
+      <p>Your uploaded documents are searched for relevant passages. These are injected as context, so the AI generates answers <strong style="color:var(--green);">grounded in real content</strong>.</p>
+      <div class="rag-side-flow">
+        <div class="rag-flow-node">Prompt</div>
+        <div class="rag-flow-arrow">+</div>
+        <div class="rag-flow-node" style="border-color:rgba(16,185,129,0.3); color:var(--green);">Retrieved Docs</div>
+        <div class="rag-flow-arrow">→</div>
+        <div class="rag-flow-node">LLM</div>
+        <div class="rag-flow-arrow">→</div>
+        <div class="rag-flow-node" style="border-color:rgba(16,185,129,0.3); color:var(--green);">Cited Output</div>
+      </div>
+      <div class="rag-tags">
+        <div class="rag-tag green">Factually grounded</div>
+        <div class="rag-tag green">Auto-cited [1][2]</div>
+        <div class="rag-tag green">Your documents</div>
+      </div>
     </div>
   </div>
 </section>
@@ -792,20 +1467,464 @@
      S6: THEORY — RAG PIPELINE
      ══════════════════════════════════════════ -->
 <section class="slide" data-title="RAG Pipeline">
+  <div class="glow" style="width:400px;height:400px;background:var(--purple);top:10%;right:10%;"></div>
   <div class="s-num anim">Theory</div>
   <h2 class="s-title anim d1">The RAG Pipeline</h2>
-  <p class="s-sub anim d2">From document upload to cited, AI-generated material</p>
-  <div class="rag-flow">
-    <div class="rag-step anim d2"><div class="num">01</div><div class="ico">📄</div><h4>Upload</h4><p>PDF/DOCX uploaded. Split into text chunks per page.</p><div class="rag-arr">→</div></div>
-    <div class="rag-step anim d3"><div class="num">02</div><div class="ico">🧮</div><h4>Embed</h4><p>Each chunk → vector via OpenAI embedding model.</p><div class="rag-arr">→</div></div>
-    <div class="rag-step anim d4"><div class="num">03</div><div class="ico">💾</div><h4>Store</h4><p>Vectors stored in ChromaDB with metadata (page, file, subject).</p><div class="rag-arr">→</div></div>
-    <div class="rag-step anim d5"><div class="num">04</div><div class="ico">🔍</div><h4>Retrieve</h4><p>Query → cosine similarity search finds top-k relevant chunks.</p><div class="rag-arr">→</div></div>
-    <div class="rag-step anim d6"><div class="num">05</div><div class="ico">🧠</div><h4>Generate</h4><p>Chunks injected as context → LLM generates with inline citations.</p></div>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:700px;">Five stages transform a raw document into AI-generated, source-cited educational material</p>
+  <div class="pipeline-grid anim d3">
+    <div class="pipe-card">
+      <div class="pipe-num">STEP 01</div>
+      <div class="pipe-ico">📄</div>
+      <h4>Ingest</h4>
+      <p>Teacher uploads PDF or DOCX. The system extracts text page-by-page and splits it into overlapping chunks.</p>
+      <div class="pipe-detail">PDF → PyPDF2<br>1000 chars / chunk<br>200 char overlap</div>
+      <div class="pipe-arrow"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-num">STEP 02</div>
+      <div class="pipe-ico">🧮</div>
+      <h4>Embed</h4>
+      <p>Each text chunk is converted into a high-dimensional vector (1536-d) using OpenAI's embedding model.</p>
+      <div class="pipe-detail">text-embedding-3-small<br>"Biology cell..."<br>→ [0.023, -0.41, ...]</div>
+      <div class="pipe-arrow"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-num">STEP 03</div>
+      <div class="pipe-ico">💾</div>
+      <h4>Store</h4>
+      <p>Vectors are stored in ChromaDB alongside metadata: page number, filename, subject, and user ID.</p>
+      <div class="pipe-detail">ChromaDB (cosine)<br>metadata: page, file,<br>subject, user_id</div>
+      <div class="pipe-arrow"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="var(--cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-num">STEP 04</div>
+      <div class="pipe-ico">🔍</div>
+      <h4>Retrieve</h4>
+      <p>A query is embedded the same way, then cosine similarity finds the top-k most relevant chunks from the database.</p>
+      <div class="pipe-detail">similarity_search<br>top_k = 8 chunks<br>score ≥ 0.7 relevance</div>
+      <div class="pipe-arrow"><svg viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-num">STEP 05</div>
+      <div class="pipe-ico">🧠</div>
+      <h4>Generate</h4>
+      <p>Retrieved chunks are injected as context into the LLM prompt. The model generates a response with inline citations [1][2].</p>
+      <div class="pipe-detail">LLM + context window<br>Bloom's Taxonomy prompt<br>→ cited HTML output</div>
+    </div>
+  </div>
+  <div class="pipe-flow-bar anim d4">
+    <span class="pfb-label" style="color:var(--blue);">Document</span>
+    <div class="pfb-track" style="background:var(--border);"></div>
+    <span class="pfb-label" style="color:var(--green);">Cited Material</span>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════
-     S7: ARCH — CLIENT
+     S7: THEORY — RAG CODE
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="RAG in Code" id="slide-code">
+  <div class="glow" style="width:400px;height:400px;background:var(--green);bottom:10%;right:5%;"></div>
+  <div class="s-num anim">Theory — Under the Hood</div>
+  <h2 class="s-title anim d1">RAG in Code</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">The actual Python pipeline running in our service</p>
+  <div class="terminal anim d3">
+    <div class="terminal-bar">
+      <div class="terminal-dot" style="background:#ff5f57;"></div>
+      <div class="terminal-dot" style="background:#febc2e;"></div>
+      <div class="terminal-dot" style="background:#28c840;"></div>
+      <div class="terminal-title">rag-service / generation.py</div>
+      <div style="width:30px;"></div>
+    </div>
+    <div class="terminal-body" id="code-terminal">
+      <div class="code-line"><span class="comment"># 1. Teacher uploads a document — we chunk and embed it</span></div>
+      <div class="code-line"><span class="keyword">from</span> <span class="var">langchain.text_splitter</span> <span class="keyword">import</span> <span class="cls">RecursiveCharacterTextSplitter</span></div>
+      <div class="code-line"></div>
+      <div class="code-line"><span class="var">splitter</span> <span class="op">=</span> <span class="cls">RecursiveCharacterTextSplitter</span><span class="op">(</span></div>
+      <div class="code-line">    <span class="param">chunk_size</span><span class="op">=</span><span class="num">1000</span><span class="op">,</span> <span class="param">chunk_overlap</span><span class="op">=</span><span class="num">200</span></div>
+      <div class="code-line"><span class="op">)</span></div>
+      <div class="code-line"><span class="var">chunks</span> <span class="op">=</span> <span class="var">splitter</span><span class="op">.</span><span class="func">split_text</span><span class="op">(</span><span class="var">document_text</span><span class="op">)</span></div>
+      <div class="code-line"></div>
+      <div class="code-line"><span class="comment"># 2. Store in ChromaDB with metadata</span></div>
+      <div class="code-line"><span class="var">collection</span><span class="op">.</span><span class="func">add</span><span class="op">(</span></div>
+      <div class="code-line">    <span class="param">documents</span><span class="op">=</span><span class="var">chunks</span><span class="op">,</span></div>
+      <div class="code-line">    <span class="param">metadatas</span><span class="op">=[{</span><span class="string">"file"</span><span class="op">:</span> <span class="var">name</span><span class="op">,</span> <span class="string">"page"</span><span class="op">:</span> <span class="var">pg</span><span class="op">,</span> <span class="string">"subject"</span><span class="op">:</span> <span class="var">subj</span><span class="op">}]</span></div>
+      <div class="code-line"><span class="op">)</span></div>
+      <div class="code-line"></div>
+      <div class="code-line"><span class="comment"># 3. Query: find relevant chunks via cosine similarity</span></div>
+      <div class="code-line"><span class="var">results</span> <span class="op">=</span> <span class="var">vectorstore</span><span class="op">.</span><span class="func">similarity_search_with_score</span><span class="op">(</span></div>
+      <div class="code-line">    <span class="param">query</span><span class="op">=</span><span class="string">"Explain cell division in English"</span><span class="op">,</span></div>
+      <div class="code-line">    <span class="param">k</span><span class="op">=</span><span class="num">8</span><span class="op">,</span></div>
+      <div class="code-line">    <span class="param">filter</span><span class="op">={</span><span class="string">"subject"</span><span class="op">:</span> <span class="string">"Biology"</span><span class="op">}</span></div>
+      <div class="code-line"><span class="op">)</span></div>
+      <div class="code-line"></div>
+      <div class="code-line"><span class="comment"># 4. Inject as context → LLM generates with citations</span></div>
+      <div class="code-line"><span class="var">context</span> <span class="op">=</span> <span class="string">"\n"</span><span class="op">.</span><span class="func">join</span><span class="op">(</span><span class="string">f"[{i}] {doc}"</span> <span class="keyword">for</span> <span class="var">i</span><span class="op">,</span> <span class="var">doc</span> <span class="keyword">in</span> <span class="var">results</span><span class="op">)</span></div>
+      <div class="code-line"><span class="var">response</span> <span class="op">=</span> <span class="var">llm</span><span class="op">.</span><span class="func">invoke</span><span class="op">(</span><span class="var">prompt</span> <span class="op">+</span> <span class="var">context</span><span class="op">)</span>  <span class="comment"># → "Cells divide via mitosis [1]..."</span></div>
+      <div class="code-line"><span class="terminal-cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S8: THEORY — EMBEDDING VISUALIZATION
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Embedding" id="slide-embed" data-substeps="4">
+  <div class="glow" style="width:450px;height:450px;background:var(--blue);top:20%;left:40%;opacity:0.4;"></div>
+  <div class="s-num anim">Theory — Visualization</div>
+  <h2 class="s-title anim d1">From Text to Vector</h2>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:700px;">How a sentence becomes a list of numbers that captures its meaning</p>
+  <div class="embed-viz anim d3">
+    <canvas id="embedCanvas"></canvas>
+  </div>
+  <div class="embed-phase-strip anim d4">
+    <div class="embed-phase-chip" data-estep="0">Sentence</div>
+    <div class="embed-phase-chip" data-estep="1">Tokenize</div>
+    <div class="embed-phase-chip" data-estep="2">Neural Network</div>
+    <div class="embed-phase-chip" data-estep="3">Vector</div>
+    <div class="embed-phase-chip" data-estep="4">Store in DB</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     S9: THEORY — VECTOR SPACE VISUALIZATION
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Vector Space" id="slide-vectors" data-substeps="3">
+  <div class="glow" style="width:500px;height:500px;background:var(--purple);top:15%;left:30%;opacity:0.5;"></div>
+  <div class="s-num anim">Theory — Visualization</div>
+  <h2 class="s-title anim d1">How Vectors Find Meaning</h2>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:700px;">Text becomes numbers. Similar meanings cluster together. Queries find the nearest neighbors.</p>
+  <div class="vecspace-wrap anim d3">
+    <div class="vecspace-canvas-wrap">
+      <canvas id="vecCanvas"></canvas>
+    </div>
+    <div class="vecspace-legend" id="vecLegend">
+      <div class="vec-stage s1" data-step="0">
+        <div class="step-num">PHASE 1</div>
+        <h4 style="color:var(--blue);">Embed Documents</h4>
+        <p>Text chunks are converted into vectors. Each dot is a chunk positioned by its semantic meaning.</p>
+      </div>
+      <div class="vec-stage s2" data-step="1">
+        <div class="step-num">PHASE 2</div>
+        <h4 style="color:var(--purple);">Cluster by Topic</h4>
+        <p>Similar content gravitates together — biology near biology, history near history.</p>
+      </div>
+      <div class="vec-stage s3" data-step="2">
+        <div class="step-num">PHASE 3</div>
+        <h4 style="color:var(--amber);">Query Arrives</h4>
+        <p>The teacher's query is embedded the same way — it lands in the vector space as a search point.</p>
+      </div>
+      <div class="vec-stage s4" data-step="3">
+        <div class="step-num">PHASE 4</div>
+        <h4 style="color:var(--green);">Retrieve Nearest</h4>
+        <p>Cosine similarity finds the closest chunks. These become the context for generation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     TECHNICAL DEEP-DIVE: TITLE
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Technical Report">
+  <div class="glow" style="width:500px;height:500px;background:var(--blue);top:30%;left:50%;transform:translateX(-50%);opacity:.06;"></div>
+  <div class="glow" style="width:300px;height:300px;background:var(--purple);bottom:20%;right:15%;opacity:.04;"></div>
+  <div class="s-num anim" style="letter-spacing:3px;">Technical Report</div>
+  <h2 class="s-title anim d1" style="font-size:28px; max-width:700px; line-height:1.35;">Architectural Foundations &<br>Validation Frameworks</h2>
+  <p class="s-sub anim d2" style="font-size:16px; margin-top:12px;">for Local LLM Implementation</p>
+  <div style="width:60px; height:2px; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:2px; margin-top:28px;" class="anim d3"></div>
+  <div style="display:flex; gap:24px; margin-top:32px; max-width:780px; width:100%;" class="anim d4">
+    <div style="flex:1; display:flex; align-items:center; gap:14px; padding:20px 22px; background:var(--surface); border:1px solid var(--border); border-radius:12px; border-left:3px solid var(--blue);">
+      <span style="font-size:24px;">🏗</span>
+      <div><div style="font-size:15px; font-weight:700; color:var(--text);">System Design</div><div style="font-size:12px; color:var(--text-dim);">Local LLM architecture</div></div>
+    </div>
+    <div style="flex:1; display:flex; align-items:center; gap:14px; padding:20px 22px; background:var(--surface); border:1px solid var(--border); border-radius:12px; border-left:3px solid var(--purple);">
+      <span style="font-size:24px;">📝</span>
+      <div><div style="font-size:15px; font-weight:700; color:var(--text);">Prompt Engineering</div><div style="font-size:12px; color:var(--text-dim);">System & user strategies</div></div>
+    </div>
+  </div>
+  <div style="display:flex; gap:24px; margin-top:14px; max-width:780px; width:100%;" class="anim d5">
+    <div style="flex:1; display:flex; align-items:center; gap:14px; padding:20px 22px; background:var(--surface); border:1px solid var(--border); border-radius:12px; border-left:3px solid var(--green);">
+      <span style="font-size:24px;">📊</span>
+      <div><div style="font-size:15px; font-weight:700; color:var(--text);">Validation</div><div style="font-size:12px; color:var(--text-dim);">LLM-as-Judge & metrics</div></div>
+    </div>
+    <div style="flex:1; display:flex; align-items:center; gap:14px; padding:20px 22px; background:var(--surface); border:1px solid var(--border); border-radius:12px; border-left:3px solid var(--amber);">
+      <span style="font-size:24px;">🔒</span>
+      <div><div style="font-size:15px; font-weight:700; color:var(--text);">Security</div><div style="font-size:12px; color:var(--text-dim);">3-layer defense framework</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     WHY LOCAL LLMs
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Why Local LLMs">
+  <div class="glow" style="width:400px;height:400px;background:var(--blue);top:15%;right:10%;"></div>
+  <div class="s-num anim">Strategic Foundation</div>
+  <h2 class="s-title anim d1">Why Local LLMs?</h2>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:650px;">Operational Sovereignty — full control over inference, data, and uptime</p>
+  <div class="pillar-row">
+    <div class="pillar anim d3">
+      <div class="p-ico">🔒</div>
+      <h4>Data Privacy</h4>
+      <p>Sensitive student data and proprietary curricula never leave your infrastructure. Full GDPR compliance by design.</p>
+    </div>
+    <div class="pillar anim d4">
+      <div class="p-ico">⚡</div>
+      <h4>Latency Optimization</h4>
+      <p>Eliminates cloud API round-trips. Sub-second inference for real-time material generation and interactive workflows.</p>
+    </div>
+    <div class="pillar anim d5">
+      <div class="p-ico">🔧</div>
+      <h4>Technical Integrity</h4>
+      <p>Pin model versions, customize fine-tuning, and guarantee reproducible outputs independent of vendor changes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SYSTEM PROMPTING ARCHITECTURE
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="System Prompts">
+  <div class="s-num anim">Prompt Engineering</div>
+  <h2 class="s-title anim d1">System Prompting Architecture</h2>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:700px;">The pedagogical configuration layer — the "constitution" of every LLM interaction</p>
+  <div style="display:flex; gap:28px; margin-top:32px; max-width:960px; width:100%; justify-content:center;">
+    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:28px 26px; border-top:3px solid var(--purple); text-align:center;">
+      <h4 style="font-size:18px; font-weight:800; color:var(--purple); margin-bottom:16px;">RTRI Framework</h4>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="padding:12px 18px; border-radius:10px; background:rgba(139,92,246,0.06); border-left:4px solid var(--purple); font-size:15px; text-align:left;"><strong style="color:var(--text);">Role</strong> <span style="color:var(--text-mid);">— who the model is</span></div>
+        <div style="padding:12px 18px; border-radius:10px; background:rgba(59,130,246,0.06); border-left:4px solid var(--blue); font-size:15px; text-align:left;"><strong style="color:var(--text);">Task</strong> <span style="color:var(--text-mid);">— what to produce</span></div>
+        <div style="padding:12px 18px; border-radius:10px; background:rgba(6,182,212,0.06); border-left:4px solid var(--cyan); font-size:15px; text-align:left;"><strong style="color:var(--text);">Requirements</strong> <span style="color:var(--text-mid);">— constraints and format</span></div>
+        <div style="padding:12px 18px; border-radius:10px; background:rgba(16,185,129,0.06); border-left:4px solid var(--green); font-size:15px; text-align:left;"><strong style="color:var(--text);">Instructions</strong> <span style="color:var(--text-mid);">— step-by-step process</span></div>
+      </div>
+    </div>
+    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:28px 26px; border-top:3px solid var(--blue); text-align:center;">
+      <h4 style="font-size:18px; font-weight:800; color:var(--blue); margin-bottom:16px;">7 Core Principles</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Clear Purpose</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Pedagogical Intent</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Specific Outputs</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Scaffolding</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Diversity</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2);">Critical Thinking</div>
+        <div style="padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500; color:var(--text); background:var(--surface-2); grid-column:span 2; text-align:center;">Assessment Alignment</div>
+      </div>
+      <p style="font-size:12px; color:var(--text-dim); margin-top:14px; line-height:1.5;">Markdown headers + delimiters enforce structural stability</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SYSTEM PROMPT ENGINEERING
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Prompt Engineering">
+  <div class="s-num anim">Prompt Engineering</div>
+  <h2 class="s-title anim d1">System Prompt Engineering</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">How we keep LLM outputs stable, structured, and on-task</p>
+  <div class="td-grid cols-2" style="margin-top:32px;">
+    <div class="td-card anim d3" style="border-top:3px solid var(--blue);">
+      <div class="td-tag" style="background:rgba(59,130,246,0.1); color:var(--blue);">Structure</div>
+      <h4>Markdown Hierarchy</h4>
+      <p>Headers (H1–H3) create a structural skeleton the model follows. Sections delimited with clear separators prevent bleed-through.</p>
+    </div>
+    <div class="td-card anim d4" style="border-top:3px solid var(--purple);">
+      <div class="td-tag" style="background:rgba(139,92,246,0.1); color:var(--purple);">Stability</div>
+      <h4>Instruction Reinforcement</h4>
+      <p>Critical constraints are repeated at multiple points. Redundancy prevents instruction drift in long generations.</p>
+    </div>
+    <div class="td-card anim d5" style="border-top:3px solid var(--amber);">
+      <div class="td-tag" style="background:rgba(245,158,11,0.1); color:var(--amber);">Safety</div>
+      <h4>Guardrails</h4>
+      <p>Explicit boundaries prevent the model from deviating — format, length, language level, and topic constraints enforced in every prompt.</p>
+    </div>
+    <div class="td-card anim d6" style="border-top:3px solid var(--green);">
+      <div class="td-tag" style="background:rgba(16,185,129,0.1); color:var(--green);">Quality</div>
+      <h4>Validation Rubrics</h4>
+      <p>Requirements map directly to rubric criteria, enabling automated evaluation of whether outputs meet specifications.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     USER PROMPTING STRATEGIES
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="User Prompts">
+  <div class="glow" style="width:350px;height:350px;background:var(--cyan);bottom:15%;right:8%;"></div>
+  <div class="s-num anim">Prompt Engineering</div>
+  <h2 class="s-title anim d1">User Prompting Strategies</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">Techniques that maximize output quality at inference time</p>
+  <div class="td-grid cols-2" style="margin-top:32px; max-width:860px;">
+    <div class="td-card anim d3" style="border-left:4px solid var(--blue);">
+      <h4 style="color:var(--blue);">Few-Shot Prompting</h4>
+      <p>2–3 examples in-context dramatically reduce output variance and anchor the model to expected formats.</p>
+    </div>
+    <div class="td-card anim d4" style="border-left:4px solid var(--purple);">
+      <h4 style="color:var(--purple);">Chain-of-Thought (CoT)</h4>
+      <p>Step-by-step reasoning traces improve accuracy on complex tasks. "Think through this step by step."</p>
+    </div>
+    <div class="td-card anim d5" style="border-left:4px solid var(--green);">
+      <h4 style="color:var(--green);">Persona Prompting</h4>
+      <p>Persona prompting is a technique where you assign a specific role or professional identity to the AI to tailor its expertise, tone, and perspective to a particular task.</p>
+    </div>
+    <div class="td-card anim d6" style="border-left:4px solid var(--amber);">
+      <h4 style="color:var(--amber);">Hallucination Mitigation</h4>
+      <p>Anchoring responses to retrieved document context prevents fabrication. "Only use the provided sources."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     LLM-AS-A-JUDGE
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="LLM-as-a-Judge">
+  <div class="s-num anim">Validation Frameworks</div>
+  <h2 class="s-title anim d1">LLM-as-a-Judge Pattern</h2>
+  <p class="s-sub anim d2" style="font-size:15px; max-width:700px;">Traditional metrics (BLEU, ROUGE) fail for semantic quality — LLMs evaluate LLMs</p>
+  <div style="display:flex; gap:18px; margin-top:32px; max-width:940px; width:100%;">
+    <div class="anim d3" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; border-top:3px solid var(--green);">
+      <div style="font-size:22px; margin-bottom:8px;">📊</div>
+      <h4 style="font-size:16px; font-weight:800; color:var(--green); margin-bottom:8px;">G-Eval</h4>
+      <p style="font-size:13px; color:var(--text-mid); line-height:1.6;">Chain-of-Thought evaluation for subjective criteria: coherence, helpfulness, pedagogical value.</p>
+      <div style="margin-top:10px; padding:6px 10px; border-radius:8px; background:rgba(16,185,129,0.06); font-size:11px; color:var(--green); font-weight:600;">Best for: Qualitative rubrics</div>
+    </div>
+    <div class="anim d4" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; border-top:3px solid var(--blue);">
+      <div style="font-size:22px; margin-bottom:8px;">✅</div>
+      <h4 style="font-size:16px; font-weight:800; color:var(--blue); margin-bottom:8px;">QAG</h4>
+      <p style="font-size:13px; color:var(--text-mid); line-height:1.6;">Binary claim verification — extracts claims from output and checks each against source documents.</p>
+      <div style="margin-top:10px; padding:6px 10px; border-radius:8px; background:rgba(59,130,246,0.06); font-size:11px; color:var(--blue); font-weight:600;">Best for: Faithfulness checking</div>
+    </div>
+    <div class="anim d5" style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; border-top:3px solid var(--purple);">
+      <div style="font-size:22px; margin-bottom:8px;">🌳</div>
+      <h4 style="font-size:16px; font-weight:800; color:var(--purple); margin-bottom:8px;">DAG</h4>
+      <p style="font-size:13px; color:var(--text-mid); line-height:1.6;">Decision trees for structured evaluation workflows — branching logic for complex rubrics.</p>
+      <div style="margin-top:10px; padding:6px 10px; border-radius:8px; background:rgba(139,92,246,0.06); font-size:11px; color:var(--purple); font-weight:600;">Best for: Multi-step validation</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     5 METRIC SLO STRATEGY
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Metric Strategy">
+  <div class="glow" style="width:400px;height:400px;background:var(--amber);top:10%;left:8%;"></div>
+  <div class="s-num anim">Validation Frameworks</div>
+  <h2 class="s-title anim d1">The 5 Metric SLO Strategy</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">Balanced metric portfolio — custom + generic + reference-less</p>
+  <div class="metric-strip anim d3">
+    <div class="metric-chip" style="border-top:3px solid var(--purple);">
+      <h4 style="color:var(--purple);">1–2 Custom</h4>
+      <p>G-Eval or DAG for domain-specific criteria tailored to CLIL pedagogical requirements</p>
+    </div>
+    <div class="metric-chip" style="border-top:3px solid var(--blue);">
+      <h4 style="color:var(--blue);">2–3 Generic</h4>
+      <p>QAG for Faithfulness, Answer Relevancy — universal metrics that apply across all output types</p>
+    </div>
+    <div class="metric-chip" style="border-top:3px solid var(--green);">
+      <h4 style="color:var(--green);">SelfCheckGPT</h4>
+      <p>Reference-less hallucination detection via sampling — no ground truth needed</p>
+    </div>
+  </div>
+  <div class="anim d4" style="margin-top:20px; padding:14px 22px; background:var(--surface); border:1px solid var(--border); border-radius:12px; max-width:700px;">
+    <p style="font-size:13px; color:var(--text-mid); line-height:1.6; text-align:center;">Each metric feeds a <strong style="color:var(--text);">Service Level Objective</strong> — automated alerts when quality drops below threshold</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HUMAN OVERSIGHT PATTERNS
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Human Oversight">
+  <div class="s-num anim">Validation Frameworks</div>
+  <h2 class="s-title anim d1">Human Oversight Patterns</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">Automation handles volume — humans handle judgment</p>
+  <div class="td-grid cols-2" style="margin-top:28px; max-width:880px;">
+    <div class="td-card anim d3" style="border-top:3px solid var(--blue);">
+      <div class="td-tag" style="background:rgba(59,130,246,0.1); color:var(--blue);">HITL</div>
+      <h4>Human-in-the-Loop</h4>
+      <p>Active approval before output is delivered. Required for high-stakes content like assessments and exams.</p>
+    </div>
+    <div class="td-card anim d4" style="border-top:3px solid var(--purple);">
+      <div class="td-tag" style="background:rgba(139,92,246,0.1); color:var(--purple);">HOTL</div>
+      <h4>Human-on-the-Loop</h4>
+      <p>Supervisory monitoring with override capability. System runs autonomously, humans audit asynchronously.</p>
+    </div>
+    <div class="td-card anim d5" style="border-top:3px solid var(--amber);">
+      <div class="td-tag" style="background:rgba(245,158,11,0.1); color:var(--amber);">SME</div>
+      <h4>SME Calibration</h4>
+      <p>Subject matter experts design evaluation rubrics and curate gold standard datasets for validation.</p>
+    </div>
+    <div class="td-card anim d6" style="border-top:3px solid var(--green);">
+      <div class="td-tag" style="background:rgba(16,185,129,0.1); color:var(--green);">Flywheel</div>
+      <h4>Improvement Cycle</h4>
+      <p>Errors feed back into gold datasets, which drive fine-tuning — a continuous quality improvement loop.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     PRODUCTION CHALLENGES P1
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Challenges I">
+  <div class="s-num anim">Production Challenges</div>
+  <h2 class="s-title anim d1">Production Challenges</h2>
+  <p class="s-sub anim d2" style="font-size:15px;">The gap between benchmarks and real-world deployment</p>
+  <div class="layer-stack" style="margin-top:32px;">
+    <div class="layer-bar anim d3" style="border-left:4px solid var(--red);">
+      <div class="l-num" style="background:rgba(239,68,68,0.1); color:var(--red);">1</div>
+      <div>
+        <h4 style="color:var(--red);">Evaluation Gap</h4>
+        <p>Benchmarks test clean data — production faces ambiguous queries, typos, and multi-language input. Test on real usage.</p>
+      </div>
+    </div>
+    <div class="layer-bar anim d4" style="border-left:4px solid var(--amber);">
+      <div class="l-num" style="background:rgba(245,158,11,0.1); color:var(--amber);">2</div>
+      <div>
+        <h4 style="color:var(--amber);">Structured Output Validation</h4>
+        <p>Use STED (Semantic Tree Edit Distance) with Hungarian Algorithm for JSON schema validation of complex outputs.</p>
+      </div>
+    </div>
+    <div class="layer-bar anim d5" style="border-left:4px solid var(--purple);">
+      <div class="l-num" style="background:rgba(139,92,246,0.1); color:var(--purple);">3</div>
+      <div>
+        <h4 style="color:var(--purple);">Performance Drift</h4>
+        <p>Model quality degrades silently over time. Continuous monitoring with SLO thresholds catches regressions early.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     KEY TAKEAWAYS
+     ══════════════════════════════════════════ -->
+<section class="slide" data-title="Key Takeaways">
+  <div class="glow" style="width:500px;height:500px;background:var(--green);top:25%;left:50%;transform:translateX(-50%);opacity:.05;"></div>
+  <div class="s-num anim">Summary</div>
+  <h2 class="s-title anim d1">Key Takeaways</h2>
+  <div class="takeaway-list">
+    <div class="takeaway-item anim d2">
+      <div class="ta-dot" style="background:var(--blue);"></div>
+      <p><strong style="color:var(--text);">Local LLMs</strong> deliver operational sovereignty — full control over data, latency, and model behavior.</p>
+    </div>
+    <div class="takeaway-item anim d3">
+      <div class="ta-dot" style="background:var(--purple);"></div>
+      <p><strong style="color:var(--text);">System prompts</strong> are the constitutional layer; <strong style="color:var(--text);">user prompts</strong> are the execution layer.</p>
+    </div>
+    <div class="takeaway-item anim d4">
+      <div class="ta-dot" style="background:var(--green);"></div>
+      <p><strong style="color:var(--text);">Automated judges</strong> (G-Eval, QAG, DAG) replace word-overlap metrics for semantic evaluation.</p>
+    </div>
+    <div class="takeaway-item anim d5">
+      <div class="ta-dot" style="background:var(--amber);"></div>
+      <p><strong style="color:var(--text);">Human oversight</strong> feeds a continuous improvement flywheel — errors become training data.</p>
+    </div>
+    <div class="takeaway-item anim d6">
+      <div class="ta-dot" style="background:var(--red);"></div>
+      <p><strong style="color:var(--text);">Multi-layer security</strong> is essential for production RAG — input validation, guardrails, output verification.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ARCH — CLIENT
      ══════════════════════════════════════════ -->
 <section class="slide" data-title="Arch: Frontend">
   <div class="s-num anim">Architecture — Layer 1</div>
@@ -989,7 +2108,7 @@
 <section class="slide" data-title="Thank You">
   <div class="glow" style="width:600px;height:600px;background:var(--purple);top:30%;left:50%;transform:translateX(-50%);opacity:.08;"></div>
   <div class="thanks-t anim">Thank You.</div>
-  <div class="thanks-s anim d1">Questions? We'd love to hear your feedback.</div>
+  <div class="thanks-s anim d1">Questions & Answers</div>
   <div class="thanks-url anim d2">helikonproject.com</div>
 </section>
 
@@ -1005,6 +2124,12 @@
   let current = 0;
   let locked = false;
 
+  // ── Sub-step state per slide ──
+  // Slides with data-substeps="N" have N extra sub-steps.
+  // subStep[i] tracks how many sub-steps have been consumed (0 = none, max = N)
+  const subStep = new Array(slides.length).fill(0);
+  function maxSub(idx) { return parseInt(slides[idx]?.dataset.substeps || '0', 10); }
+
   // Build nav dots
   slides.forEach((_, i) => {
     const d = document.createElement('button');
@@ -1012,8 +2137,9 @@
     d.addEventListener('click', () => goTo(i));
     nav.appendChild(d);
   });
-  const dots = nav.querySelectorAll('.nav-dot');
+  const navDots = nav.querySelectorAll('.nav-dot');
 
+  // ── Slide transition ──
   function goTo(idx) {
     if (idx < 0 || idx >= slides.length || idx === current || locked) return;
     locked = true;
@@ -1022,55 +2148,852 @@
     const next = slides[idx];
     const goingDown = idx > current;
 
-    // Exit current
-    prev.classList.remove('active');
-    prev.classList.add(goingDown ? 'exit-up' : '');
-    prev.style.transform = goingDown ? 'translateY(-30px)' : 'translateY(30px)';
-    prev.style.opacity = '0';
+    // Reset sub-step when leaving
+    subStep[current] = 0;
+    onSlideLeave(prev);
 
-    // Reset anim children on exit
+    prev.classList.remove('active');
+    if (goingDown) prev.classList.add('exit-up');
+
     setTimeout(() => {
       prev.classList.remove('exit-up');
-      prev.style.transform = '';
-      prev.querySelectorAll('.anim, .anim-s').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = el.classList.contains('anim-s') ? 'scale(0.92)' : 'translateY(30px)';
-      });
-    }, 300);
+      prev.style.cssText = '';
+      prev.querySelectorAll('.anim, .anim-s').forEach(el => { el.style.cssText = ''; });
+    }, 600);
 
-    // Prepare next
-    next.style.transform = goingDown ? 'translateY(30px)' : 'translateY(-30px)';
+    next.style.transition = 'none';
     next.style.opacity = '0';
-    next.style.pointerEvents = 'auto';
+    next.style.transform = goingDown ? 'translateY(40px)' : 'translateY(-40px)';
+    next.querySelectorAll('.anim, .anim-s').forEach(el => { el.style.cssText = ''; });
 
-    // Activate next after tiny delay
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        next.classList.add('active');
-        next.style.transform = 'translateY(0)';
-        next.style.opacity = '1';
-      });
-    });
+    void next.offsetWidth;
+    next.style.cssText = '';
+    next.classList.add('active');
 
     current = idx;
+    subStep[idx] = 0;
     updateUI();
-    setTimeout(() => { locked = false; }, 500);
+    onSlideEnter(next);
+    setTimeout(() => { locked = false; }, 650);
+  }
+
+  // ── Navigate forward (handles sub-steps) ──
+  function navForward() {
+    if (locked) return;
+    const ms = maxSub(current);
+    if (subStep[current] < ms) {
+      subStep[current]++;
+      onSubStep(slides[current], subStep[current]);
+    } else {
+      goTo(current + 1);
+    }
+  }
+
+  // ── Navigate backward (handles sub-steps) ──
+  function navBackward() {
+    if (locked) return;
+    if (subStep[current] > 0) {
+      subStep[current]--;
+      onSubStep(slides[current], subStep[current]);
+    } else {
+      goTo(current - 1);
+    }
   }
 
   function updateUI() {
-    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+    navDots.forEach((d, i) => d.classList.toggle('active', i === current));
     progress.style.width = (current / (slides.length - 1) * 100) + '%';
     counter.textContent = (current + 1) + ' / ' + slides.length;
   }
 
-  // Keyboard
+  // ── Slide lifecycle hooks ──
+  function onSlideEnter(slide) {
+    if (slide.id === 'slide-code') triggerCodeTyping();
+    if (slide.id === 'slide-embed') initEmbedAnim();
+    if (slide.id === 'slide-vectors') initVectorAnim();
+  }
+
+  function onSlideLeave(slide) {
+    if (slide.id === 'slide-vectors' && vecAnimFrame) cancelAnimationFrame(vecAnimFrame);
+    if (slide.id === 'slide-embed' && embedAnimFrame) cancelAnimationFrame(embedAnimFrame);
+  }
+
+  function onSubStep(slide, step) {
+    if (slide.id === 'slide-embed') embedAdvance(step);
+    if (slide.id === 'slide-vectors') vecAdvance(step);
+  }
+
+  // ══════════════════════════════════════════
+  //  CODE TYPING ANIMATION
+  // ══════════════════════════════════════════
+  function triggerCodeTyping() {
+    const lines = document.querySelectorAll('#code-terminal .code-line');
+    lines.forEach(l => l.classList.remove('visible'));
+    lines.forEach((line, i) => {
+      setTimeout(() => line.classList.add('visible'), 120 * i);
+    });
+  }
+
+  // ══════════════════════════════════════════
+  //  EMBEDDING VISUALIZATION (canvas)
+  // ══════════════════════════════════════════
+  let embedAnimFrame = null;
+  let embedState = null;
+
+  function initEmbedAnim() {
+    const canvas = document.getElementById('embedCanvas');
+    if (!canvas) return;
+    const wrap = canvas.parentElement;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = wrap.clientWidth * dpr;
+    canvas.height = wrap.clientHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+
+    const sentence = "The cell membrane controls what enters and leaves the cell";
+    const tokens = ["The", "cell", "membrane", "controls", "what", "enters", "and", "leaves", "the", "cell"];
+    const vector = [0.023, -0.417, 0.881, 0.156, -0.334, 0.720, -0.092, 0.548, -0.615, 0.203, 0.447, -0.178];
+
+    embedState = {
+      canvas, ctx, W, H, sentence, tokens, vector,
+      phase: -1,          // -1 = show sentence, 0..4 = phases
+      phaseStart: 0,      // timestamp when phase started
+    };
+
+    // Reset chips
+    document.querySelectorAll('.embed-phase-chip').forEach(c => {
+      c.classList.remove('active', 'done');
+    });
+
+    // Show initial state (sentence only)
+    embedState.phase = -1;
+    embedState.phaseStart = performance.now();
+    if (embedAnimFrame) cancelAnimationFrame(embedAnimFrame);
+    embedAnimFrame = requestAnimationFrame(drawEmbed);
+  }
+
+  function embedAdvance(step) {
+    if (!embedState) return;
+    embedState.phase = step - 1; // step 1 → phase 0, step 2 → phase 1, etc.
+    embedState.phaseStart = performance.now();
+
+    // Update chips
+    document.querySelectorAll('.embed-phase-chip').forEach(c => {
+      const cs = parseInt(c.dataset.estep, 10);
+      c.classList.toggle('active', cs === step);
+      c.classList.toggle('done', cs < step);
+    });
+  }
+
+  function drawEmbed(now) {
+    if (!embedState) return;
+    const { ctx, W, H, sentence, tokens, vector, phase } = embedState;
+    const rawT = Math.min((now - embedState.phaseStart) / 1200, 1);
+    const ease = v => v < 0.5 ? 4*v*v*v : 1 - Math.pow(-2*v+2, 3)/2;
+    const p = ease(rawT);
+
+    ctx.clearRect(0, 0, W, H);
+    const cx = W / 2;
+
+    // ════════════════════════════════════════
+    // PHASE -1: Just the sentence, centered
+    // ════════════════════════════════════════
+    if (phase === -1) {
+      ctx.globalAlpha = 1;
+      ctx.font = '600 20px Inter, sans-serif';
+      ctx.fillStyle = '#e8eaef';
+      ctx.textAlign = 'center';
+      ctx.fillText('"' + sentence + '"', cx, H * 0.4);
+
+      ctx.font = '400 13px Inter, sans-serif';
+      ctx.fillStyle = '#5c6170';
+      ctx.fillText('A text chunk from a Biology PDF — page 12', cx, H * 0.4 + 32);
+
+      // Pulsing hint
+      const hintAlpha = 0.3 + Math.sin(now / 600) * 0.2;
+      ctx.globalAlpha = hintAlpha;
+      ctx.font = '500 12px Inter, sans-serif';
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillText('Press ↓ to begin', cx, H * 0.4 + 68);
+      ctx.globalAlpha = 1;
+    }
+
+    // ════════════════════════════════════════
+    // PHASE 0: Tokenize — sentence at top, tokens pop in below
+    // ════════════════════════════════════════
+    if (phase === 0) {
+      // Sentence shrinks and rises to top
+      const sentAlpha = Math.max(0.4, 1 - p * 0.6);
+      ctx.globalAlpha = sentAlpha;
+      ctx.font = `${600} ${18 - 4 * p}px Inter, sans-serif`;
+      ctx.fillStyle = '#e8eaef';
+      ctx.textAlign = 'center';
+      ctx.fillText('"' + sentence + '"', cx, 40 + (H * 0.35) * (1 - p));
+
+      // Label
+      ctx.globalAlpha = p;
+      ctx.font = '700 10px Inter, sans-serif';
+      ctx.fillStyle = '#3b82f680';
+      ctx.letterSpacing = '2px';
+      ctx.fillText('TOKENIZE', cx, H * 0.28);
+
+      // Tokens appear staggered — measure each token for box width
+      ctx.globalAlpha = 1;
+      const tokY = H * 0.42;
+      ctx.font = '600 11px "SF Mono", "Fira Code", monospace';
+      const tokPad = 14;
+      const tokGap = 6;
+      const tokWidths = tokens.map(tok => ctx.measureText(tok).width + tokPad * 2);
+      const totalTokW = tokWidths.reduce((s, w) => s + w, 0) + tokGap * (tokens.length - 1);
+      let tokX = cx - totalTokW / 2;
+      tokens.forEach((tok, i) => {
+        const delay = Math.max(0, p - i * 0.06);
+        const a = ease(Math.min(1, delay * 2));
+        const bw = tokWidths[i];
+        const tx = tokX + bw / 2;
+        const ty = tokY + (1 - a) * 25;
+
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#141720';
+        ctx.strokeStyle = '#3b82f640';
+        ctx.lineWidth = 1;
+        roundRect(ctx, tokX, ty - 16, bw, 32, 8);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#79c0ff';
+        ctx.font = '600 11px "SF Mono", "Fira Code", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(tok, tx, ty + 4);
+
+        tokX += bw + tokGap;
+      });
+
+      // Arrow down hint
+      if (p > 0.8) {
+        ctx.globalAlpha = (p - 0.8) * 5;
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#5c6170';
+        ctx.fillText(tokens.length + ' tokens extracted', cx, tokY + 50);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // ════════════════════════════════════════
+    // PHASE 1: Neural network — tokens at top, NN in center
+    // ════════════════════════════════════════
+    if (phase === 1) {
+      // Small tokens at top (static, faded) — measured widths
+      const tokY = 36;
+      ctx.font = '600 9px "SF Mono", monospace';
+      const sPad = 10;
+      const sGap = 4;
+      const sWidths = tokens.map(tok => ctx.measureText(tok).width + sPad * 2);
+      const sTotalW = sWidths.reduce((s, w) => s + w, 0) + sGap * (tokens.length - 1);
+      let sX = cx - sTotalW / 2;
+      ctx.globalAlpha = 0.35;
+      tokens.forEach((tok, i) => {
+        const bw = sWidths[i];
+        ctx.fillStyle = '#141720';
+        ctx.strokeStyle = '#3b82f620';
+        ctx.lineWidth = 1;
+        roundRect(ctx, sX, tokY - 11, bw, 22, 6);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#79c0ff';
+        ctx.font = '600 9px "SF Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(tok, sX + bw / 2, tokY + 3);
+        sX += bw + sGap;
+      });
+
+      // Downward arrows from tokens to NN
+      ctx.globalAlpha = 0.15 * p;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 1;
+      // Evenly space 3 arrow lines across the token row width
+      for (let ai = 0; ai < 3; ai++) {
+        const ax = cx - sTotalW / 2 + (sTotalW * (ai + 0.5)) / 3;
+        ctx.beginPath();
+        ctx.moveTo(ax, tokY + 14);
+        ctx.lineTo(ax, 80);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Model label
+      ctx.globalAlpha = p;
+      ctx.font = '600 13px Inter, sans-serif';
+      ctx.fillStyle = '#8b5cf6';
+      ctx.textAlign = 'center';
+      ctx.fillText('Embedding Model: text-embedding-3-small', cx, 80);
+
+      // Neural network centered
+      const nnY = H * 0.48;
+      const layers = [10, 7, 5, 7, 12];
+      const layerSpacing = W * 0.12;
+      const nnStartX = cx - ((layers.length - 1) * layerSpacing) / 2;
+      const nodeSpacing = 20;
+
+      ctx.globalAlpha = 1;
+      layers.forEach((nodeCount, li) => {
+        const lx = nnStartX + li * layerSpacing;
+        const layerH = (nodeCount - 1) * nodeSpacing;
+        const nodeP = ease(Math.max(0, Math.min(1, (p - li * 0.1) * 2)));
+
+        for (let ni = 0; ni < nodeCount; ni++) {
+          const ny = nnY - layerH / 2 + ni * nodeSpacing;
+
+          // Connections to next layer (sparse for clarity)
+          if (li < layers.length - 1) {
+            const nlx = nnStartX + (li + 1) * layerSpacing;
+            const nextCount = layers[li + 1];
+            const nextH = (nextCount - 1) * nodeSpacing;
+            for (let nj = 0; nj < nextCount; nj += 2) {
+              const nny = nnY - nextH / 2 + nj * nodeSpacing;
+              ctx.beginPath(); ctx.moveTo(lx, ny); ctx.lineTo(nlx, nny);
+              ctx.strokeStyle = `rgba(139,92,246,${0.06 * nodeP})`;
+              ctx.lineWidth = 0.5; ctx.stroke();
+            }
+          }
+
+          // Glow
+          ctx.beginPath(); ctx.arc(lx, ny, 4, 0, Math.PI * 2);
+          const pulse = Math.sin(now / 350 + li * 1.3 + ni * 0.5) * 0.3 + 0.7;
+          ctx.fillStyle = `rgba(59,130,246,${0.25 * nodeP * pulse})`;
+          ctx.fill();
+          // Core
+          ctx.beginPath(); ctx.arc(lx, ny, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(139,92,246,${0.8 * nodeP})`;
+          ctx.fill();
+        }
+
+        // Layer labels
+        if (nodeP > 0.5) {
+          const layerH2 = (nodeCount - 1) * nodeSpacing;
+          ctx.font = '600 8px Inter, sans-serif';
+          ctx.fillStyle = '#5c617060';
+          ctx.textAlign = 'center';
+          const labels = ['Input', 'Hidden', 'Hidden', 'Hidden', 'Output'];
+          ctx.fillText(labels[li], lx, nnY + layerH2 / 2 + 20);
+        }
+      });
+
+      // Flowing data particles
+      for (let pi = 0; pi < 8; pi++) {
+        const pp = (now / 1200 + pi * 0.125) % 1;
+        const px = nnStartX + pp * (layerSpacing * 4);
+        const py = nnY + Math.sin(pp * Math.PI * 4) * 25;
+        ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        const pa = 0.8 * (1 - Math.abs(pp - 0.5) * 2) * p;
+        ctx.fillStyle = `rgba(139,92,246,${pa})`;
+        ctx.fill();
+      }
+
+      // "Processing..." text at bottom
+      if (p > 0.4) {
+        ctx.font = '500 11px Inter, sans-serif';
+        ctx.fillStyle = '#5c6170';
+        ctx.textAlign = 'center';
+        const dots = '.'.repeat(1 + Math.floor((now / 400) % 3));
+        ctx.fillText('Processing ' + tokens.length + ' tokens through 1536 dimensions' + dots, cx, H - 30);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // ════════════════════════════════════════
+    // PHASE 2: Vector output — bar chart visualization
+    // ════════════════════════════════════════
+    if (phase === 2) {
+      ctx.globalAlpha = 1;
+
+      // Title
+      ctx.font = '600 13px Inter, sans-serif';
+      ctx.fillStyle = '#3b82f6';
+      ctx.textAlign = 'center';
+      ctx.fillText('Output: 1536-dimensional vector', cx, 35);
+
+      ctx.font = '400 11px Inter, sans-serif';
+      ctx.fillStyle = '#5c6170';
+      ctx.fillText('Each dimension captures a different facet of semantic meaning', cx, 54);
+
+      // ── Bar chart of vector values ──
+      const barCount = vector.length;
+      const barAreaW = W * 0.75;
+      const barW = Math.floor(barAreaW / barCount) - 4;
+      const barStartX = cx - barAreaW / 2;
+      const barBaseY = H * 0.48;
+      const barMaxH = H * 0.22;
+
+      for (let i = 0; i < barCount; i++) {
+        const delay = ease(Math.max(0, Math.min(1, (p - i * 0.04) * 2.5)));
+        const val = vector[i];
+        const barH = Math.abs(val) * barMaxH * delay;
+        const bx = barStartX + i * (barW + 4);
+        const isPos = val >= 0;
+        const by = isPos ? barBaseY - barH : barBaseY;
+
+        // Bar glow
+        ctx.fillStyle = isPos ? `rgba(59,130,246,${0.08 * delay})` : `rgba(236,72,153,${0.08 * delay})`;
+        roundRect(ctx, bx - 2, (isPos ? by - 2 : by), barW + 4, barH + 4, 4);
+        ctx.fill();
+
+        // Bar
+        ctx.fillStyle = isPos ? `rgba(59,130,246,${0.7 * delay})` : `rgba(236,72,153,${0.7 * delay})`;
+        roundRect(ctx, bx, (isPos ? by : by), barW, barH, 3);
+        ctx.fill();
+
+        // Value label
+        if (delay > 0.7) {
+          ctx.globalAlpha = (delay - 0.7) * 3.3;
+          ctx.font = '600 9px "SF Mono", monospace';
+          ctx.fillStyle = isPos ? '#79c0ff' : '#f472b6';
+          ctx.textAlign = 'center';
+          ctx.fillText(val.toFixed(2), bx + barW / 2, isPos ? by - 6 : by + barH + 12);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Zero line
+      ctx.beginPath();
+      ctx.moveTo(barStartX - 10, barBaseY);
+      ctx.lineTo(barStartX + barAreaW + 10, barBaseY);
+      ctx.strokeStyle = '#5c617040';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Axis label
+      ctx.font = '500 9px Inter, sans-serif';
+      ctx.fillStyle = '#5c6170';
+      ctx.textAlign = 'left';
+      ctx.fillText('0', barStartX - 20, barBaseY + 4);
+      ctx.fillText('+', barStartX - 20, barBaseY - barMaxH * 0.5);
+      ctx.fillText('−', barStartX - 20, barBaseY + barMaxH * 0.5);
+
+      // Dimension indices
+      ctx.textAlign = 'center';
+      ctx.font = '500 8px "SF Mono", monospace';
+      ctx.fillStyle = '#5c617060';
+      for (let i = 0; i < barCount; i++) {
+        ctx.fillText('d' + i, barStartX + i * (barW + 4) + barW / 2, barBaseY + barMaxH + 20);
+      }
+
+      // Numeric string below
+      const numY = H - 50;
+      const vecStr = '[' + vector.map(v => v.toFixed(3)).join(', ') + ', ...]';
+      const strReveal = Math.floor(vecStr.length * p);
+      ctx.font = '500 12px "SF Mono", "Fira Code", monospace';
+      ctx.textAlign = 'center';
+
+      // Background pill
+      const tw = ctx.measureText(vecStr).width;
+      ctx.fillStyle = '#0d111780';
+      roundRect(ctx, cx - tw / 2 - 12, numY - 14, tw + 24, 28, 8);
+      ctx.fill();
+
+      // Characters
+      ctx.textAlign = 'left';
+      const strStartX = cx - tw / 2;
+      for (let ci = 0; ci < vecStr.length; ci++) {
+        const ca = ci < strReveal ? 1 : 0.1;
+        const isNum = /[0-9.\-]/.test(vecStr[ci]);
+        ctx.fillStyle = isNum ? `rgba(121,192,255,${ca})` : `rgba(200,210,220,${ca * 0.6})`;
+        ctx.fillText(vecStr[ci], strStartX + ci * 8.2, numY + 4);
+      }
+
+      // "showing 12 of 1536"
+      if (p > 0.6) {
+        ctx.globalAlpha = (p - 0.6) * 2.5;
+        ctx.font = '400 10px Inter, sans-serif';
+        ctx.fillStyle = '#5c6170';
+        ctx.textAlign = 'center';
+        ctx.fillText('showing 12 of 1,536 dimensions  ·  full vector = 6 KB of numbers', cx, numY + 24);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ════════════════════════════════════════
+    // PHASE 3: Store in DB
+    // ════════════════════════════════════════
+    if (phase === 3) {
+      ctx.globalAlpha = 1;
+
+      // Small vector reference at top
+      ctx.font = '500 11px "SF Mono", monospace';
+      ctx.fillStyle = '#79c0ff60';
+      ctx.textAlign = 'center';
+      ctx.fillText('[0.023, -0.417, 0.881, 0.156, -0.334, ...]', cx, 32);
+      ctx.font = '500 10px Inter, sans-serif';
+      ctx.fillStyle = '#5c617060';
+      ctx.fillText('vector from previous step', cx, 48);
+
+      // Arrow down
+      const arrP = Math.min(1, p * 3);
+      const arrLen = 30;
+      ctx.beginPath();
+      ctx.moveTo(cx, 58);
+      ctx.lineTo(cx, 58 + arrLen * arrP);
+      ctx.strokeStyle = '#3b82f650';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (arrP > 0.7) {
+        ctx.beginPath();
+        ctx.moveTo(cx - 5, 58 + arrLen - 6);
+        ctx.lineTo(cx, 58 + arrLen + 2);
+        ctx.lineTo(cx + 5, 58 + arrLen - 6);
+        ctx.fillStyle = '#3b82f6';
+        ctx.fill();
+      }
+
+      // DB Card
+      const cardW = 600, cardH = 200;
+      const cardX = cx - cardW / 2;
+      const cardY = 105;
+      const cardP = ease(Math.max(0, (p - 0.15) / 0.85));
+
+      // Card background
+      ctx.fillStyle = '#0d1117';
+      ctx.strokeStyle = '#21262d';
+      ctx.lineWidth = 1;
+      roundRect(ctx, cardX, cardY, cardW, cardH * cardP, 14);
+      ctx.fill(); ctx.stroke();
+
+      // Top accent
+      ctx.fillStyle = '#06b6d4';
+      roundRect(ctx, cardX, cardY, cardW, 3, 14);
+      ctx.fill();
+
+      if (cardP > 0.3) {
+        const innerA = (cardP - 0.3) / 0.7;
+        ctx.globalAlpha = innerA;
+
+        // DB title area
+        ctx.font = '800 16px Inter, sans-serif';
+        ctx.fillStyle = '#06b6d4';
+        ctx.textAlign = 'left';
+        ctx.fillText('ChromaDB', cardX + 24, cardY + 34);
+
+        ctx.font = '400 11px Inter, sans-serif';
+        ctx.fillStyle = '#5c6170';
+        ctx.fillText('Collection: helikon_docs  ·  Distance: cosine', cardX + 24, cardY + 52);
+
+        // Separator
+        ctx.beginPath();
+        ctx.moveTo(cardX + 20, cardY + 65);
+        ctx.lineTo(cardX + cardW - 20, cardY + 65);
+        ctx.strokeStyle = '#21262d';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Metadata fields — two rows to avoid overflow
+        const row1 = [
+          { k: 'file', v: '"biology.pdf"', c: '#a5d6ff' },
+          { k: 'page', v: '12', c: '#7ee787' },
+          { k: 'subject', v: '"Biology"', c: '#ffa657' },
+        ];
+        const row2 = [
+          { k: 'user_id', v: '42', c: '#d2a8ff' },
+          { k: 'chunk_idx', v: '3', c: '#f472b6' },
+        ];
+
+        ctx.font = '700 10px Inter, sans-serif';
+        ctx.fillStyle = '#5c617080';
+        ctx.textAlign = 'left';
+        ctx.fillText('METADATA', cardX + 24, cardY + 84);
+
+        function drawFieldRow(fields, fy, startFi) {
+          let fx = cardX + 24;
+          ctx.font = '600 11px "SF Mono", monospace';
+          fields.forEach((f, i) => {
+            const fi = startFi + i;
+            const fieldP = ease(Math.max(0, Math.min(1, (innerA - fi * 0.1) * 2.5)));
+            ctx.globalAlpha = fieldP;
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'left';
+            const keyStr = f.k + ': ';
+            ctx.fillText(keyStr, fx, fy);
+            const kw = ctx.measureText(keyStr).width;
+            ctx.fillStyle = f.c;
+            ctx.fillText(f.v, fx + kw, fy);
+            fx += kw + ctx.measureText(f.v).width + 24;
+          });
+        }
+        drawFieldRow(row1, cardY + 100, 0);
+        drawFieldRow(row2, cardY + 118, row1.length);
+
+        // Vector row
+        ctx.globalAlpha = innerA;
+        ctx.font = '700 10px Inter, sans-serif';
+        ctx.fillStyle = '#5c617080';
+        ctx.textAlign = 'left';
+        ctx.fillText('VECTOR', cardX + 24, cardY + 132);
+
+        ctx.font = '500 11px "SF Mono", monospace';
+        ctx.fillStyle = '#79c0ff80';
+        ctx.fillText('[0.023, -0.417, 0.881, 0.156, -0.334, 0.720, -0.092, ...]', cardX + 24, cardY + 150);
+
+        ctx.font = '400 10px Inter, sans-serif';
+        ctx.fillStyle = '#5c617060';
+        ctx.fillText('1536 float32 values  ·  cosine distance metric', cardX + 24, cardY + 170);
+
+        // Stored confirmation
+        if (p > 0.75) {
+          const checkA = (p - 0.75) * 4;
+          ctx.globalAlpha = checkA;
+          ctx.font = '700 14px Inter, sans-serif';
+          ctx.fillStyle = '#10b981';
+          ctx.textAlign = 'center';
+          ctx.fillText('✓  Stored and indexed — ready for semantic retrieval', cx, cardY + cardH + 36);
+        }
+
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    ctx.textAlign = 'left';
+    ctx.globalAlpha = 1;
+    embedAnimFrame = requestAnimationFrame(drawEmbed);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  // ══════════════════════════════════════════
+  //  VECTOR SPACE ANIMATION (arrow-stepped)
+  // ══════════════════════════════════════════
+  let vecAnimFrame = null;
+  let vecState = null;
+
+  function initVectorAnim() {
+    const canvas = document.getElementById('vecCanvas');
+    if (!canvas) return;
+    const wrap = canvas.parentElement;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = wrap.clientWidth * dpr;
+    canvas.height = wrap.clientHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+
+    const topics = [
+      { label: 'Biology', color: '#3b82f6', cx: W*0.25, cy: H*0.3 },
+      { label: 'History', color: '#8b5cf6', cx: W*0.7, cy: H*0.25 },
+      { label: 'Physics', color: '#06b6d4', cx: W*0.35, cy: H*0.7 },
+      { label: 'Geography', color: '#10b981', cx: W*0.72, cy: H*0.68 },
+    ];
+
+    const dots = [];
+    topics.forEach(t => {
+      for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 25 + Math.random() * 40;
+        dots.push({
+          x: Math.random() * W, y: Math.random() * H,
+          tx: t.cx + Math.cos(angle) * dist,
+          ty: t.cy + Math.sin(angle) * dist,
+          color: t.color, topic: t.label,
+          r: 4 + Math.random() * 3,
+          retrieved: false,
+        });
+      }
+    });
+
+    const query = { x: W * 0.85, y: H * 0.12, tx: W * 0.3, ty: H * 0.35, visible: false };
+
+    const stages = document.querySelectorAll('#vecLegend .vec-stage');
+    stages.forEach(s => s.classList.remove('active'));
+
+    vecState = { ctx, W, H, topics, dots, query, retrieveLines: [], stages, phase: -1, phaseStart: performance.now() };
+
+    // Show initial state: dots scattered, first stage highlighted
+    stages[0].classList.add('active');
+    vecState.phase = 0;
+    vecState.phaseStart = performance.now();
+
+    if (vecAnimFrame) cancelAnimationFrame(vecAnimFrame);
+    vecAnimFrame = requestAnimationFrame(drawVec);
+  }
+
+  function vecAdvance(step) {
+    if (!vecState) return;
+    const { dots, query, stages, W, H } = vecState;
+
+    vecState.phase = step;
+    vecState.phaseStart = performance.now();
+    stages.forEach((s, i) => s.classList.toggle('active', i <= step));
+
+    if (step >= 2) {
+      query.visible = true;
+    }
+    if (step >= 3) {
+      const bioDots = dots.filter(d => d.topic === 'Biology');
+      bioDots.sort((a, b) => {
+        const da = Math.hypot(a.tx - query.tx, a.ty - query.ty);
+        const db = Math.hypot(b.tx - query.tx, b.ty - query.ty);
+        return da - db;
+      });
+      bioDots.slice(0, 4).forEach(d => d.retrieved = true);
+      vecState.retrieveLines = bioDots.slice(0, 4).map(d => ({ x: d.tx, y: d.ty }));
+    }
+    if (step < 3) {
+      dots.forEach(d => d.retrieved = false);
+      vecState.retrieveLines = [];
+    }
+    if (step < 2) {
+      query.visible = false;
+    }
+  }
+
+  function drawVec(now) {
+    if (!vecState) return;
+    const { ctx, W, H, topics, dots, query, retrieveLines, phase } = vecState;
+    const t = Math.min((now - vecState.phaseStart) / 1400, 1);
+    const ease = v => v < 0.5 ? 4*v*v*v : 1 - Math.pow(-2*v+2, 3)/2;
+    const p = ease(t);
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#1c1f2a';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillStyle = '#5c6170';
+    ctx.textAlign = 'left';
+    ctx.fillText('semantic dimension 1 →', W - 140, H - 10);
+    ctx.save(); ctx.translate(14, 130); ctx.rotate(-Math.PI/2);
+    ctx.fillText('semantic dimension 2 →', 0, 0);
+    ctx.restore();
+
+    // Dot clustering interpolation
+    const clustered = phase >= 1;
+    const clusterP = phase === 0 ? 0 : (phase === 1 ? p : 1);
+    const appearP = phase === 0 ? p : 1;
+
+    dots.forEach(d => {
+      const cx = d.x + (d.tx - d.x) * clusterP;
+      const cy = d.y + (d.ty - d.y) * clusterP;
+
+      if (d.retrieved && phase >= 3) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, d.r + 8 + Math.sin(now/300) * 2, 0, Math.PI * 2);
+        ctx.fillStyle = d.color + '30';
+        ctx.fill();
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = d.retrieved && phase >= 3 ? '#fff' : d.color;
+      ctx.globalAlpha = 0.3 + appearP * 0.55;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    // Topic labels + cluster circles (after clustering)
+    if (clusterP > 0.5) {
+      ctx.globalAlpha = Math.min(1, (clusterP - 0.5) * 2);
+      ctx.font = '600 11px Inter, sans-serif';
+      topics.forEach(tp => {
+        ctx.fillStyle = tp.color + 'cc';
+        ctx.textAlign = 'center';
+        ctx.fillText(tp.label, tp.cx, tp.cy - 55);
+
+        ctx.beginPath();
+        ctx.arc(tp.cx, tp.cy, 55, 0, Math.PI * 2);
+        ctx.strokeStyle = tp.color + '25';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    }
+
+    // Query point
+    if (query.visible && phase >= 2) {
+      const qt = phase === 2 ? p : 1;
+      const qx = query.x + (query.tx - query.x) * qt;
+      const qy = query.y + (query.ty - query.y) * qt;
+
+      const pulse = Math.sin(now / 300) * 0.3 + 0.7;
+      ctx.beginPath();
+      ctx.arc(qx, qy, 14 + pulse * 4, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f59e0b50';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(qx, qy, 7, 0, Math.PI * 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fill();
+
+      ctx.font = '700 12px Inter, sans-serif';
+      ctx.fillStyle = '#f59e0b';
+      ctx.textAlign = 'center';
+      ctx.fillText('QUERY', qx, qy - 20);
+      ctx.textAlign = 'left';
+
+      // Retrieve lines
+      if (phase >= 3) {
+        const lt = phase === 3 ? p : 1;
+        retrieveLines.forEach(rl => {
+          const lx = qx + (rl.x - qx) * lt;
+          const ly = qy + (rl.y - qy) * lt;
+          ctx.beginPath();
+          ctx.moveTo(qx, qy);
+          ctx.lineTo(lx, ly);
+          ctx.strokeStyle = '#10b98180';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (lt > 0.8) {
+            const mx = (qx + rl.x) / 2;
+            const my = (qy + rl.y) / 2;
+            const dist = Math.hypot(rl.x - qx, rl.y - qy);
+            const score = Math.max(0, 1 - dist / (W * 0.5));
+            ctx.font = '600 10px Inter, sans-serif';
+            ctx.fillStyle = '#10b981';
+            ctx.textAlign = 'center';
+            ctx.fillText((score * 100).toFixed(0) + '%', mx, my - 8);
+            ctx.textAlign = 'left';
+          }
+        });
+      }
+    }
+
+    vecAnimFrame = requestAnimationFrame(drawVec);
+  }
+
+  // ══════════════════════════════════════════
+  //  KEYBOARD / WHEEL / TOUCH
+  // ══════════════════════════════════════════
   document.addEventListener('keydown', (e) => {
     if (['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)) {
       e.preventDefault();
-      goTo(current + 1);
+      navForward();
     } else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) {
       e.preventDefault();
-      goTo(current - 1);
+      navBackward();
     } else if (e.key === 'Home') {
       e.preventDefault();
       goTo(0);
@@ -1080,37 +3003,41 @@
     }
   });
 
-  // Mouse wheel
   let wheelTimeout;
   document.addEventListener('wheel', (e) => {
     e.preventDefault();
     if (wheelTimeout) return;
     wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 600);
-    if (e.deltaY > 0) goTo(current + 1);
-    else if (e.deltaY < 0) goTo(current - 1);
+    if (e.deltaY > 0) navForward();
+    else if (e.deltaY < 0) navBackward();
   }, { passive: false });
 
-  // Touch swipe
   let touchY = 0;
   document.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; });
   document.addEventListener('touchend', (e) => {
     const dy = touchY - e.changedTouches[0].clientY;
     if (Math.abs(dy) > 50) {
-      dy > 0 ? goTo(current + 1) : goTo(current - 1);
+      dy > 0 ? navForward() : navBackward();
     }
+  });
+
+  // ── Canvas resize handler ──
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const slide = slides[current];
+      if (slide && slide.id === 'slide-embed' && embedState) {
+        initEmbedAnim();
+      }
+      if (slide && slide.id === 'slide-vectors' && vecState) {
+        initVectorAnim();
+      }
+    }, 200);
   });
 
   // Init
   updateUI();
-  // Reset all non-active slide animations
-  slides.forEach((s, i) => {
-    if (i !== 0) {
-      s.querySelectorAll('.anim, .anim-s').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = el.classList.contains('anim-s') ? 'scale(0.92)' : 'translateY(30px)';
-      });
-    }
-  });
 })();
 </script>
 
