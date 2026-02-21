@@ -349,20 +349,26 @@ def rag_two_phase_generate(
 
     perfection_llm = get_llm(model_name, temperature=0.0)
 
-    verify_prompt = f"""Review and perfect this educational content:
+    verify_prompt = f"""You are a senior programming teacher reviewing colleague's teaching materials.
+
+                        CHECKLIST:
+                        ✅ Technical accuracy (code works, concepts correct)
+                        ✅ Pedagogical quality (clear objectives, good differentiation)
+                        ✅ Complete solutions
+                        ✅ Classroom-ready format
+
+                        FIX EVERYTHING automatically. Output ONLY final, perfect Markdown for teachers without unnecessary text like:Here is the reviewed and finalized version of the Python Basics Quiz:
+
+                        in the output only give what is required e.g. I want quiz :only output quiz without asking the user or thanking the user or showing the user something.
+
 
 --- CONTENT TO REVIEW ---
 {raw_content}
 --- END CONTENT ---
+Review this raw material and create the FINAL teacher-ready version:
 
-Your task:
-1. Check for accuracy against the provided document sources
-2. Ensure all citations are properly formatted
-3. Fix any errors (grammar, facts, structure)
-4. Verify HTML formatting is correct
-5. Return the CORRECTED version (or original if already perfect)
-
-The content includes citations to uploaded documents. Preserve these citations."""
+Return ONLY perfect Markdown and return only what is provided here  and nothing more this will be directly exported and only the quiz is neededwith:
+same struture as the given raw material. """
 
     start_verify = time.time()
     perfect_response = perfection_llm.invoke([
