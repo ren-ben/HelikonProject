@@ -20,18 +20,24 @@ from config import settings
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Validate API keys and warm up the vector store before accepting traffic."""
-    # key validation
-    missing = []
-    if not settings.llm_api_key:
-        missing.append("LLM_API_KEY")
-    if not settings.embedding_api_key:
-        missing.append("EMBEDDING_API_KEY")
-    if missing:
-        raise RuntimeError(
-            f"RAG service cannot start. missing env vars: {', '.join(missing)}"
-        )
 
-    # warm up ChromaDB (creates persistent dir if needed)
+    # Only validate API keys if NOT using Ollama
+    if settings.llm_provider.lower() != "ollama":
+        missing = []
+        if not settings.llm_api_key:
+            missing.append("LLM_API_KEY")
+        if not settings.embedding_api_key:
+            missing.append("EMBEDDING_API_KEY")
+        if missing:
+            raise RuntimeError(
+                f"RAG service cannot start. Missing env vars: {', '.join(missing)}"
+            )
+    else:
+        print(f"🦙 Using Ollama provider - skipping API key validation")
+        print(f"🦙 Ollama URL: {settings.ollama_url}")
+        print(f"🦙 Model: {settings.llm_model}")
+
+    # Warm up ChromaDB (creates persistent dir if needed)
     from vector_store import get_collection, get_vectorstore
     get_collection()
     get_vectorstore()
