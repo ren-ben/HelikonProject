@@ -205,3 +205,190 @@ def rag_generate(
         for doc, dist in results_with_score
     ]
     return {"answer": response.content, "sources": sources}
+
+
+import time
+
+# two phase prompting to check
+def two_phase_parametric_generate(
+    user_prompt: str,
+    model_name: str | None = None,
+) -> dict:
+    """
+    Two-phase generation matching your quiz_agent.py logic:
+
+    Phase 1: Generate raw content (temperature=0.7, creative)
+    Phase 2: Verify and perfect content (temperature=0.0, precise)
+
+    Returns {
+        "formattedResponse": str,    # Final HTML
+        "rawContent": str,           # Before verification
+        "sources": [],
+        "timings": {...}
+    }
+    """
+    system_prompt = _load_system_prompt()
+
+    generator_llm = get_llm(model_name, temperature=0.7)
+    enhanced_prompt = user_prompt + _HTML_SUFFIX
+
+    start_gen = time.time()
+    raw_response = generator_llm.invoke([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=enhanced_prompt),
+    ])
+    gen_time = time.time() - start_gen
+    raw_content = raw_response.content
+
+
+    perfection_llm = get_llm(model_name, temperature=0.0)
+
+    verify_prompt = f"""Review and perfect this educational content:
+
+--- CONTENT TO REVIEW ---
+{raw_content}
+--- END CONTENT ---
+
+Your task:
+1. Check for accuracy, clarity, and completeness
+2. Fix any errors (grammar, facts, structure)
+3. Ensure proper HTML formatting
+4. Return the CORRECTED version (or original if already perfect)
+
+Be thorough but preserve the original intent."""
+
+    start_verify = time.time()
+    perfect_response = perfection_llm.invoke([
+        HumanMessage(content=verify_prompt)
+    ])
+    verify_time = time.time() - start_verify
+    final_content = perfect_response.content
+
+    total_time = gen_time + verify_time
+
+    timing_html = f"""
+<hr>
+<div style="color: #666; font-size: 0.9em; margin-top: 20px;">
+<strong>⏱️ Generation Details:</strong><br>
+Phase 1 (Generate): {gen_time:.1f}s<br>
+Phase 2 (Verify): {verify_time:.1f}s<br>
+<strong>Total: {total_time:.1f}s</strong>
+</div>"""
+
+    return {
+        "formattedResponse": final_content + timing_html,
+        "rawContent": raw_content,
+        "sources": [],
+        "timings": {
+            "generate": f"{gen_time:.1f}s",
+            "verify": f"{verify_time:.1f}s",
+            "total": f"{total_time:.1f}s"
+        }
+    }
+
+
+
+
+
+def rag_two_phase_generate(
+    user_prompt: str,
+    user_id: str,
+    subject: str | None = None,
+    model_name: str | None = None,
+    top_k: int = 5,
+    citation_style: str = "numbered",
+) -> dict:
+    """
+    RAG-augmented two-phase generation:
+    1. Retrieve relevant documents from ChromaDB
+    2. Phase 1: Generate with documents + custom prompts (temp=0.7)
+    3. Phase 2: Verify and perfect (temp=0.0)
+
+    Returns both raw and final content with document sources.
+    """
+
+    vs = get_vectorstore()
+    results_with_score = vs.similarity_search_with_score(
+        user_prompt,
+        k=top_k,
+        filter=_build_filter(user_id, subject),
+    )
+    sources = []
+    if results_with_score:
+        context_parts = []
+        for i, (doc, dist) in enumerate(results_with_score):
+            ref_num = i + 1
+            label = _source_label(doc, ref_num)
+            context_parts.append(f"{label}:\n{doc.page_content}")
+            sources.append(_build_source(doc, dist, ref_number=ref_num))
+
+        context = "\n\n".join(context_parts)
+        citation_instr = _CITATION_INSTRUCTIONS.get(citation_style, "")
+        context_block = (
+            "\n\nDie folgenden Auszuege aus hochgeladenen Dokumenten sollen als "
+            "zusaetzlicher Kontext fuer die Materialerstellung dienen:\n\n"
+            f"--- Dokumentkontext ---\n{context}\n--- Ende Dokumentkontext ---"
+            f"{citation_instr}\n"
+        )
+    else:
+        context_block = ""
+
+    system_prompt = _load_system_prompt()
+    enhanced_prompt = user_prompt + context_block + _HTML_SUFFIX
+
+    generator_llm = get_llm(model_name, temperature=0.7)
+
+    start_gen = time.time()
+    raw_response = generator_llm.invoke([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=enhanced_prompt),
+    ])
+    gen_time = time.time() - start_gen
+    raw_content = raw_response.content
+
+
+    perfection_llm = get_llm(model_name, temperature=0.0)
+
+    verify_prompt = f"""Review and perfect this educational content:
+
+--- CONTENT TO REVIEW ---
+{raw_content}
+--- END CONTENT ---
+
+Your task:
+1. Check for accuracy against the provided document sources
+2. Ensure all citations are properly formatted
+3. Fix any errors (grammar, facts, structure)
+4. Verify HTML formatting is correct
+5. Return the CORRECTED version (or original if already perfect)
+
+The content includes citations to uploaded documents. Preserve these citations."""
+
+    start_verify = time.time()
+    perfect_response = perfection_llm.invoke([
+        HumanMessage(content=verify_prompt)
+    ])
+    verify_time = time.time() - start_verify
+    final_content = perfect_response.content
+
+    total_time = gen_time + verify_time
+
+    timing_html = f"""
+<hr>
+<div style="color: #666; font-size: 0.9em; margin-top: 20px;">
+<strong>⏱️ Generation Details:</strong><br>
+Phase 1 (Generate with {len(sources)} sources): {gen_time:.1f}s<br>
+Phase 2 (Verify): {verify_time:.1f}s<br>
+<strong>Total: {total_time:.1f}s</strong>
+</div>"""
+
+    return {
+        "formattedResponse": final_content + timing_html,
+        "rawContent": raw_content,
+        "sources": sources,
+        "timings": {
+            "generate": f"{gen_time:.1f}s",
+            "verify": f"{verify_time:.1f}s",
+            "total": f"{total_time:.1f}s"
+        }
+    }
