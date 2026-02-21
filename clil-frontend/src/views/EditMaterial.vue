@@ -45,6 +45,7 @@
           </v-alert>
       </v-col>
 
+
       <!-- Sidebar für Metadaten -->
       <v-col cols="12" md="4">
         <v-card elevation="1" v-if="material">
@@ -127,6 +128,42 @@
         </v-card>
          <v-skeleton-loader v-else type="card"></v-skeleton-loader>
       </v-col>
+
+
+
+
+            <!-- AI Chat Assistant -->
+            <v-col cols="12" md="8">
+              <v-card elevation="1" class="mt-4">
+                <v-card-title class="text-subtitle-1 d-flex align-center">
+                  <v-icon start color="primary">mdi-robot-outline</v-icon>
+                  AI-Assistent
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                  <v-textarea
+                    v-model="chatPrompt"
+                    label="Material ändern..."
+                    placeholder="z.B. 'kürzer machen', 'mehr Beispiele hinzufügen', 'ins Deutsche übersetzen'"
+                    variant="outlined"
+                    rows="3"
+                    density="compact"
+                    :disabled="chatLoading"
+                  ></v-textarea>
+                  <v-btn
+                    color="primary"
+                    block
+                    @click="handleChatSubmit"
+                    :loading="chatLoading"
+                    :disabled="!chatPrompt.trim()"
+                  >
+                    <v-icon start>mdi-magic-staff</v-icon>
+                    Material aktualisieren
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
     </v-row>
 
      <!-- Delete Confirmation Dialog -->
@@ -193,6 +230,10 @@ import {
   formatDate,
   MATERIAL_TYPES
 } from '@/utils/materialUtils';
+
+const chatPrompt = ref('');
+const chatLoading = ref(false);
+
 
 const route = useRoute();
 const router = useRouter();
@@ -417,6 +458,53 @@ const deleteMaterial = async () => {
     deleting.value = false;
   }
 };
+
+
+const handleChatSubmit = async () => {
+  if (!chatPrompt.value.trim() || !material.value) return;
+
+  chatLoading.value = true;
+  saveStatus.value = 'saving';
+
+  try {
+    const response = await fetch(`/api/v1/clil/material/${material.value.id}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        prompt: chatPrompt.value,
+        content: editableContent.value,
+        language: material.value.language || 'German',
+        languageLevel: editableLanguageLevel.value,
+        subject: editableSubject.value,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Chat request failed');
+    }
+
+    const data = await response.json();
+
+    // Update content with AI response
+    editableContent.value = data.formattedResponse;
+    material.value.content = data.formattedResponse;
+
+    chatPrompt.value = ''; // Clear input
+    saveStatus.value = 'unsaved'; // Mark as unsaved so user can review
+    showFeedback('Material mit AI aktualisiert! Überprüfen Sie das Ergebnis.', 'success');
+
+  } catch (error) {
+    console.error('Chat error:', error);
+    showFeedback('Fehler beim AI-Update', 'error');
+    saveStatus.value = 'error';
+  } finally {
+    chatLoading.value = false;
+  }
+};
+
 
 </script>
 
