@@ -1,11 +1,13 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    # LLM Configuration
     llm_provider: str = "openai"
     llm_api_key: str = ""
     llm_model: str = "gpt-4o-mini"
 
     ollama_url: str = "http://host.docker.internal:11434"
+    ollama_embedding_model: str = "nomic-embed-text"
 
     embedding_api_key: str = ""
 
