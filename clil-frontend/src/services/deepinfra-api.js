@@ -495,4 +495,21 @@ export default {
       return { success: false, error: error.message };
     }
   },
+  // Chat with AI to modify existing material
+    async chatWithMaterial(materialId, chatData) {
+      try {
+        const response = await apiClient.post(`/material/${materialId}/chat`, chatData);
+        return {
+          success: true,
+          data: response.data,
+        };
+      } catch (error) {
+        console.error('Chat with material error:', error.message);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
 };

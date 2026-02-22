@@ -223,6 +223,8 @@ import MaterialEditor from '@/components/Editor/MaterialEditor.vue';
 import ExportDialog from '@/components/ExportDialog.vue';
 import { useNotificationStore } from '@/stores/notifications';
 import { useSubjectStore } from '@/stores/subjects';
+import materialsService from '@/services/materialsService';
+import apiClient from '@/services/deepinfra-api';
 import {
   getIconForType,
   getIconColor,
@@ -460,6 +462,7 @@ const deleteMaterial = async () => {
 };
 
 
+// Chat with AI - use API client with automatic auth
 const handleChatSubmit = async () => {
   if (!chatPrompt.value.trim() || !material.value) return;
 
@@ -467,30 +470,21 @@ const handleChatSubmit = async () => {
   saveStatus.value = 'saving';
 
   try {
-    const response = await fetch(`/api/v1/clil/material/${material.value.id}/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({
-        prompt: chatPrompt.value,
-        content: editableContent.value,
-        language: material.value.language || 'German',
-        languageLevel: editableLanguageLevel.value,
-        subject: editableSubject.value,
-      })
+    const response = await apiClient.chatWithMaterial(material.value.id, {
+      prompt: chatPrompt.value,
+      content: editableContent.value,
+      language: material.value.language || 'German',
+      languageLevel: editableLanguageLevel.value,
+      subject: editableSubject.value,
     });
 
-    if (!response.ok) {
-      throw new Error('Chat request failed');
+    if (!response.success) {
+      throw new Error(response.error || 'Chat failed');
     }
 
-    const data = await response.json();
-
     // Update content with AI response
-    editableContent.value = data.formattedResponse;
-    material.value.content = data.formattedResponse;
+    editableContent.value = response.data.formattedResponse;
+    material.value.content = response.data.formattedResponse;
 
     chatPrompt.value = ''; // Clear input
     saveStatus.value = 'unsaved'; // Mark as unsaved so user can review
@@ -498,12 +492,13 @@ const handleChatSubmit = async () => {
 
   } catch (error) {
     console.error('Chat error:', error);
-    showFeedback('Fehler beim AI-Update', 'error');
+    showFeedback(error.message || 'Fehler beim AI-Update', 'error');
     saveStatus.value = 'error';
   } finally {
     chatLoading.value = false;
   }
 };
+
 
 
 </script>
