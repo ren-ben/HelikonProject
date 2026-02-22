@@ -2,3 +2,7 @@ helikonproject.com, www.helikonproject.com {
     header -X-Frame-Options
     reverse_proxy frontend:80
 }
+
+list-me.net {
+    reverse_proxy listme-frontend:80
+}

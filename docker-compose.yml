@@ -14,6 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - helikon
+      - caddy-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
@@ -122,3 +123,6 @@ volumes:
 networks:
   helikon:
     driver: bridge
+  caddy-net:
+    external: true
+    name: caddy-net
