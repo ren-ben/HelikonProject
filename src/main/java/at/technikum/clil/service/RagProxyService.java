@@ -1,6 +1,7 @@
 package at.technikum.clil.service;
 
 import at.technikum.clil.dto.ClilResponse;
+import at.technikum.clil.dto.MaterialChatRequest;
 import at.technikum.clil.dto.MaterialRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -71,4 +72,23 @@ public class RagProxyService {
                             .build());
                 });
     }
+
+    public Mono<ClilResponse> chatWithMaterial(MaterialChatRequest request) {
+        log.info("Proxying chat request to RAG service");
+
+        return webClient.post()
+                .uri("/rag/chat")
+                .bodyValue(request)  // Send the DTO directly
+                .retrieve()
+                .bodyToMono(ClilResponse.class)
+                .doOnSuccess(resp -> log.info("Chat completed"))
+                .onErrorResume(error -> {
+                    log.error("Chat error: {}", error.getMessage());
+                    return Mono.just(ClilResponse.builder()
+                            .formattedResponse("<div class='error'>Chat failed: " + error.getMessage() + "</div>")
+                            .build());
+                });
+    }
+
+
 }
