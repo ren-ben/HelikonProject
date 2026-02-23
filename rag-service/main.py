@@ -59,6 +59,9 @@ from routes.ingest     import router as ingest_router
 from routes.query      import router as query_router
 from routes.documents  import router as documents_router
 from routes.models     import router as models_router
+from routes.chat import router as chat_router
+
+app.include_router(chat_router, prefix="/rag")
 
 app.include_router(generate_router,   prefix="/rag")
 app.include_router(ingest_router,     prefix="/rag")
