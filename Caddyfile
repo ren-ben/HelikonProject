@@ -1,6 +1,6 @@
 helikonproject.com, www.helikonproject.com {
     header -X-Frame-Options
-    reverse_proxy frontend:80
+    reverse_proxy clil-frontend:80
 }
 
 list-me.net {
