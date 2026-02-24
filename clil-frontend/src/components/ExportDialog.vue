@@ -217,6 +217,8 @@
 import { ref, computed, watch, reactive, nextTick } from 'vue';
 import { useMaterialsStore } from '@/stores/materials';
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
+import { convertMarkdownToDocx } from '@mohtasham/md-to-docx';
 
 const props = defineProps({
   modelValue: Boolean,
@@ -268,24 +270,40 @@ const finalFilename = computed({
   set: (v) => { filenameBase.value = v; }
 });
 
-// Sanitize content: strip markdown code fences + AI trailing commentary
-const sanitizedContent = computed(() => {
-  let html = materialData.value?.content || materialData.value?.formattedHtml || '<p>Kein Inhalt verfügbar.</p>';
+// Extract raw markdown content from material
+const rawMarkdownContent = computed(() => {
+  let content = materialData.value?.content || materialData.value?.formattedHtml || 'Kein Inhalt verfügbar.';
 
-  // Strip leading ```html or ``` wrapper
-  html = html.replace(/^\s*```\s*html?\s*/i, '');
-  // Strip trailing ``` and any AI commentary after it
-  const closingFence = html.lastIndexOf('```');
+  // Strip code fences if present
+  content = content.replace(/^\s*```\s*html?\s*/i, '');
+  const closingFence = content.lastIndexOf('```');
   if (closingFence !== -1) {
-    html = html.substring(0, closingFence);
+    content = content.substring(0, closingFence);
   }
 
-  return DOMPurify.sanitize(html.trim());
+  return content.trim();
+});
+
+// Convert markdown to HTML for display
+const sanitizedContent = computed(() => {
+  try {
+    // Use marked to convert markdown to HTML
+    const htmlContent = marked.parse(rawMarkdownContent.value, {
+      breaks: true,  // Convert line breaks to <br>
+      gfm: true      // GitHub Flavored Markdown
+    });
+
+    return DOMPurify.sanitize(htmlContent);
+  } catch (error) {
+    console.error('Markdown parsing error:', error);
+    return DOMPurify.sanitize(rawMarkdownContent.value);
+  }
 });
 
 // --- Static Options ---
 const formatOptions = [
   { value: 'pdf', title: 'PDF', icon: 'mdi-file-pdf-box', color: 'red' },
+  { value: 'docx', title: 'Word (DOCX)', icon: 'mdi-file-word-box', color: 'blue' },
   { value: 'html', title: 'HTML', icon: 'mdi-language-html5', color: 'orange' }
 ];
 const colorSchemeOptions = [
@@ -392,8 +410,6 @@ const buildExportHtml = () => {
     margin: 20px 0 28px;
   }
 
-  /* --- Content Styles (Notion-like) --- */
-
   .doc-content h1 {
     font-size: 20pt;
     font-weight: 700;
@@ -417,13 +433,6 @@ const buildExportHtml = () => {
     margin: 1em 0 0.3em;
   }
 
-  .doc-content h4, .doc-content h5, .doc-content h6 {
-    font-size: 11pt;
-    font-weight: 600;
-    color: #444;
-    margin: 0.8em 0 0.3em;
-  }
-
   .doc-content p {
     margin-bottom: 0.8em;
   }
@@ -436,104 +445,12 @@ const buildExportHtml = () => {
     margin-bottom: 0.3em;
   }
 
-  .doc-content li::marker {
-    color: ${accent};
-  }
-
-  .doc-content strong, .doc-content b {
+  .doc-content strong {
     font-weight: 700;
-    color: #111;
   }
 
-  .doc-content em, .doc-content i {
+  .doc-content em {
     font-style: italic;
-  }
-
-  .doc-content blockquote {
-    margin: 1em 0;
-    padding: 12px 16px;
-    background: ${accent}08;
-    border-left: 3px solid ${accent};
-    border-radius: 0 6px 6px 0;
-    color: #333;
-    font-style: italic;
-  }
-
-  .doc-content pre, .doc-content code {
-    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-    font-size: 9.5pt;
-  }
-
-  .doc-content code {
-    background: #f5f5f5;
-    padding: 2px 6px;
-    border-radius: 3px;
-    color: #c7254e;
-  }
-
-  .doc-content pre {
-    background: #282c34;
-    color: #abb2bf;
-    padding: 16px 20px;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 1em 0;
-    line-height: 1.5;
-  }
-
-  .doc-content pre code {
-    background: none;
-    color: inherit;
-    padding: 0;
-    border-radius: 0;
-  }
-
-  .doc-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1em 0;
-    font-size: 10pt;
-  }
-
-  .doc-content th {
-    background: ${accent}12;
-    color: ${accent};
-    font-weight: 700;
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 2px solid ${accent}30;
-  }
-
-  .doc-content td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #eee;
-    vertical-align: top;
-  }
-
-  .doc-content tr:hover td {
-    background: #fafafa;
-  }
-
-  .doc-content img {
-    max-width: 100%;
-    border-radius: 6px;
-    margin: 1em 0;
-  }
-
-  .doc-content hr {
-    border: none;
-    border-top: 1px solid #e5e5e5;
-    margin: 2em 0;
-  }
-
-  /* Vocab / highlight boxes */
-  .doc-content .vocab-list, .doc-content .vocabulary,
-  .doc-content div[class*="vocab"], .doc-content section[class*="vocab"] {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin: 1.5em 0;
   }
 
   .doc-footer {
@@ -598,8 +515,8 @@ const exportMaterialAction = async () => {
         // A4 dimensions in mm
         const pageW = 210;
         const pageH = 297;
-        const marginX = 0;
-        const marginY = 0;
+        const marginX = 5;
+        const marginY = 10;
         const contentW = pageW - 2 * marginX;
         const contentH = pageH - 2 * marginY;
 
@@ -635,6 +552,40 @@ const exportMaterialAction = async () => {
         break;
       }
 
+      case 'docx': {
+        const title = materialData.value?.title || 'Material';
+        const subject = materialData.value?.subject || '';
+        const type = materialData.value?.type || '';
+
+        let markdown = `# ${title}\n\n`;
+        if (subject) markdown += `**Fach:** ${subject}  \n`;
+        if (type) markdown += `**Typ:** ${type}  \n`;
+        markdown += `\n---\n\n`;
+
+        // Convert single \n to double line break for more spacing
+        let processedContent = rawMarkdownContent.value
+          // First, protect existing double line breaks (paragraphs)
+          .replace(/\n\n/g, '<<PARAGRAPH_BREAK>>')
+          // Convert single line breaks to double line breaks (more spacing)
+          .replace(/\n/g, '\n\n')
+          // Restore paragraph breaks with even more spacing
+          .replace(/<<PARAGRAPH_BREAK>>/g, '\n\n\n');
+
+        markdown += processedContent;
+
+        if (includeFooter.value) {
+          markdown += `\n\n---\n\n*${headerFooterText.value || `Erstellt am ${new Date().toLocaleDateString('de-DE')}`}*`;
+        }
+
+        const blob = await convertMarkdownToDocx(markdown);
+        downloadBlob(blob, `${finalFilename.value}.docx`);
+        break;
+      }
+
+
+
+
+
       case 'html': {
         const htmlContent = buildExportHtml();
         const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -646,6 +597,7 @@ const exportMaterialAction = async () => {
     showSnackbar('Export erfolgreich!', 'success');
   } catch (error) {
     showSnackbar('Fehler beim Exportieren: ' + error.message, 'error');
+    console.error('Export error:', error);
   } finally {
     exporting.value = false;
   }
@@ -670,6 +622,7 @@ watch(
   }
 );
 </script>
+
 
 <style scoped lang="scss">
 .preview-area {
