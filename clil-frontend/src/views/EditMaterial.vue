@@ -18,10 +18,6 @@
             <v-icon start>mdi-content-save</v-icon>
             Speichern
         </v-btn>
-        <v-btn color="info" variant="text" @click="handlePreview">
-          <v-icon start>mdi-eye</v-icon>
-          Vorschau
-        </v-btn>
         <v-btn color="secondary" @click="handleExport">
           <v-icon start>mdi-export</v-icon>
           Exportieren
@@ -32,13 +28,10 @@
       <!-- Haupt-Editor-Bereich -->
       <v-col cols="12" md="8">
           <v-skeleton-loader v-if="loading" type="image, article"></v-skeleton-loader>
-          <material-editor
+          <monaco-editor
             v-else-if="material"
             v-model="editableContent"
-            @save-status="updateSaveStatus"
-            :language-level="editableLanguageLevel"
-            :vocab-percentage="editableVocabPercentage"
-            :enable-clil-tools="true"
+            language="markdown"
           />
           <v-alert v-else type="error">
               Material konnte nicht geladen werden.
@@ -199,7 +192,6 @@
           <v-btn icon @click="showPreview = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>Vorschau: {{ editableTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn color="primary" @click="showPreview = false">
             Zurück zum Bearbeiten
@@ -219,7 +211,7 @@ import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import { useUIStore } from '@/stores/ui';
-import MaterialEditor from '@/components/Editor/MaterialEditor.vue';
+import MonacoEditor from '@/components/Editor/MonacoEditor.vue';
 import ExportDialog from '@/components/ExportDialog.vue';
 import { useNotificationStore } from '@/stores/notifications';
 import { useSubjectStore } from '@/stores/subjects';
@@ -332,9 +324,7 @@ onBeforeUnmount(async () => {
 });
 
 // Save-Status-Logik
-const updateSaveStatus = (status) => {
-  saveStatus.value = status;
-};
+
 const saveStatusText = computed(() => {
     switch(saveStatus.value) {
         case 'saved': return 'Gespeichert';
@@ -399,10 +389,7 @@ const handleExport = () => {
   exportDialog.value = true;
 };
 
-// Vorschau
-const handlePreview = () => {
-  showPreview.value = true;
-};
+
 
 // Snackbar Feedback
 const showFeedback = (text, color = 'success') => {
@@ -463,6 +450,7 @@ const deleteMaterial = async () => {
 
 
 // Chat with AI - use API client with automatic auth
+// Chat with AI - use API client with automatic auth
 const handleChatSubmit = async () => {
   if (!chatPrompt.value.trim() || !material.value) return;
 
@@ -482,13 +470,13 @@ const handleChatSubmit = async () => {
       throw new Error(response.error || 'Chat failed');
     }
 
-    // Update content with AI response
+    // No conversion needed - Monaco handles any format
     editableContent.value = response.data.formattedResponse;
     material.value.content = response.data.formattedResponse;
 
-    chatPrompt.value = ''; // Clear input
-    saveStatus.value = 'unsaved'; // Mark as unsaved so user can review
-    showFeedback('Material mit AI aktualisiert! Überprüfen Sie das Ergebnis.', 'success');
+    chatPrompt.value = '';
+    saveStatus.value = 'unsaved';
+    showFeedback('Material mit AI aktualisiert!', 'success');
 
   } catch (error) {
     console.error('Chat error:', error);
@@ -498,6 +486,7 @@ const handleChatSubmit = async () => {
     chatLoading.value = false;
   }
 };
+
 
 
 
