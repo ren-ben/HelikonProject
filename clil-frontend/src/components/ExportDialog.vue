@@ -105,6 +105,14 @@
                   density="compact"
                   class="mb-2"
                 ></v-checkbox>
+                <v-checkbox
+                  v-model="includeTitleBlock"
+                  label="Titelblock einschließen"
+                  color="primary"
+                  hide-details
+                  density="compact"
+                  class="mb-2"
+                ></v-checkbox>
                 <v-text-field
                   v-if="includeHeader || includeFooter"
                   v-model="headerFooterText"
@@ -165,7 +173,7 @@
                 </div>
 
                 <!-- Title block -->
-                <div class="doc-title-block">
+                <div v-if="includeTitleBlock" class="doc-title-block">
                   <div class="doc-title" :style="{ color: accentColor }">{{ materialData?.title }}</div>
                   <div class="doc-meta">
                     <span v-if="materialData?.subject" class="doc-meta-chip" :style="{ background: accentColor + '18', color: accentColor }">{{ materialData.subject }}</span>
@@ -173,7 +181,8 @@
                   </div>
                 </div>
 
-                <hr class="doc-divider" :style="{ borderColor: accentColor + '30' }" />
+                <hr v-if="includeTitleBlock" class="doc-divider" :style="{ borderColor: accentColor + '30' }" />
+
 
                 <!-- Content -->
                 <div class="doc-content" v-html="sanitizedContent"></div>
@@ -249,7 +258,7 @@ const includeHeader = ref(true);
 const includeFooter = ref(true);
 const headerFooterText = ref('');
 const filenameBase = ref('');
-
+const includeTitleBlock = ref(true);
 // --- Preview ---
 const previewZoom = ref(0.9);
 const previewDocRef = ref(null);
@@ -469,6 +478,7 @@ const buildExportHtml = () => {
 </head>
 <body>
   ${includeHeader.value ? `<div class="doc-header">${headerFooterText.value || title}</div>` : ''}
+  ${includeTitleBlock.value ? `
   <div class="doc-title-block">
     <div class="doc-title">${title}</div>
     <div class="doc-meta">
@@ -477,6 +487,7 @@ const buildExportHtml = () => {
     </div>
   </div>
   <hr class="doc-divider" style="border-color:${accent}30" />
+  ` : ''}
   <div class="doc-content">${content}</div>
   ${includeFooter.value ? `<div class="doc-footer">${headerFooterText.value || `Erstellt am ${new Date().toLocaleDateString('de-DE')}`}</div>` : ''}
 </body>
@@ -557,18 +568,20 @@ const exportMaterialAction = async () => {
         const subject = materialData.value?.subject || '';
         const type = materialData.value?.type || '';
 
-        let markdown = `# ${title}\n\n`;
-        if (subject) markdown += `**Fach:** ${subject}  \n`;
-        if (type) markdown += `**Typ:** ${type}  \n`;
-        markdown += `\n---\n\n`;
+        let markdown = '';
 
-        // Convert single \n to double line break for more spacing
+        // Only add title block if enabled
+        if (includeTitleBlock.value) {
+          markdown += `# ${title}\n\n`;
+          if (subject) markdown += `**Fach:** ${subject}  \n`;
+          if (type) markdown += `**Typ:** ${type}  \n`;
+          markdown += `\n---\n\n`;
+        }
+
+        // Process raw markdown content with larger line breaks
         let processedContent = rawMarkdownContent.value
-          // First, protect existing double line breaks (paragraphs)
           .replace(/\n\n/g, '<<PARAGRAPH_BREAK>>')
-          // Convert single line breaks to double line breaks (more spacing)
           .replace(/\n/g, '\n\n')
-          // Restore paragraph breaks with even more spacing
           .replace(/<<PARAGRAPH_BREAK>>/g, '\n\n\n');
 
         markdown += processedContent;
@@ -581,6 +594,7 @@ const exportMaterialAction = async () => {
         downloadBlob(blob, `${finalFilename.value}.docx`);
         break;
       }
+
 
 
 
