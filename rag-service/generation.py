@@ -334,7 +334,7 @@ def rag_two_phase_generate(
         context_block = ""
 
     system_prompt = _load_system_prompt()
-    enhanced_prompt = user_prompt + context_block + _HTML_SUFFIX
+    enhanced_prompt = user_prompt + context_block
 
     generator_llm = get_llm(model_name, temperature=0.7)
 
@@ -389,7 +389,7 @@ Phase 2 (Verify): {verify_time:.1f}s<br>
 </div>"""
 
     return {
-        "formattedResponse": final_content + timing_html,
+        "formattedResponse": final_content,
         "rawContent": raw_content,
         "sources": sources,
         "timings": {
