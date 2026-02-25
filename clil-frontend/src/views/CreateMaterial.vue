@@ -459,11 +459,13 @@
             type="article, paragraph@3"
           ></v-skeleton-loader>
 
-          <div
-            v-else-if="generatedMaterial"
-            v-html="previewContent"
-            class="preview-content"
-          ></div>
+          <monaco-editor
+                  v-else-if="generatedMaterial"
+                  :model-value="previewContent"
+                  language="markdown"
+                  :readonly="true"
+                  height="45vh"
+                />
 
           <!-- Quellen aus RAG-Kontext -->
           <div v-if="generatedMaterial?.sources?.length > 0" class="mt-4 px-4 pb-2">
@@ -568,6 +570,7 @@
 </template>
 
 <script setup>
+import MonacoEditor from "@/components/Editor/MonacoEditor.vue";
 import { ref, computed, watch, reactive, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useVuelidate } from "@vuelidate/core";

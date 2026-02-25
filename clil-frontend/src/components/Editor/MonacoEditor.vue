@@ -20,7 +20,17 @@ const props = defineProps({
   language: {
     type: String,
     default: 'markdown' // or 'plaintext'
+  },
+  readonly: {
+      type: Boolean,
+      default: false
   }
+  ,height: {
+       type: String,
+       default: '70vh'
+     }
+
+
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -39,6 +49,7 @@ onMounted(() => {
       minimap: { enabled: false },
       lineNumbers: 'off',
       fontSize: 14,
+      readOnly: props.readonly,
       padding: { top: 16, bottom: 16 }
     });
 
@@ -68,7 +79,7 @@ onBeforeUnmount(() => {
 
 .editor-container {
   width: 100%;
-  height: 70vh;
+  height: v-bind(height);
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
 }
