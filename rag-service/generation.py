@@ -259,17 +259,10 @@ Be thorough but preserve the original intent."""
 
     total_time = gen_time + verify_time
 
-    timing_html = f"""
-<hr>
-<div style="color: #666; font-size: 0.9em; margin-top: 20px;">
-<strong>⏱️ Generation Details:</strong><br>
-Phase 1 (Generate): {gen_time:.1f}s<br>
-Phase 2 (Verify): {verify_time:.1f}s<br>
-<strong>Total: {total_time:.1f}s</strong>
-</div>"""
+
 
     return {
-        "formattedResponse": final_content + timing_html,
+        "formattedResponse": final_content,
         "rawContent": raw_content,
         "sources": [],
         "timings": {
@@ -372,14 +365,6 @@ same struture as the given raw material. """
 
     total_time = gen_time + verify_time
 
-    timing_html = f"""
-<hr>
-<div style="color: #666; font-size: 0.9em; margin-top: 20px;">
-<strong>⏱️ Generation Details:</strong><br>
-Phase 1 (Generate with {len(sources)} sources): {gen_time:.1f}s<br>
-Phase 2 (Verify): {verify_time:.1f}s<br>
-<strong>Total: {total_time:.1f}s</strong>
-</div>"""
 
     return {
         "formattedResponse": final_content,

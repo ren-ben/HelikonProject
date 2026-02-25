@@ -526,6 +526,7 @@ import deepinfraApi from "@/services/deepinfra-api";
 import ExportDialog from "@/components/ExportDialog.vue";
 import { useSubjectStore } from "@/stores/subjects";
 import { useNotificationStore } from "@/stores/notifications";
+import apiClient from '@/services/deepinfra-api';
 
 const router = useRouter();
 const route = useRoute();
@@ -956,22 +957,22 @@ const saveMaterial = async () => {
     const savedMaterial = await materialsStore.addMaterial(newMaterialData);
 
     try {
-      // Save user's initial prompt
-      await apiClient.post(`/api/materials/${savedMaterial.id}/conversation`, {
+      // User's initial prompt
+      await apiClient.addConversationMessage(savedMaterial.id, {
         role: 'user',
         message: generatedPrompt.value,
         modelUsed: form.value.model
       });
 
-      // Save AI's initial response
-      await apiClient.post(`/api/materials/${savedMaterial.id}/conversation`, {
+      // AI's initial response
+      await apiClient.addConversationMessage(savedMaterial.id, {
         role: 'assistant',
         message: previewContent.value,
         modelUsed: form.value.model
       });
     } catch (convError) {
       console.error('Error saving conversation history:', convError);
-      // Don't block the save if conversation fails
+      // Don't block save if conversation fails
     }
 
     uiStore.setLastCreatedMaterial(savedMaterial.id);

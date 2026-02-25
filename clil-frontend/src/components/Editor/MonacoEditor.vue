@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
 
 .editor-container {
   width: 100%;
-  height: 60vh;
+  height: 70vh;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
 }
