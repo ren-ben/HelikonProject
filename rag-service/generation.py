@@ -18,13 +18,6 @@ def _load_system_prompt() -> str:
 
 
 # Exact HTML-formatting suffix
-_HTML_SUFFIX = (
-    "\n\nIMPORTANT: Please format your response using proper HTML tags for better "
-    "presentation. Use headings (<h1>, <h2>, <h3>), paragraphs (<p>), lists "
-    "(<ul>, <ol>, <li>), emphasis (<strong>, <em>), and other appropriate HTML "
-    "elements. Please provide a well-structured HTML response that can be "
-    "directly rendered in a web application."
-)
 
 
 def _build_filter(user_id: str, subject: str | None = None) -> dict:
@@ -111,7 +104,7 @@ def parametric_generate(
     Returns {"formattedResponse": str, "sources": []}.
     """
     system_prompt = _load_system_prompt()
-    enhanced_prompt = user_prompt + _HTML_SUFFIX
+    enhanced_prompt = user_prompt
 
     llm = get_llm(model_name)
     response = llm.invoke([
@@ -165,7 +158,7 @@ def rag_parametric_generate(
         context_block = ""
 
     system_prompt = _load_system_prompt()
-    enhanced_prompt = user_prompt + context_block + _HTML_SUFFIX
+    enhanced_prompt = user_prompt + context_block
 
     llm = get_llm(model_name)
     response = llm.invoke([
@@ -230,7 +223,7 @@ def two_phase_parametric_generate(
     system_prompt = _load_system_prompt()
 
     generator_llm = get_llm(model_name, temperature=0.7)
-    enhanced_prompt = user_prompt + _HTML_SUFFIX
+    enhanced_prompt = user_prompt
 
     start_gen = time.time()
     raw_response = generator_llm.invoke([
