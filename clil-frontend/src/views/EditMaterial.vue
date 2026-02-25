@@ -366,7 +366,7 @@ onMounted(async () => {
 
   loadingModels.value = true;
   try {
-    const response = await deepinfraApi.getAvailableModels();
+    const response = await apiClient.getAvailableModels();
     if (response.success && response.data.length > 0) {
       availableModels.value = response.data;
       selectedModel.value = availableModels.value[0]; // Set default
@@ -382,7 +382,6 @@ onMounted(async () => {
     loadingModels.value = false;
   }
 
-  window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 // Cleanup timeouts on unmount
