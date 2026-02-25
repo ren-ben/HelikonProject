@@ -344,16 +344,6 @@
                       </template>
                       <v-list-item-title>CLIL-Parameter</v-list-item-title>
                       <v-list-item-subtitle>
-                        Sprachniveau: {{ form.languageLevel }}, Fachvokabular:
-                        {{ form.vocabPercentage }}%
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon color="primary">mdi-translate</v-icon>
-                      </template>
-                      <v-list-item-title>CLIL-Parameter</v-list-item-title>
-                      <v-list-item-subtitle>
                         Sprache: {{ form.language }}, Sprachniveau: {{ form.languageLevel }}, Fachvokabular:
                         {{ form.vocabPercentage }}%
                       </v-list-item-subtitle>
@@ -615,7 +605,7 @@ const form = ref({
   languageLevel: "C1",
   vocabPercentage: 50,
   contentFocus: "content",
-  includeVocabList: true,
+  includeVocabList: false,
   useDocumentContext: true,
   useTwoPhase: true,
   model: "",
@@ -937,7 +927,10 @@ ${
 - Ensure accuracy of subject-matter information
 - Support comprehension through context clues and supportive language
 
-Generate well-structured, pedagogically sound content that effectively combines subject learning with language development.`;
+Generate well-structured, pedagogically sound content that effectively combines subject learning with language development.
+IMPORTANT!!!
+The whole output needs to be in provided language of instruction:${form.value.language}.
+`;
 
     // Only update if parameters are still current
     if (lastPromptParams === JSON.stringify(form.value)) {
