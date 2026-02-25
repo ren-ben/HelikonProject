@@ -134,6 +134,19 @@
                 </v-card-title>
                 <v-divider></v-divider>
                 <v-card-text>
+                                    <v-select
+                                                            v-model="selectedModel"
+                                                            :items="availableModels"
+                                                            label="LLM-Modell"
+                                                            prepend-inner-icon="mdi-brain"
+                                                            variant="outlined"
+                                                            density="compact"
+                                                            :loading="loadingModels"
+                                                            :disabled="loadingModels || chatLoading"
+                                                            hint="Wählen Sie ein Modell für die Generierung"
+                                                            persistent-hint
+                                                            class="mb-3"
+                                                          ></v-select>
                   <v-textarea
                     v-model="chatPrompt"
                     label="Material ändern..."
@@ -143,6 +156,16 @@
                     density="compact"
                     :disabled="chatLoading"
                   ></v-textarea>
+
+                  <v-switch
+                                          v-model="useDocumentContext"
+                                          color="primary"
+                                          label="Kontext aus hochgeladenen Dokumenten verwenden"
+                                          hide-details
+                                          inset
+                                          :disabled="chatLoading"
+                                          class="mb-3"
+                                        ></v-switch>
                   <v-btn
                     color="primary"
                     block
@@ -245,6 +268,10 @@ import {
 
 const chatPrompt = ref('');
 const chatLoading = ref(false);
+const selectedModel = ref('');
+const availableModels = ref([]);
+const loadingModels = ref(false);
+const useDocumentContext = ref(true);
 
 
 const route = useRoute();
@@ -336,6 +363,26 @@ onMounted(async () => {
   if (route.params.id) {
     await loadMaterial(route.params.id);
   }
+
+  loadingModels.value = true;
+  try {
+    const response = await deepinfraApi.getAvailableModels();
+    if (response.success && response.data.length > 0) {
+      availableModels.value = response.data;
+      selectedModel.value = availableModels.value[0]; // Set default
+    } else {
+      availableModels.value = ['llama3'];
+      selectedModel.value = 'llama3';
+    }
+  } catch (error) {
+    console.error('Error loading models:', error);
+    availableModels.value = ['llama3'];
+    selectedModel.value = 'llama3';
+  } finally {
+    loadingModels.value = false;
+  }
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 // Cleanup timeouts on unmount
@@ -485,7 +532,7 @@ const handleChatSubmit = async () => {
     await apiClient.addConversationMessage(material.value.id, {
       role: 'user',
       message: chatPrompt.value,
-      modelUsed: null
+      modelUsed: selectedModel.value
     });
 
     const response = await apiClient.chatWithMaterial(material.value.id, {
@@ -494,17 +541,18 @@ const handleChatSubmit = async () => {
       language: material.value.language || 'German',
       languageLevel: editableLanguageLevel.value,
       subject: editableSubject.value,
+      modelName: selectedModel.value,
+      useDocumentContext: useDocumentContext.value,
     });
 
     if (!response.success) {
       throw new Error(response.error || 'Chat failed');
     }
 
-    // ✅ Save AI's response
     await apiClient.addConversationMessage(material.value.id, {
       role: 'assistant',
       message: response.data.formattedResponse,
-      modelUsed: response.data.model || null
+      modelUsed: selectedModel.value
     });
 
     editableContent.value = response.data.formattedResponse;

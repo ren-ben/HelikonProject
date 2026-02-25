@@ -27,7 +27,7 @@ const props = defineProps({
   }
   ,height: {
        type: String,
-       default: '70vh'
+       default: '64vh'
      }
 
 

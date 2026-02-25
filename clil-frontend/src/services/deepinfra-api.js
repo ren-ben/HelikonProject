@@ -529,9 +529,24 @@ export default {
       }
     },
   // Chat with AI to modify existing material
+    // Chat with AI to modify existing material
+    // Chat with AI to modify existing material
     async chatWithMaterial(materialId, chatData) {
       try {
-        const response = await apiClient.post(`/material/${materialId}/chat`, chatData);
+        // Get user from localStorage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user.username || 'anonymous';
+
+        const response = await apiClient.post(`/material/${materialId}/chat`, {
+          prompt: chatData.prompt,
+          content: chatData.content,
+          language: chatData.language || 'German',
+          languageLevel: chatData.languageLevel || 'B1',
+          subject: chatData.subject || '',
+          modelName: chatData.modelName || 'llama3',
+          useDocumentContext: chatData.useDocumentContext || false,
+          userId: userId,
+        });
         return {
           success: true,
           data: response.data,
@@ -544,5 +559,6 @@ export default {
         };
       }
     },
+
 
 };
