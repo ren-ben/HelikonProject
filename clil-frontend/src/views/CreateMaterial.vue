@@ -154,6 +154,16 @@
                 ></v-select>
               </v-col>
               <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.language"
+                  :items="languageOptions"
+                  label="Sprache"
+                  prepend-inner-icon="mdi-web"
+                  variant="outlined"
+                  density="compact"
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="6">
                 <v-slider
                   v-model="form.vocabPercentage"
                   :min="10"
@@ -254,6 +264,27 @@
                 </v-alert>
               </v-col>
               <v-col cols="12">
+                <v-switch
+                  v-model="form.useTwoPhase"
+                  color="primary"
+                  label="Zwei-Phasen-Generierung aktivieren"
+                  hide-details
+                  inset
+                ></v-switch>
+                <v-alert
+                  v-if="form.useTwoPhase"
+                  color="info"
+                  variant="tonal"
+                  icon="mdi-sync"
+                  class="mt-2 text-body-2"
+                  density="compact"
+                >
+                  Die Generierung erfolgt in zwei Schritten für verbesserte Qualität
+                  und Strukturierung.
+                </v-alert>
+              </v-col>
+
+              <v-col cols="12">
                 <v-textarea
                   v-model="generatedPrompt"
                   label="Generierter Prompt"
@@ -317,6 +348,16 @@
                         {{ form.vocabPercentage }}%
                       </v-list-item-subtitle>
                     </v-list-item>
+                    <v-list-item>
+                      <template v-slot:prepend>
+                        <v-icon color="primary">mdi-translate</v-icon>
+                      </template>
+                      <v-list-item-title>CLIL-Parameter</v-list-item-title>
+                      <v-list-item-subtitle>
+                        Sprache: {{ form.language }}, Sprachniveau: {{ form.languageLevel }}, Fachvokabular:
+                        {{ form.vocabPercentage }}%
+                      </v-list-item-subtitle>
+                    </v-list-item>
                     <template v-if="form.useDocumentContext">
                       <v-divider inset></v-divider>
                       <v-list-item>
@@ -326,6 +367,18 @@
                         <v-list-item-title>Dokumentkontext</v-list-item-title>
                         <v-list-item-subtitle>
                           Kontext aus hochgeladenen Dokumenten wird verwendet
+                        </v-list-item-subtitle>
+                      </v-list-item>
+                    </template>
+                    <template v-if="form.useTwoPhase">
+                      <v-divider inset></v-divider>
+                      <v-list-item>
+                        <template v-slot:prepend>
+                          <v-icon color="primary">mdi-sync</v-icon>
+                        </template>
+                        <v-list-item-title>Zwei-Phasen-Generierung</v-list-item-title>
+                        <v-list-item-subtitle>
+                          Aktiviert für verbesserte Qualität
                         </v-list-item-subtitle>
                       </v-list-item>
                     </template>
@@ -555,11 +608,13 @@ const form = ref({
   subject: "",
   topic: "",
   description: "",
-  languageLevel: "B1",
-  vocabPercentage: 30,
-  contentFocus: "balanced",
+  language: "German",
+  languageLevel: "C1",
+  vocabPercentage: 50,
+  contentFocus: "content",
   includeVocabList: true,
   useDocumentContext: true,
+  useTwoPhase: true,
   model: "",
 });
 
@@ -665,6 +720,42 @@ const languageLevels = [
   { title: "B2 (Gute Mittelstufe)", value: "B2" },
   { title: "C1 (Fortgeschritten)", value: "C1" },
 ];
+
+// Language options - European languages
+const languageOptions = [
+  { title: "Deutsch", value: "German" },
+  { title: "Englisch", value: "English" },
+  { title: "Französisch", value: "French" },
+  { title: "Spanisch", value: "Spanish" },
+  { title: "Italienisch", value: "Italian" },
+  { title: "Portugiesisch", value: "Portuguese" },
+  { title: "Niederländisch", value: "Dutch" },
+  { title: "Polnisch", value: "Polish" },
+  { title: "Russisch", value: "Russian" },
+  { title: "Ukrainisch", value: "Ukrainian" },
+  { title: "Tschechisch", value: "Czech" },
+  { title: "Slowakisch", value: "Slovak" },
+  { title: "Ungarisch", value: "Hungarian" },
+  { title: "Rumänisch", value: "Romanian" },
+  { title: "Bulgarisch", value: "Bulgarian" },
+  { title: "Griechisch", value: "Greek" },
+  { title: "Kroatisch", value: "Croatian" },
+  { title: "Serbisch", value: "Serbian" },
+  { title: "Slowenisch", value: "Slovenian" },
+  { title: "Schwedisch", value: "Swedish" },
+  { title: "Norwegisch", value: "Norwegian" },
+  { title: "Dänisch", value: "Danish" },
+  { title: "Finnisch", value: "Finnish" },
+  { title: "Estnisch", value: "Estonian" },
+  { title: "Lettisch", value: "Latvian" },
+  { title: "Litauisch", value: "Lithuanian" },
+  { title: "Türkisch", value: "Turkish" },
+  { title: "Albanisch", value: "Albanian" },
+  { title: "Mazedonisch", value: "Macedonian" },
+  { title: "Bosnisch", value: "Bosnian" },
+];
+
+
 
 // Content focus options
 const contentFocusOptions = [
@@ -790,46 +881,62 @@ const generatePromptText = async () => {
     isGeneratingPrompt.value = true;
     const params = JSON.stringify(form.value);
     lastPromptParams = params;
+
     if (!form.value.type || !form.value.topic || !form.value.subject) {
       generatedPrompt.value =
-        "Bitte füllen Sie die Felder für Typ, Fach und Thema aus, um den Prompt zu generieren.";
+        "Please fill in the fields for type, subject, and topic to generate the prompt.";
       return;
     }
-    const promptTemplate = `Erstelle ein ${getMaterialTypeName(
-      form.value.type
-    )} zum Thema "${form.value.topic}" für das Fach "${
-      form.value.subject
-    }" mit folgendem CLIL-Ansatz:
 
-- Zielgruppe: Schüler/Studenten mit Sprachniveau ${form.value.languageLevel}
-- Fachvokabular: Betone wichtige Fachbegriffe (ca. ${
-      form.value.vocabPercentage
-    }% der relevanten Termini).
-- Fokus: ${
-      form.value.contentFocus === "balanced"
-        ? "Lege Wert auf ein ausgewogenes Verhältnis zwischen Fachinhalt und sprachlicher Unterstützung."
-        : form.value.contentFocus === "content"
-        ? "Konzentriere dich primär auf die korrekte Darstellung des Fachinhalts."
-        : "Priorisiere den Spracherwerb durch Vereinfachungen und zusätzliche Erklärungen."
+    // Determine content focus description
+    let focusDescription = "";
+    if (form.value.contentFocus === "balanced") {
+      focusDescription = "Maintain a balanced approach between subject content mastery and language acquisition support.";
+    } else if (form.value.contentFocus === "content") {
+      focusDescription = "Prioritize accurate and comprehensive presentation of subject content.";
+    } else {
+      focusDescription = "Emphasize language acquisition through scaffolding, simplifications, and additional linguistic support.";
     }
+
+    const promptTemplate = `Create a ${getMaterialTypeName(
+      form.value.type
+    )} on the topic "${form.value.topic}" for the subject "${
+      form.value.subject
+    }" in ${form.value.language} using a CLIL (Content and Language Integrated Learning) approach with the following specifications:
+
+**Target Audience & Language Parameters:**
+- Target language proficiency level: ${form.value.languageLevel} (CEFR)
+- Language of instruction: ${form.value.language}
+- Subject-specific vocabulary emphasis: Highlight and explain approximately ${
+      form.value.vocabPercentage
+    }% of key terminology
+- Pedagogical focus: ${focusDescription}
 ${
   form.value.description
-    ? `\nZusätzliche Details zum Inhalt:\n${form.value.description}`
+    ? `\n**Additional Content Requirements:**\n${form.value.description}\n`
     : ""
 }
+**Structure & Formatting Guidelines:**
+- Use clear headings and logical section organization
+- Employ appropriate formatting (bold for key terms, italics for emphasis)
+- Ensure content is age-appropriate and culturally sensitive
+
 ${
   form.value.includeVocabList
-    ? `\n- Füge am Ende eine Vokabelliste mit den wichtigsten Fachbegriffen und einfachen Erklärungen hinzu.`
+    ? `\n**Vocabulary Support:**\n- Include a glossary section at the end with the most important subject-specific terms\n- Provide clear, simple definitions in ${form.value.language}\n- Add pronunciation guides where helpful for difficult terms`
     : ""
 }
 
-Struktur und Formatierung:
-- Verwende klare Überschriften und Absätze.
-- Hebe wichtige Informationen hervor (z.B. durch Fettdruck).
-- Integriere, falls passend für den Materialtyp (${getMaterialTypeName(
-      form.value.type
-    )}), Aufgaben, Fragen oder Beispiele.`;
-    // Nur übernehmen, wenn die Parameter noch aktuell sind
+**Content Development:**
+- Integrate authentic subject content with language learning objectives
+- Provide scaffolding appropriate for ${form.value.languageLevel} learners
+- Include examples, illustrations, or practice elements suitable for the material type
+- Ensure accuracy of subject-matter information
+- Support comprehension through context clues and supportive language
+
+Generate well-structured, pedagogically sound content that effectively combines subject learning with language development.`;
+
+    // Only update if parameters are still current
     if (lastPromptParams === JSON.stringify(form.value)) {
       generatedPrompt.value = promptTemplate;
     }
@@ -839,6 +946,7 @@ Struktur und Formatierung:
     isGeneratingPrompt.value = false;
   }
 };
+
 
 // Generate material using the mock API
 const generateMaterialAction = async () => {
@@ -866,6 +974,7 @@ const generateMaterialAction = async () => {
       topic: form.value.topic,
       prompt: generatedPrompt.value,
       subject: form.value.subject,
+      language: form.value.language,
       languageLevel: form.value.languageLevel,
       vocabPercentage: form.value.vocabPercentage,
       contentFocus: form.value.contentFocus,
@@ -873,8 +982,10 @@ const generateMaterialAction = async () => {
       description: form.value.description,
       modelName: form.value.model,
       useDocumentContext: form.value.useDocumentContext,
+      useTwoPhase: form.value.useTwoPhase,
       citationStyle: citationPrefs.style || 'numbered',
     });
+
 
     if (response.success) {
       generatedMaterial.value = response.data;
