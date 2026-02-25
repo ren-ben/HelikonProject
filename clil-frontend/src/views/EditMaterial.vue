@@ -105,9 +105,9 @@
                     Zuletzt geändert: {{ formatDate(material.modified) }}
                 </div>
                 <v-divider class="my-3"></v-divider>
-                <v-btn block variant="text" @click="showVersionHistory = true">
+                <v-btn block variant="text" @click="router.push(`/materials/${material.id}/history`)">
                   <v-icon start>mdi-history</v-icon>
-                  Änderungsverlauf anzeigen
+                  Chatverlauf anzeigen
                 </v-btn>
            </v-card-text>
            <v-divider></v-divider>
@@ -458,6 +458,12 @@ const handleChatSubmit = async () => {
   saveStatus.value = 'saving';
 
   try {
+    await apiClient.addConversationMessage(material.value.id, {
+      role: 'user',
+      message: chatPrompt.value,
+      modelUsed: null
+    });
+
     const response = await apiClient.chatWithMaterial(material.value.id, {
       prompt: chatPrompt.value,
       content: editableContent.value,
@@ -470,7 +476,13 @@ const handleChatSubmit = async () => {
       throw new Error(response.error || 'Chat failed');
     }
 
-    // No conversion needed - Monaco handles any format
+    // ✅ Save AI's response
+    await apiClient.addConversationMessage(material.value.id, {
+      role: 'assistant',
+      message: response.data.formattedResponse,
+      modelUsed: response.data.model || null
+    });
+
     editableContent.value = response.data.formattedResponse;
     material.value.content = response.data.formattedResponse;
 
@@ -486,6 +498,8 @@ const handleChatSubmit = async () => {
     chatLoading.value = false;
   }
 };
+
+
 
 
 

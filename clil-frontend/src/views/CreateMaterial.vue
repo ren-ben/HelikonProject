@@ -929,30 +929,24 @@ const handleError = (error, context = "") => {
 // Nach dem Speichern UI-Store aktualisieren
 const saveMaterial = async () => {
   if (!generatedMaterial.value) {
-    handleError(
-      new Error(
-        "Kann Material nicht speichern, da die Generierung fehlgeschlagen ist."
-      )
-    );
+    handleError(new Error("Kann Material nicht speichern, da die Generierung fehlgeschlagen ist."));
     return;
   }
   saving.value = true;
   try {
     const newMaterialData = {
-      // Frontend-orientierte Felder, die der Service dann transformiert
       title: generatedMaterial.value.title || form.value.topic,
-      type: form.value.type, // Wird zu materialType
+      type: form.value.type,
       subject: form.value.subject,
-      content: previewContent.value, // Cleaned HTML (stripped AI commentary + Quellen)
+      content: previewContent.value,
       languageLevel: form.value.languageLevel,
       vocabPercentage: form.value.vocabPercentage,
       tags: [
         form.value.subject.toLowerCase(),
         form.value.topic.toLowerCase().split(" ")[0],
-      ].filter(tag => tag && tag.trim() !== ''), // Filtert leere Tags
-      // Zusätzliche Metadaten für spätere Verwendung oder detailliertere Speicherung
+      ].filter(tag => tag && tag.trim() !== ''),
       prompt: generatedPrompt.value,
-      clilElements: { // Diese sind eher für die interne Logik oder detaillierte Ansichten
+      clilElements: {
         vocabPercentage: form.value.vocabPercentage,
         contentFocus: form.value.contentFocus,
         includeVocabList: form.value.includeVocabList,
@@ -961,10 +955,34 @@ const saveMaterial = async () => {
 
     const savedMaterial = await materialsStore.addMaterial(newMaterialData);
 
+    try {
+      // Save user's initial prompt
+      await apiClient.post(`/api/materials/${savedMaterial.id}/conversation`, {
+        role: 'user',
+        message: generatedPrompt.value,
+        modelUsed: form.value.model
+      });
+
+      // Save AI's initial response
+      await apiClient.post(`/api/materials/${savedMaterial.id}/conversation`, {
+        role: 'assistant',
+        message: previewContent.value,
+        modelUsed: form.value.model
+      });
+    } catch (convError) {
+      console.error('Error saving conversation history:', convError);
+      // Don't block the save if conversation fails
+    }
+
     uiStore.setLastCreatedMaterial(savedMaterial.id);
     previewDialog.value = false;
     showFeedback("Material erfolgreich gespeichert!", "success");
-    notificationStore.add({ title: 'Material gespeichert', message: `"${form.value.topic}" wurde gespeichert`, type: 'success', icon: 'mdi-content-save' })
+    notificationStore.add({
+      title: 'Material gespeichert',
+      message: `"${form.value.topic}" wurde gespeichert`,
+      type: 'success',
+      icon: 'mdi-content-save'
+    });
     router.push(`/edit/${savedMaterial.id}`);
   } catch (error) {
     console.error('[CreateMaterial.vue] Error in saveMaterial:', error);
@@ -973,6 +991,8 @@ const saveMaterial = async () => {
     saving.value = false;
   }
 };
+
+
 
 // Watch form changes to update the generated prompt in step 4
 watch(
