@@ -122,7 +122,9 @@ public class ClilController {
             @AuthenticationPrincipal User user) {
 
         log.info("Chat request for material {}: {}", materialId, request.getPrompt());
-
+        if (Boolean.TRUE.equals(request.getUseDocumentContext()) && user != null) {
+            request.setUserId(user.getId().toString());
+        }
         ClilResponse response = ragProxyService.chatWithMaterial(request).block();
 
         return ResponseEntity.ok(response);

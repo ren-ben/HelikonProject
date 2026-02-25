@@ -16,4 +16,7 @@ public class MaterialChatRequest {
     private String languageLevel;
     private String subject;
     private String modelName;
+    private Boolean useDocumentContext;
+    private String userId;
 }
+
