@@ -174,6 +174,24 @@
       </v-card>
     </v-dialog>
 
+    <!-- Unsaved Changes Dialog -->
+    <v-dialog v-model="confirmLeaveDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-h5">Ungespeicherte Änderungen</v-card-title>
+        <v-card-text>
+          Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie die Seite verlassen?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="cancelLeave">Abbrechen</v-btn>
+          <v-btn color="warning" variant="text" @click="confirmLeave">Verwerfen</v-btn>
+          <v-btn color="primary" @click="saveAndLeave" :loading="saveStatus === 'saving'">
+            Speichern & Verlassen
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <ExportDialog
       v-model="exportDialog"
       :material-id="material?.id"
@@ -208,7 +226,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import { useUIStore } from '@/stores/ui';
 import MonacoEditor from '@/components/Editor/MonacoEditor.vue';
@@ -253,6 +271,7 @@ const exportDialog = ref(false);
 const showPreview = ref(false);
 const showVersionHistory = ref(false);
 const snackbar = ref({ show: false, text: '', color: 'success' });
+const initialLoadComplete = ref(false);
 
 // Globale Materialtypen aus Utils
 const materialTypes = computed(() =>
@@ -292,6 +311,11 @@ const loadMaterial = async (materialId) => {
       editableLanguageLevel.value = material.value.languageLevel || 'B1';
       editableVocabPercentage.value = material.value.vocabPercentage || 30;
       editableTags.value = material.value.tags || [];
+
+      setTimeout(() => {
+              initialLoadComplete.value = true;
+            }, 100);
+
       
     } else {
       console.error('No material data available after fetch');
@@ -354,7 +378,7 @@ const saveStatusColor = computed(() => {
 });
 
 const markUnsaved = () => {
-    if (saveStatus.value === 'saved') {
+    if (saveStatus.value === 'saved' && initialLoadComplete.value) {
         saveStatus.value = 'unsaved';
     }
 }
@@ -500,6 +524,40 @@ const handleChatSubmit = async () => {
 };
 
 
+
+// Add this after other refs
+const confirmLeaveDialog = ref(false);
+let nextRoute = null;
+
+// Add navigation guard
+onBeforeRouteLeave((to, from, next) => {
+  if (saveStatus.value === 'unsaved') {
+    confirmLeaveDialog.value = true;
+    nextRoute = to;
+    next(false); // Block navigation
+  } else {
+    next(); // Allow navigation
+  }
+});
+
+// Add handlers for the confirmation dialog
+const confirmLeave = () => {
+  confirmLeaveDialog.value = false;
+  saveStatus.value = 'saved'; // Mark as saved to allow navigation
+  if (nextRoute) {
+    router.push(nextRoute);
+  }
+};
+
+const cancelLeave = () => {
+  confirmLeaveDialog.value = false;
+  nextRoute = null;
+};
+
+const saveAndLeave = async () => {
+  await forceSave();
+  confirmLeave();
+};
 
 
 
