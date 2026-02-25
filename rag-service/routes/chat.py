@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional
-from generation import get_llm  # Just get the LLM directly
-from langchain_core.messages import HumanMessage
+from generation import parametric_generate, rag_parametric_generate
 import time
 
 router = APIRouter()
@@ -15,6 +14,8 @@ class ChatRequest(BaseModel):
     languageLevel: str
     subject: str
     modelName: Optional[str] = "llama3"
+    useDocumentContext: Optional[bool] = False
+    userId: str
 
 
 class ChatResponse(BaseModel):
@@ -27,11 +28,10 @@ class ChatResponse(BaseModel):
 @router.post("/chat")
 def chat_with_material(req: ChatRequest) -> ChatResponse:
     """
-    Chat with existing material - simple single-phase generation.
+    Chat with existing material - uses existing generation functions.
     """
 
     try:
-        # Build the prompt
         enhanced_prompt = f"""You are editing existing teaching material.
 
 CURRENT MATERIAL:
@@ -46,23 +46,35 @@ Context:
 - Language Level: {req.languageLevel}
 
 Task: Update the material according to the user's request. Keep the original structure unless asked to change it. Return ONLY the updated material content, no explanations."""
-        llm = get_llm("llama3", temperature=0.7)
 
         start_time = time.time()
-        response = llm.invoke([HumanMessage(content=enhanced_prompt)])
+
+        if req.useDocumentContext:
+            result = rag_parametric_generate(
+                user_prompt=enhanced_prompt,
+                user_id=req.userId,
+                subject=req.subject,
+                model_name=req.modelName,
+                top_k=3,
+                citation_style="numbered"
+            )
+        else:
+            result = parametric_generate(
+                user_prompt=enhanced_prompt,
+                model_name=req.modelName
+            )
+
         elapsed_time = time.time() - start_time
 
-        updated_content = response.content
-
-        print(f"Chat completed in {elapsed_time:.1f}s")
+        print(f"✅ Chat completed in {elapsed_time:.1f}s using model: {req.modelName}, RAG: {req.useDocumentContext}")
 
         return ChatResponse(
-            formattedResponse=updated_content,
+            formattedResponse=result["formattedResponse"],
             rawContent=None,
             timings={
                 "total": f"{elapsed_time:.1f}s"
             },
-            sources=[]
+            sources=result.get("sources", [])
         )
 
     except Exception as e:
@@ -70,5 +82,6 @@ Task: Update the material according to the user's request. Keep the original str
         import traceback
         traceback.print_exc()
         return ChatResponse(
-            formattedResponse=f"<div class='error'>Chat failed: {str(e)}</div>"
+            formattedResponse=f"<div class='error'>Chat failed: {str(e)}</div>",
+            sources=[]
         )

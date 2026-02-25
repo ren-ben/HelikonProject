@@ -2,7 +2,7 @@ from config import settings
 
 PROVIDER_MODELS: dict[str, list[str]] = {
     "openai": ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
-    "ollama": ["llama3","llama3.1"],
+    "ollama": ["llama3","deepseek-r1","mistral"],
 }
 
 _LLM_PARAMS = {"temperature": 0.7, "max_tokens": 2048, "top_p": 0.9}
