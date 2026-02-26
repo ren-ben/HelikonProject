@@ -46,7 +46,7 @@
         <v-col cols="12" md="10" lg="8">
           <v-timeline side="end" align="start" truncate-line="both">
             <v-timeline-item
-              v-for="(message, index) in conversationHistory"
+              v-for="message in conversationHistory"
               :key="message.id"
               :dot-color="message.role === 'user' ? 'blue' : 'green'"
               size="small"
@@ -71,6 +71,21 @@
                     {{ message.role === 'user' ? 'Sie' : 'AI Assistant' }}
                   </v-chip>
                   <v-spacer></v-spacer>
+
+                  <!-- ✅ Copy Button -->
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    @click="copyToClipboard(message.message)"
+                    class="mr-2"
+                  >
+                    <v-icon size="small">mdi-content-copy</v-icon>
+                    <v-tooltip activator="parent" location="top">
+                      Text kopieren
+                    </v-tooltip>
+                  </v-btn>
+
                   <span class="text-caption text-grey">
                     {{ formatTimestamp(message.timestamp) }}
                   </span>
@@ -79,14 +94,12 @@
                 <v-divider></v-divider>
 
                 <v-card-text class="pa-4">
-                  <!-- User messages: plain text -->
-                  <div v-if="message.role === 'user'" class="text-body-2 user-message">
+                  <!-- ✅ Scrollable message container with max-height -->
+                  <div
+                    :class="message.role === 'user' ? 'user-message' : 'assistant-message'"
+                    class="text-body-2 message-container"
+                  >
                     {{ message.message }}
-                  </div>
-
-                  <!-- Assistant messages: rendered HTML -->
-                  <div v-else class="assistant-message">
-                    <div class="preview-content" v-html="sanitizeHtml(message.message)"></div>
                   </div>
 
                   <!-- Model info footer -->
@@ -103,6 +116,23 @@
         </v-col>
       </v-row>
     </v-container>
+
+    <!-- ✅ Copy Success Snackbar -->
+    <v-snackbar
+      v-model="copySnackbar"
+      :timeout="2000"
+      color="success"
+    >
+      Text in Zwischenablage kopiert!
+      <template v-slot:actions>
+        <v-btn
+          variant="text"
+          @click="copySnackbar = false"
+        >
+          Schließen
+        </v-btn>
+      </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -111,7 +141,6 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import apiClient from '@/services/deepinfra-api';
-import DOMPurify from 'dompurify';
 
 const route = useRoute();
 const router = useRouter();
@@ -121,6 +150,7 @@ const conversationHistory = ref([]);
 const material = ref(null);
 const loading = ref(false);
 const error = ref(null);
+const copySnackbar = ref(false);
 
 const goBack = () => {
   router.push(`/edit/${route.params.id}`);
@@ -150,8 +180,27 @@ const loadData = async () => {
   }
 };
 
-const sanitizeHtml = (html) => {
-  return DOMPurify.sanitize(html);
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    copySnackbar.value = true;
+  } catch (err) {
+    console.error('Failed to copy text:', err);
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      copySnackbar.value = true;
+    } catch (e) {
+      console.error('Fallback copy failed:', e);
+    }
+    document.body.removeChild(textArea);
+  }
 };
 
 const formatTimestamp = (timestamp) => {
@@ -174,6 +223,16 @@ onMounted(() => {
   min-height: calc(100vh - 64px);
 }
 
+.message-container {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+}
+
 .user-message {
   background: white;
   padding: 12px;
@@ -183,69 +242,26 @@ onMounted(() => {
 
 .assistant-message {
   background: white;
-  border-radius: 8px;
   padding: 12px;
+  border-radius: 8px;
   border-left: 3px solid #4CAF50;
 }
 
-.preview-content {
-  max-height: 500px;
-  overflow-y: auto;
+.message-container::-webkit-scrollbar {
+  width: 8px;
 }
 
-.preview-content :deep(h1),
-.preview-content :deep(h2),
-.preview-content :deep(h3) {
-  margin-top: 0.75em;
-  margin-bottom: 0.5em;
-  color: #333;
-}
-
-.preview-content :deep(p) {
-  margin-bottom: 1em;
-  line-height: 1.6;
-}
-
-.preview-content :deep(ul),
-.preview-content :deep(ol) {
-  margin-left: 1.5em;
-  margin-bottom: 1em;
-}
-
-.preview-content :deep(li) {
-  margin-bottom: 0.5em;
-}
-
-.preview-content :deep(code) {
-  background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: monospace;
-}
-
-.preview-content :deep(pre) {
-  background: #f5f5f5;
-  padding: 12px;
+.message-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 4px;
-  overflow-x: auto;
-  margin-bottom: 1em;
 }
 
-.preview-content :deep(table) {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1em;
+.message-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
 }
 
-.preview-content :deep(th),
-.preview-content :deep(td) {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.preview-content :deep(th) {
-  background-color: #f5f5f5;
-  font-weight: bold;
+.message-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>
