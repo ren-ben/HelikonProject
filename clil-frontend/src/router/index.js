@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 // Lazy-loaded Komponenten für bessere Performance
+const ConversationHistoryView = () => import('@/views/ConversationHistoryView.vue')
 const Dashboard = () => import('@/views/Dashboard.vue')
 const CreateMaterial = () => import('@/views/CreateMaterial.vue')
 const EditMaterial = () => import('@/views/EditMaterial.vue')
@@ -96,6 +97,13 @@ const routes = [
     name: 'admin',
     component: AdminView,
     meta: { title: 'Administration', requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/materials/:id/history',
+    name: 'conversation-history',
+    component: ConversationHistoryView,
+    props: true,
+    meta: { title: 'Änderungsverlauf', requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',

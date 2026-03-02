@@ -1,14 +1,11 @@
 package at.technikum.clil.controller;
 
-import at.technikum.clil.dto.ClilResponse;
-import at.technikum.clil.dto.LessonMaterialDto;
-import at.technikum.clil.dto.MaterialCreateRequest;
-import at.technikum.clil.dto.MaterialRequest;
-import at.technikum.clil.dto.MaterialUpdateRequest;
+import at.technikum.clil.dto.*;
 import at.technikum.clil.model.User;
 import at.technikum.clil.service.RagProxyService;
 import at.technikum.clil.service.MaterialService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -117,4 +114,22 @@ public class ClilController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PostMapping("/material/{materialId}/chat")
+    public ResponseEntity<ClilResponse> chatWithMaterial(
+            @PathVariable Long materialId,
+            @RequestBody MaterialChatRequest request,
+            @AuthenticationPrincipal User user) {
+
+        log.info("Chat request for material {}: {}", materialId, request.getPrompt());
+        if (Boolean.TRUE.equals(request.getUseDocumentContext()) && user != null) {
+            request.setUserId(user.getId().toString());
+        }
+        ClilResponse response = ragProxyService.chatWithMaterial(request).block();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
 }

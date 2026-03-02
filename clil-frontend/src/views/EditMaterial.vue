@@ -18,10 +18,6 @@
             <v-icon start>mdi-content-save</v-icon>
             Speichern
         </v-btn>
-        <v-btn color="info" variant="text" @click="handlePreview">
-          <v-icon start>mdi-eye</v-icon>
-          Vorschau
-        </v-btn>
         <v-btn color="secondary" @click="handleExport">
           <v-icon start>mdi-export</v-icon>
           Exportieren
@@ -32,18 +28,16 @@
       <!-- Haupt-Editor-Bereich -->
       <v-col cols="12" md="8">
           <v-skeleton-loader v-if="loading" type="image, article"></v-skeleton-loader>
-          <material-editor
+          <monaco-editor
             v-else-if="material"
             v-model="editableContent"
-            @save-status="updateSaveStatus"
-            :language-level="editableLanguageLevel"
-            :vocab-percentage="editableVocabPercentage"
-            :enable-clil-tools="true"
+            language="markdown"
           />
           <v-alert v-else type="error">
               Material konnte nicht geladen werden.
           </v-alert>
       </v-col>
+
 
       <!-- Sidebar für Metadaten -->
       <v-col cols="12" md="4">
@@ -111,9 +105,9 @@
                     Zuletzt geändert: {{ formatDate(material.modified) }}
                 </div>
                 <v-divider class="my-3"></v-divider>
-                <v-btn block variant="text" @click="showVersionHistory = true">
+                <v-btn block variant="text" @click="router.push(`/materials/${material.id}/history`)">
                   <v-icon start>mdi-history</v-icon>
-                  Änderungsverlauf anzeigen
+                  Chatverlauf anzeigen
                 </v-btn>
            </v-card-text>
            <v-divider></v-divider>
@@ -127,6 +121,65 @@
         </v-card>
          <v-skeleton-loader v-else type="card"></v-skeleton-loader>
       </v-col>
+
+
+
+
+            <!-- AI Chat Assistant -->
+            <v-col cols="12" md="8">
+              <v-card elevation="1" class="mt-4">
+                <v-card-title class="text-subtitle-1 d-flex align-center">
+                  <v-icon start color="primary">mdi-robot-outline</v-icon>
+                  AI-Assistent
+                </v-card-title>
+                <v-divider></v-divider>
+                <v-card-text>
+                                    <v-select
+                                                            v-model="selectedModel"
+                                                            :items="availableModels"
+                                                            label="LLM-Modell"
+                                                            prepend-inner-icon="mdi-brain"
+                                                            variant="outlined"
+                                                            density="compact"
+                                                            :loading="loadingModels"
+                                                            :disabled="loadingModels || chatLoading"
+                                                            hint="Wählen Sie ein Modell für die Generierung"
+                                                            persistent-hint
+                                                            class="mb-3"
+                                                          ></v-select>
+                  <v-textarea
+                    v-model="chatPrompt"
+                    label="Material ändern..."
+                    placeholder="z.B. 'kürzer machen', 'mehr Beispiele hinzufügen', 'ins Deutsche übersetzen'"
+                    variant="outlined"
+                    rows="3"
+                    density="compact"
+                    :disabled="chatLoading"
+                  ></v-textarea>
+
+                  <v-switch
+                                          v-model="useDocumentContext"
+                                          color="primary"
+                                          label="Kontext aus hochgeladenen Dokumenten verwenden"
+                                          hide-details
+                                          inset
+                                          :disabled="chatLoading"
+                                          class="mb-3"
+                                        ></v-switch>
+                  <v-btn
+                    color="primary"
+                    block
+                    @click="handleChatSubmit"
+                    :loading="chatLoading"
+                    :disabled="!chatPrompt.trim()"
+                  >
+                    <v-icon start>mdi-magic-staff</v-icon>
+                    Material aktualisieren
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+            </v-col>
+
     </v-row>
 
      <!-- Delete Confirmation Dialog -->
@@ -140,6 +193,24 @@
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="confirmDeleteDialog = false">Abbrechen</v-btn>
           <v-btn color="error" @click="deleteMaterial" :loading="deleting">Löschen</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Unsaved Changes Dialog -->
+    <v-dialog v-model="confirmLeaveDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-h5">Ungespeicherte Änderungen</v-card-title>
+        <v-card-text>
+          Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie die Seite verlassen?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="cancelLeave">Abbrechen</v-btn>
+          <v-btn color="warning" variant="text" @click="confirmLeave">Verwerfen</v-btn>
+          <v-btn color="primary" @click="saveAndLeave" :loading="saveStatus === 'saving'">
+            Speichern & Verlassen
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -162,7 +233,6 @@
           <v-btn icon @click="showPreview = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
-          <v-toolbar-title>Vorschau: {{ editableTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn color="primary" @click="showPreview = false">
             Zurück zum Bearbeiten
@@ -179,13 +249,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import { useUIStore } from '@/stores/ui';
-import MaterialEditor from '@/components/Editor/MaterialEditor.vue';
+import MonacoEditor from '@/components/Editor/MonacoEditor.vue';
 import ExportDialog from '@/components/ExportDialog.vue';
 import { useNotificationStore } from '@/stores/notifications';
 import { useSubjectStore } from '@/stores/subjects';
+import materialsService from '@/services/materialsService';
+import apiClient from '@/services/deepinfra-api';
 import {
   getIconForType,
   getIconColor,
@@ -193,6 +265,14 @@ import {
   formatDate,
   MATERIAL_TYPES
 } from '@/utils/materialUtils';
+
+const chatPrompt = ref('');
+const chatLoading = ref(false);
+const selectedModel = ref('');
+const availableModels = ref([]);
+const loadingModels = ref(false);
+const useDocumentContext = ref(true);
+
 
 const route = useRoute();
 const router = useRouter();
@@ -218,6 +298,7 @@ const exportDialog = ref(false);
 const showPreview = ref(false);
 const showVersionHistory = ref(false);
 const snackbar = ref({ show: false, text: '', color: 'success' });
+const initialLoadComplete = ref(false);
 
 // Globale Materialtypen aus Utils
 const materialTypes = computed(() =>
@@ -257,6 +338,11 @@ const loadMaterial = async (materialId) => {
       editableLanguageLevel.value = material.value.languageLevel || 'B1';
       editableVocabPercentage.value = material.value.vocabPercentage || 30;
       editableTags.value = material.value.tags || [];
+
+      setTimeout(() => {
+              initialLoadComplete.value = true;
+            }, 100);
+
       
     } else {
       console.error('No material data available after fetch');
@@ -277,6 +363,25 @@ onMounted(async () => {
   if (route.params.id) {
     await loadMaterial(route.params.id);
   }
+
+  loadingModels.value = true;
+  try {
+    const response = await apiClient.getAvailableModels();
+    if (response.success && response.data.length > 0) {
+      availableModels.value = response.data;
+      selectedModel.value = availableModels.value[0]; // Set default
+    } else {
+      availableModels.value = ['llama3'];
+      selectedModel.value = 'llama3';
+    }
+  } catch (error) {
+    console.error('Error loading models:', error);
+    availableModels.value = ['llama3'];
+    selectedModel.value = 'llama3';
+  } finally {
+    loadingModels.value = false;
+  }
+
 });
 
 // Cleanup timeouts on unmount
@@ -289,9 +394,7 @@ onBeforeUnmount(async () => {
 });
 
 // Save-Status-Logik
-const updateSaveStatus = (status) => {
-  saveStatus.value = status;
-};
+
 const saveStatusText = computed(() => {
     switch(saveStatus.value) {
         case 'saved': return 'Gespeichert';
@@ -321,7 +424,7 @@ const saveStatusColor = computed(() => {
 });
 
 const markUnsaved = () => {
-    if (saveStatus.value === 'saved') {
+    if (saveStatus.value === 'saved' && initialLoadComplete.value) {
         saveStatus.value = 'unsaved';
     }
 }
@@ -356,10 +459,7 @@ const handleExport = () => {
   exportDialog.value = true;
 };
 
-// Vorschau
-const handlePreview = () => {
-  showPreview.value = true;
-};
+
 
 // Snackbar Feedback
 const showFeedback = (text, color = 'success') => {
@@ -417,6 +517,97 @@ const deleteMaterial = async () => {
     deleting.value = false;
   }
 };
+
+
+// Chat with AI - use API client with automatic auth
+// Chat with AI - use API client with automatic auth
+const handleChatSubmit = async () => {
+  if (!chatPrompt.value.trim() || !material.value) return;
+
+  chatLoading.value = true;
+  saveStatus.value = 'saving';
+
+  try {
+    await apiClient.addConversationMessage(material.value.id, {
+      role: 'user',
+      message: chatPrompt.value,
+      modelUsed: selectedModel.value
+    });
+
+    const response = await apiClient.chatWithMaterial(material.value.id, {
+      prompt: chatPrompt.value,
+      content: editableContent.value,
+      language: material.value.language || 'German',
+      languageLevel: editableLanguageLevel.value,
+      subject: editableSubject.value,
+      modelName: selectedModel.value,
+      useDocumentContext: useDocumentContext.value,
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Chat failed');
+    }
+
+    await apiClient.addConversationMessage(material.value.id, {
+      role: 'assistant',
+      message: response.data.formattedResponse,
+      modelUsed: selectedModel.value
+    });
+
+    editableContent.value = response.data.formattedResponse;
+    material.value.content = response.data.formattedResponse;
+
+    chatPrompt.value = '';
+    saveStatus.value = 'unsaved';
+    showFeedback('Material mit AI aktualisiert!', 'success');
+
+  } catch (error) {
+    console.error('Chat error:', error);
+    showFeedback(error.message || 'Fehler beim AI-Update', 'error');
+    saveStatus.value = 'error';
+  } finally {
+    chatLoading.value = false;
+  }
+};
+
+
+
+// Add this after other refs
+const confirmLeaveDialog = ref(false);
+let nextRoute = null;
+
+// Add navigation guard
+onBeforeRouteLeave((to, from, next) => {
+  if (saveStatus.value === 'unsaved') {
+    confirmLeaveDialog.value = true;
+    nextRoute = to;
+    next(false); // Block navigation
+  } else {
+    next(); // Allow navigation
+  }
+});
+
+// Add handlers for the confirmation dialog
+const confirmLeave = () => {
+  confirmLeaveDialog.value = false;
+  saveStatus.value = 'saved'; // Mark as saved to allow navigation
+  if (nextRoute) {
+    router.push(nextRoute);
+  }
+};
+
+const cancelLeave = () => {
+  confirmLeaveDialog.value = false;
+  nextRoute = null;
+};
+
+const saveAndLeave = async () => {
+  await forceSave();
+  confirmLeave();
+};
+
+
+
 
 </script>
 

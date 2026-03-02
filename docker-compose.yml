@@ -53,6 +53,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,15 +74,18 @@ services:
     container_name: clil-rag
     restart: unless-stopped
     environment:
-      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
       LLM_API_KEY: ${LLM_API_KEY:-}
-      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_MODEL: ${LLM_MODEL:-llama3}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
       CHROMADB_PATH: /data/chromadb
     volumes:
       - chromadb_data:/data/chromadb
     networks:
       - helikon
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build:
