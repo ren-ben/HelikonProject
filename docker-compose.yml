@@ -14,8 +14,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - helikon
+      - caddy-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: [ "CMD-SHELL", "pg_isready" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,7 +25,7 @@ services:
     image: dpage/pgadmin4
     container_name: clil-pgadmin
     restart: unless-stopped
-    profiles: ["dev"]        # only starts with: docker compose --profile dev up
+    profiles: [ "dev" ] # only starts with: docker compose --profile dev up
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -61,12 +62,11 @@ services:
     networks:
       - helikon
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 30s      # give the JVM time to boot
-
+      start_period: 30s # give the JVM time to boot
 
   rag-service:
     build:
@@ -114,15 +114,20 @@ services:
       - frontend
     networks:
       - helikon
+      - caddy-net
 
 # ─── Volumes ────────────────────────────────────────────────────
 volumes:
   postgres_data:
-  chromadb_data:     # persists ChromaDB vectors across restarts
-  caddy_data:        # persists Caddy's automatic HTTPS certificates
-  caddy_config:      # persists Caddy configuration
+  chromadb_data: # persists ChromaDB vectors across restarts
+  caddy_data: # persists Caddy's automatic HTTPS certificates
+  caddy_config:
+    # persists Caddy configuration
 
-# ─── Networks ───────────────────────────────────────────────────
+    # ─── Networks ───────────────────────────────────────────────────
 networks:
   helikon:
     driver: bridge
+  caddy-net:
+    external: true
+    name: caddy-net
