@@ -736,7 +736,6 @@ import { useRouter } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import ExportDialog from '@/components/ExportDialog.vue';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 const router = useRouter();
