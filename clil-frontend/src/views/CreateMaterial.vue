@@ -768,34 +768,13 @@ const generatedMaterial = ref(null);
 const previewContent = computed(() => {
   const mat = generatedMaterial.value
   if (!mat) return ''
-  let html = mat.content || ''
 
-  html = html.replace(/^\s*```\s*html?\s*/i, '')
+  let markdown = mat.content || ''
 
-  const lastTagEnd = html.lastIndexOf('>')
-  const closingFence = html.indexOf('```', lastTagEnd > -1 ? lastTagEnd : 0)
-  if (closingFence !== -1) {
-    html = html.substring(0, closingFence)
-  }
 
-  const lastTag = html.lastIndexOf('</')
-  if (lastTag !== -1) {
-    const afterLastTag = html.indexOf('>', lastTag)
-    if (afterLastTag !== -1) {
-      const trailing = html.substring(afterLastTag + 1).trim()
-      if (trailing && !/<[a-z][\s\S]*>/i.test(trailing)) {
-        html = html.substring(0, afterLastTag + 1)
-      }
-    }
-  }
-
-  // Strip LLM-generated Quellen section when structured sources exist
-  if (mat.sources?.length > 0) {
-    html = html.replace(/<h[23][^>]*>\s*(Quellen|Quellenverzeichnis)\s*<\/h[23]>[\s\S]*$/i, '')
-  }
-
-  return html.trim()
+  return markdown.trim()
 })
+
 
 const editPrompt = ref(false);
 const isGeneratingPrompt = ref(false);

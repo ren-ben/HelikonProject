@@ -279,19 +279,13 @@ const finalFilename = computed({
   set: (v) => { filenameBase.value = v; }
 });
 
-// Extract raw markdown content from material
 const rawMarkdownContent = computed(() => {
-  let content = materialData.value?.content || materialData.value?.formattedHtml || 'Kein Inhalt verfügbar.';
+  let markdown = materialData.value?.content || materialData.value?.formattedHtml || 'Kein Inhalt verfügbar.';
 
-  // Strip code fences if present
-  content = content.replace(/^\s*```\s*html?\s*/i, '');
-  const closingFence = content.lastIndexOf('```');
-  if (closingFence !== -1) {
-    content = content.substring(0, closingFence);
-  }
-
-  return content.trim();
+  return markdown.trim();
 });
+
+
 
 // Convert markdown to HTML for display
 const sanitizedContent = computed(() => {
