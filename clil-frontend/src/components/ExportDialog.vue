@@ -228,6 +228,10 @@ import { useMaterialsStore } from '@/stores/materials';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { convertMarkdownToDocx } from '@mohtasham/md-to-docx';
+import {
+  exportToMarkdown,
+  exportToText,
+} from '@/utils/exportHelpers';
 
 const props = defineProps({
   modelValue: Boolean,
@@ -307,8 +311,11 @@ const sanitizedContent = computed(() => {
 const formatOptions = [
   { value: 'pdf', title: 'PDF', icon: 'mdi-file-pdf-box', color: 'red' },
   { value: 'docx', title: 'Word (DOCX)', icon: 'mdi-file-word-box', color: 'blue' },
-  { value: 'html', title: 'HTML', icon: 'mdi-language-html5', color: 'orange' }
+  { value: 'html', title: 'HTML', icon: 'mdi-language-html5', color: 'orange' },
+  { value: 'md', title: 'Markdown', icon: 'mdi-language-markdown', color: 'grey' },
+  { value: 'txt', title: 'Text', icon: 'mdi-text-box', color: 'grey-darken-2' }
 ];
+
 const colorSchemeOptions = [
   { title: 'Standard (Blau)', value: 'default' },
   { title: 'Neutral (Grau)', value: 'neutral' },
@@ -600,6 +607,27 @@ const exportMaterialAction = async () => {
         downloadBlob(blob, `${finalFilename.value}.html`);
         break;
       }
+
+
+      case 'md': {
+        exportToMarkdown(rawMarkdownContent.value, finalFilename.value);
+        break;
+      }
+
+      case 'txt': {
+        // Convert markdown to plain text (strip markdown syntax)
+        const plainText = rawMarkdownContent.value
+          .replace(/#{1,6}\s+/g, '') // Remove headers
+          .replace(/\*\*([^*]+)\*\*/g, '$1') // Bold
+          .replace(/\*([^*]+)\*/g, '$1') // Italic
+          .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Links
+          .replace(/```[\s\S]*?```/g, '[Code Block]') // Code blocks
+          .replace(/`([^`]+)`/g, '$1'); // Inline code
+
+        exportToText(plainText, finalFilename.value);
+        break;
+      }
+
     }
 
     showSnackbar('Export erfolgreich!', 'success');

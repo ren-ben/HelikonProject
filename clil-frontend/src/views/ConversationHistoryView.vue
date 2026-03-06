@@ -262,7 +262,12 @@ import { ref, onMounted, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import apiClient from '@/services/deepinfra-api';
-import { convertMarkdownToDocx } from '@mohtasham/md-to-docx';
+import {
+  exportToDocx,
+  exportToMarkdown,
+  exportToText,
+  exportChatToPDF
+} from '@/utils/exportHelpers';
 
 const route = useRoute();
 const router = useRouter();
@@ -471,20 +476,7 @@ const exportToPDF = async (content) => {
   downloadBlob(blob, `${exportFilename.value}.pdf`);
 };
 
-const exportToDOCX = async (markdownContent) => {
-  const blob = await convertMarkdownToDocx(markdownContent);
-  downloadBlob(blob, `${exportFilename.value}.docx`);
-};
 
-const exportToMarkdown = (markdownContent) => {
-  const blob = new Blob([markdownContent], { type: 'text/markdown' });
-  downloadBlob(blob, `${exportFilename.value}.md`);
-};
-
-const exportToText = (textContent) => {
-  const blob = new Blob([textContent], { type: 'text/plain' });
-  downloadBlob(blob, `${exportFilename.value}.txt`);
-};
 
 const downloadBlob = (blob, filename) => {
   const link = document.createElement('a');
@@ -500,18 +492,36 @@ const performExport = async () => {
   exporting.value = true;
 
   try {
+    const metadata = includeMetadata.value ? {
+      'Material': material.value?.topic || 'N/A',
+      'Fach': material.value?.subject || 'N/A',
+      'Exportiert': new Date().toLocaleString('de-DE'),
+      'Nachrichten': conversationHistory.value.length
+    } : {};
+
     switch (exportFormat.value) {
       case 'pdf':
-        await exportToPDF(buildTextContent());
-        break;
+              await exportChatToPDF(
+                conversationHistory.value,
+                exportFilename.value,
+                {
+                  title: `Chatverlauf: ${material.value?.topic || 'Untitled'}`,
+                  metadata
+                }
+              );
+              break;
+
+
       case 'docx':
-        await exportToDOCX(buildMarkdownContent());
+        await exportToDocx(buildMarkdownContent(), exportFilename.value);
         break;
+
       case 'md':
-        exportToMarkdown(buildMarkdownContent());
+        exportToMarkdown(buildMarkdownContent(), exportFilename.value);
         break;
+
       case 'txt':
-        exportToText(buildTextContent());
+        exportToText(buildTextContent(), exportFilename.value);
         break;
     }
 
