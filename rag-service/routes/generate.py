@@ -49,15 +49,26 @@ from generation import (
     rag_two_phase_generate
 )
 
+
 @router.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest):
-    """CLIL material generation with RAG and two-phase support."""
+    """CLIL material generation with RAG and two-phase support.
+
+    Routing logic:
+    - RAG + Two-Phase: useDocumentContext=true + useTwoPhase=true
+    - RAG Only: useDocumentContext=true + useTwoPhase=false
+    - Two-Phase Only: useDocumentContext=false + useTwoPhase=true
+    - Basic: useDocumentContext=false + useTwoPhase=false
+    """
     try:
-        if req.useDocumentContext and req.userId:
+        use_rag = req.useDocumentContext and req.userId
+        use_two_phase = req.useTwoPhase
+
+        if use_rag and use_two_phase:
             result = rag_two_phase_generate(
                 user_prompt=req.prompt,
                 user_id=req.userId,
-                subject=req.contextSubject,
+                subject=req.contextSubject or req.subject,
                 model_name=req.modelName,
                 citation_style=req.citationStyle,
             )
@@ -68,7 +79,20 @@ def generate(req: GenerateRequest):
                 timings=result.get("timings"),
             )
 
-        elif req.useTwoPhase:
+        elif use_rag and not use_two_phase:
+            result = rag_parametric_generate(
+                user_prompt=req.prompt,
+                user_id=req.userId,
+                subject=req.contextSubject or req.subject,
+                model_name=req.modelName,
+                citation_style=req.citationStyle,
+            )
+            return GenerateResponse(
+                formattedResponse=result["formattedResponse"],
+                sources=result.get("sources", []),
+            )
+
+        elif not use_rag and use_two_phase:
             result = two_phase_parametric_generate(
                 user_prompt=req.prompt,
                 model_name=req.modelName,
@@ -89,16 +113,6 @@ def generate(req: GenerateRequest):
                 formattedResponse=result["formattedResponse"],
                 sources=result.get("sources", []),
             )
-
-    except Exception as exc:
-        error_html = (
-            "<div class='error'>"
-            "<h3>Error generating content</h3>"
-            f"<p>{exc}</p>"
-            "</div>"
-        )
-        return GenerateResponse(formattedResponse=error_html)
-
 
     except Exception as exc:
         error_html = (
