@@ -11,19 +11,17 @@ router = APIRouter()
 def list_models():
     """Return available models, dynamically from Ollama or static from config."""
     provider = settings.llm_provider.lower()
-
     if provider == "ollama":
         try:
-            ollama_url = getattr(settings, 'ollama_base_url', 'http://localhost:11434')
+            ollama_url = settings.ollama_url
             response = requests.get(f"{ollama_url}/api/tags", timeout=3)
-
             if response.status_code == 200:
                 data = response.json()
                 if "models" in data:
                     model_names = [m["name"] for m in data["models"] if "name" in m]
                     return {"provider": provider, "models": sorted(model_names)}
-        except:
-            pass  
-
+        except Exception as e:
+            print(f"Ollama models fetch failed: {e}")
+            pass
     models = PROVIDER_MODELS.get(provider, [])
     return {"provider": provider, "models": models}
