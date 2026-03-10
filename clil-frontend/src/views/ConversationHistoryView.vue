@@ -12,6 +12,18 @@
       <v-chip v-if="material" variant="tonal" color="primary">
         {{ material.topic }}
       </v-chip>
+
+      <v-btn
+        v-if="conversationHistory.length > 0"
+        icon
+        @click="exportDialog = true"
+        class="ml-2"
+      >
+        <v-icon>mdi-download</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          Chatverlauf exportieren
+        </v-tooltip>
+      </v-btn>
     </v-toolbar>
 
     <!-- Loading State -->
@@ -72,7 +84,6 @@
                   </v-chip>
                   <v-spacer></v-spacer>
 
-                  <!-- ✅ Copy Button -->
                   <v-btn
                     icon
                     size="small"
@@ -94,7 +105,6 @@
                 <v-divider></v-divider>
 
                 <v-card-text class="pa-4">
-                  <!-- ✅ Scrollable message container with max-height -->
                   <div
                     :class="message.role === 'user' ? 'user-message' : 'assistant-message'"
                     class="text-body-2 message-container"
@@ -102,7 +112,6 @@
                     {{ message.message }}
                   </div>
 
-                  <!-- Model info footer -->
                   <div v-if="message.modelUsed" class="mt-3 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
                     <div class="text-caption text-grey d-flex align-center gap-2">
                       <v-icon size="x-small">mdi-chip</v-icon>
@@ -117,7 +126,108 @@
       </v-row>
     </v-container>
 
-    <!-- ✅ Copy Success Snackbar -->
+    <!-- ✅ Export Dialog -->
+    <v-dialog v-model="exportDialog" max-width="800" scrollable>
+      <v-card>
+        <v-toolbar color="primary" dark density="compact">
+          <v-btn icon @click="exportDialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+          <v-toolbar-title>Chatverlauf exportieren</v-toolbar-title>
+        </v-toolbar>
+
+        <v-card-text class="pa-6">
+          <v-row>
+            <v-col cols="12">
+              <h3 class="text-subtitle-1 mb-3">Format auswählen</h3>
+              <v-chip-group
+                v-model="exportFormat"
+                column
+                mandatory
+                selected-class="text-primary"
+              >
+                <v-chip value="pdf" filter label>
+                  <v-icon start color="red">mdi-file-pdf-box</v-icon>
+                  PDF
+                </v-chip>
+                <v-chip value="docx" filter label>
+                  <v-icon start color="blue">mdi-file-word-box</v-icon>
+                  Word (DOCX)
+                </v-chip>
+                <v-chip value="md" filter label>
+                  <v-icon start color="grey">mdi-language-markdown</v-icon>
+                  Markdown
+                </v-chip>
+                <v-chip value="txt" filter label>
+                  <v-icon start color="grey-darken-2">mdi-text-box</v-icon>
+                  Text
+                </v-chip>
+              </v-chip-group>
+
+              <v-divider class="my-4"></v-divider>
+
+              <h3 class="text-subtitle-1 mb-3">Optionen</h3>
+
+              <v-checkbox
+                v-model="includeTimestamps"
+                label="Zeitstempel einschließen"
+                color="primary"
+                hide-details
+                density="compact"
+                class="mb-2"
+              ></v-checkbox>
+
+              <v-checkbox
+                v-model="includeModelInfo"
+                label="Modellinformationen einschließen"
+                color="primary"
+                hide-details
+                density="compact"
+                class="mb-2"
+              ></v-checkbox>
+
+              <v-checkbox
+                v-model="includeMetadata"
+                label="Material-Metadaten einschließen"
+                color="primary"
+                hide-details
+                density="compact"
+                class="mb-4"
+              ></v-checkbox>
+
+              <v-text-field
+                v-model="exportFilename"
+                label="Dateiname"
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                :suffix="'.' + exportFormat"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="exportDialog = false">
+            Abbrechen
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="performExport"
+            :loading="exporting"
+            :disabled="exporting"
+          >
+            <v-icon start>mdi-download</v-icon>
+            Exportieren
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Copy Success Snackbar -->
     <v-snackbar
       v-model="copySnackbar"
       :timeout="2000"
@@ -125,10 +235,21 @@
     >
       Text in Zwischenablage kopiert!
       <template v-slot:actions>
-        <v-btn
-          variant="text"
-          @click="copySnackbar = false"
-        >
+        <v-btn variant="text" @click="copySnackbar = false">
+          Schließen
+        </v-btn>
+      </template>
+    </v-snackbar>
+
+    <!-- Export Success Snackbar -->
+    <v-snackbar
+      v-model="exportSnackbar.show"
+      :timeout="3000"
+      :color="exportSnackbar.color"
+    >
+      {{ exportSnackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="exportSnackbar.show = false">
           Schließen
         </v-btn>
       </template>
@@ -137,10 +258,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMaterialsStore } from '@/stores/materials';
 import apiClient from '@/services/deepinfra-api';
+import {
+  exportToDocx,
+  exportToMarkdown,
+  exportToText,
+  exportChatToPDF
+} from '@/utils/exportHelpers';
 
 const route = useRoute();
 const router = useRouter();
@@ -152,6 +279,16 @@ const loading = ref(false);
 const error = ref(null);
 const copySnackbar = ref(false);
 
+// Export state
+const exportDialog = ref(false);
+const exportFormat = ref('pdf');
+const exportFilename = ref('chatverlauf');
+const includeTimestamps = ref(true);
+const includeModelInfo = ref(true);
+const includeMetadata = ref(true);
+const exporting = ref(false);
+const exportSnackbar = reactive({ show: false, message: '', color: 'success' });
+
 const goBack = () => {
   router.push(`/edit/${route.params.id}`);
 };
@@ -161,10 +298,7 @@ const loadData = async () => {
   error.value = null;
 
   try {
-    // Load material
     material.value = await materialsStore.fetchMaterialById(route.params.id);
-
-    // Load conversation history
     const response = await apiClient.getConversationHistory(route.params.id);
 
     if (!response.success) {
@@ -186,7 +320,6 @@ const copyToClipboard = async (text) => {
     copySnackbar.value = true;
   } catch (err) {
     console.error('Failed to copy text:', err);
-    // Fallback for older browsers
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
@@ -213,8 +346,202 @@ const formatTimestamp = (timestamp) => {
   });
 };
 
+
+const buildMetadataHeader = () => {
+  if (!includeMetadata.value) return '';
+
+  return `Material: ${material.value?.topic || 'N/A'}
+Fach: ${material.value?.subject || 'N/A'}
+Typ: ${material.value?.type || 'N/A'}
+Exportiert: ${new Date().toLocaleString('de-DE')}
+Anzahl Nachrichten: ${conversationHistory.value.length}
+
+${'='.repeat(60)}
+
+`;
+};
+
+const buildTextContent = () => {
+  let content = buildMetadataHeader();
+
+  conversationHistory.value.forEach((msg, index) => {
+    const role = msg.role === 'user' ? 'SIE' : 'AI ASSISTANT';
+    const timestamp = includeTimestamps.value ? ` [${formatTimestamp(msg.timestamp)}]` : '';
+    const modelInfo = includeModelInfo.value && msg.modelUsed ? `\nModell: ${msg.modelUsed}` : '';
+
+    content += `${index + 1}. ${role}${timestamp}${modelInfo}\n`;
+    content += `${'-'.repeat(60)}\n`;
+    content += `${msg.message}\n\n`;
+  });
+
+  return content;
+};
+
+const buildMarkdownContent = () => {
+  let content = '';
+
+  if (includeMetadata.value) {
+    content += `# Chatverlauf: ${material.value?.topic || 'Untitled'}\n\n`;
+    content += `**Fach:** ${material.value?.subject || 'N/A'}  \n`;
+    content += `**Typ:** ${material.value?.type || 'N/A'}  \n`;
+    content += `**Exportiert:** ${new Date().toLocaleString('de-DE')}  \n`;
+    content += `**Anzahl Nachrichten:** ${conversationHistory.value.length}\n\n`;
+    content += `---\n\n`;
+  }
+
+  conversationHistory.value.forEach((msg, index) => {
+    const role = msg.role === 'user' ? '👤 **Sie**' : '🤖 **AI Assistant**';
+    const timestamp = includeTimestamps.value ? ` - *${formatTimestamp(msg.timestamp)}*` : '';
+    const modelInfo = includeModelInfo.value && msg.modelUsed ? `\n> Modell: ${msg.modelUsed}` : '';
+
+    content += `## ${index + 1}. ${role}${timestamp}\n\n`;
+    content += `${msg.message}\n`;
+    if (modelInfo) content += `${modelInfo}\n`;
+    content += `\n---\n\n`;
+  });
+
+  return content;
+};
+
+const exportToPDF = async (content) => {
+  const { jsPDF } = await import('jspdf');
+
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 20;
+  const maxWidth = pageWidth - 2 * margin;
+  let yPosition = margin;
+
+  // Helper to add new page
+  const checkPageBreak = (neededSpace = 10) => {
+    if (yPosition + neededSpace > pageHeight - margin) {
+      pdf.addPage();
+      yPosition = margin;
+      return true;
+    }
+    return false;
+  };
+
+  // Title
+  if (includeMetadata.value) {
+    pdf.setFontSize(16);
+    pdf.setFont(undefined, 'bold');
+    pdf.text(`Chatverlauf: ${material.value?.topic || 'Untitled'}`, margin, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Fach: ${material.value?.subject || 'N/A'}`, margin, yPosition);
+    yPosition += 6;
+    pdf.text(`Exportiert: ${new Date().toLocaleString('de-DE')}`, margin, yPosition);
+    yPosition += 10;
+  }
+
+  // Messages
+  conversationHistory.value.forEach((msg, index) => {
+    checkPageBreak(20);
+
+    // Role header
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, 'bold');
+    const role = msg.role === 'user' ? 'Sie' : 'AI Assistant';
+    const timestamp = includeTimestamps.value ? ` [${formatTimestamp(msg.timestamp)}]` : '';
+    pdf.text(`${index + 1}. ${role}${timestamp}`, margin, yPosition);
+    yPosition += 7;
+
+    // Model info
+    if (includeModelInfo.value && msg.modelUsed) {
+      pdf.setFontSize(8);
+      pdf.setFont(undefined, 'italic');
+      pdf.text(`Modell: ${msg.modelUsed}`, margin, yPosition);
+      yPosition += 5;
+    }
+
+    // Message content
+    pdf.setFontSize(10);
+    pdf.setFont(undefined, 'normal');
+    const lines = pdf.splitTextToSize(msg.message, maxWidth);
+
+    lines.forEach((line) => {
+      checkPageBreak(6);
+      pdf.text(line, margin, yPosition);
+      yPosition += 6;
+    });
+
+    yPosition += 8; // Space between messages
+  });
+
+  const blob = pdf.output('blob');
+  downloadBlob(blob, `${exportFilename.value}.pdf`);
+};
+
+
+
+const downloadBlob = (blob, filename) => {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
+
+const performExport = async () => {
+  if (!conversationHistory.value.length) return;
+
+  exporting.value = true;
+
+  try {
+    const metadata = includeMetadata.value ? {
+      'Material': material.value?.topic || 'N/A',
+      'Fach': material.value?.subject || 'N/A',
+      'Exportiert': new Date().toLocaleString('de-DE'),
+      'Nachrichten': conversationHistory.value.length
+    } : {};
+
+    switch (exportFormat.value) {
+      case 'pdf':
+              await exportChatToPDF(
+                conversationHistory.value,
+                exportFilename.value,
+                {
+                  title: `Chatverlauf: ${material.value?.topic || 'Untitled'}`,
+                  metadata
+                }
+              );
+              break;
+
+
+      case 'docx':
+        await exportToDocx(buildMarkdownContent(), exportFilename.value);
+        break;
+
+      case 'md':
+        exportToMarkdown(buildMarkdownContent(), exportFilename.value);
+        break;
+
+      case 'txt':
+        exportToText(buildTextContent(), exportFilename.value);
+        break;
+    }
+
+    exportSnackbar.message = 'Export erfolgreich!';
+    exportSnackbar.color = 'success';
+    exportSnackbar.show = true;
+    exportDialog.value = false;
+  } catch (err) {
+    console.error('Export error:', err);
+    exportSnackbar.message = 'Fehler beim Exportieren: ' + err.message;
+    exportSnackbar.color = 'error';
+    exportSnackbar.show = true;
+  } finally {
+    exporting.value = false;
+  }
+};
+
 onMounted(() => {
   loadData();
+  exportFilename.value = `chatverlauf_${route.params.id}`;
 });
 </script>
 

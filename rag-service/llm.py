@@ -17,27 +17,15 @@ def get_llm(model_name: str | None = None, temperature: float | None = None):
         temperature: Override temperature (e.g. 0.0 for verify phase)
     """
     provider = settings.llm_provider.lower()
-    allowed = PROVIDER_MODELS.get(provider)
-
-    if allowed is None:
-        raise ValueError(f"Unsupported LLM provider: {provider}")
-
     model = model_name or settings.llm_model
     temp = temperature if temperature is not None else _LLM_PARAMS["temperature"]
-
     if provider == "ollama":
         from langchain_ollama import ChatOllama
-
         return ChatOllama(
             model=model,
             base_url=settings.ollama_url,
             temperature=temp,
             num_predict=_LLM_PARAMS.get("max_tokens", 2048),
-        )
-
-    if model not in allowed:
-        raise ValueError(
-            f"Model '{model}' not available for '{provider}'. Allowed: {allowed}"
         )
 
     if provider == "openai":
