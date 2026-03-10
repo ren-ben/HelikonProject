@@ -2,13 +2,17 @@ package at.technikum.clil.service;
 
 import at.technikum.clil.dto.ConversationMessageDTO;
 import at.technikum.clil.model.MaterialConversationHistory;
+import at.technikum.clil.model.User;
 import at.technikum.clil.repository.ConversationHistoryRepository;
 import at.technikum.clil.repository.LessonMaterialRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,5 +69,19 @@ public class ConversationHistoryService {
                 .timestamp(entity.getTimestamp())
                 .modelUsed(entity.getModelUsed())
                 .build();
+    }
+
+    public List<ConversationMessageDTO> getRecentHistory(Long materialId, User user, int limit) {
+        var recentPage = conversationRepository
+                .findByMaterialIdAndUserIdOrderByTimestampDesc(
+                        materialId,
+                        user.getId(),
+                        PageRequest.of(0, limit)
+                );
+
+        return recentPage.getContent()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 }

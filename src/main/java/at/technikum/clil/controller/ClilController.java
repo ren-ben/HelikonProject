@@ -2,6 +2,7 @@ package at.technikum.clil.controller;
 
 import at.technikum.clil.dto.*;
 import at.technikum.clil.model.User;
+import at.technikum.clil.service.ConversationHistoryService;
 import at.technikum.clil.service.RagProxyService;
 import at.technikum.clil.service.MaterialService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +21,12 @@ public class ClilController {
 
     private final RagProxyService ragProxyService;
     private final MaterialService materialService;
+    private final ConversationHistoryService conversationHistoryService;
 
-    public ClilController(RagProxyService ragProxyService, MaterialService materialService) {
+    public ClilController(RagProxyService ragProxyService, MaterialService materialService, ConversationHistoryService conversationHistoryService) {
         this.ragProxyService = ragProxyService;
         this.materialService = materialService;
+        this.conversationHistoryService = conversationHistoryService;
     }
 
     @GetMapping("/models")
@@ -121,7 +124,12 @@ public class ClilController {
             @RequestBody MaterialChatRequest request,
             @AuthenticationPrincipal User user) {
 
+
+
         log.info("Chat request for material {}: {}", materialId, request.getPrompt());
+        List<ConversationMessageDTO> history = conversationHistoryService.getRecentHistory(materialId, user, 10);
+        request.setChatHistory(history);
+
         if (Boolean.TRUE.equals(request.getUseDocumentContext()) && user != null) {
             request.setUserId(user.getId().toString());
         }
