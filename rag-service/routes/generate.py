@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from generation import parametric_generate, rag_parametric_generate
-
 router = APIRouter()
 
 
@@ -22,6 +20,7 @@ class GenerateRequest(BaseModel):
     userId: str | None = None
     contextSubject: str | None = None
     citationStyle: str = "numbered"
+    useTwoPhase: bool = True
 
 
 class SourceInfo(BaseModel):
@@ -39,33 +38,67 @@ class GenerateResponse(BaseModel):
     """Mirrors Java ClilResponse."""
     formattedResponse: str
     sources: list[SourceInfo] = []
+    rawContent: str | None = None
+    timings: dict | None = None
 
+
+from generation import (
+    parametric_generate,
+    rag_parametric_generate,
+    two_phase_parametric_generate,
+    rag_two_phase_generate
+)
 
 @router.post("/generate", response_model=GenerateResponse)
 def generate(req: GenerateRequest):
-    """CLIL material generation — parametric or RAG-augmented.
-
-    Always returns HTTP 200.  On error the HTML error div is placed in
-    ``formattedResponse``.
-    """
+    """CLIL material generation with RAG and two-phase support."""
     try:
         if req.useDocumentContext and req.userId:
-            result = rag_parametric_generate(
+            result = rag_two_phase_generate(
                 user_prompt=req.prompt,
                 user_id=req.userId,
                 subject=req.contextSubject,
                 model_name=req.modelName,
                 citation_style=req.citationStyle,
             )
+            return GenerateResponse(
+                formattedResponse=result["formattedResponse"],
+                sources=result.get("sources", []),
+                rawContent=result.get("rawContent"),
+                timings=result.get("timings"),
+            )
+
+        elif req.useTwoPhase:
+            result = two_phase_parametric_generate(
+                user_prompt=req.prompt,
+                model_name=req.modelName,
+            )
+            return GenerateResponse(
+                formattedResponse=result["formattedResponse"],
+                sources=result.get("sources", []),
+                rawContent=result.get("rawContent"),
+                timings=result.get("timings"),
+            )
+
         else:
             result = parametric_generate(
                 user_prompt=req.prompt,
                 model_name=req.modelName,
             )
-        return GenerateResponse(
-            formattedResponse=result["formattedResponse"],
-            sources=result.get("sources", []),
+            return GenerateResponse(
+                formattedResponse=result["formattedResponse"],
+                sources=result.get("sources", []),
+            )
+
+    except Exception as exc:
+        error_html = (
+            "<div class='error'>"
+            "<h3>Error generating content</h3>"
+            f"<p>{exc}</p>"
+            "</div>"
         )
+        return GenerateResponse(formattedResponse=error_html)
+
 
     except Exception as exc:
         error_html = (

@@ -495,4 +495,70 @@ export default {
       return { success: false, error: error.message };
     }
   },
+
+  async getConversationHistory(materialId) {
+      try {
+        const response = await apiClient.get(`/materials/${materialId}/conversation`);
+        return {
+          success: true,
+          data: response.data
+        };
+      } catch (error) {
+        console.error('Error fetching conversation history:', error);
+        return {
+          success: false,
+          error: error.message,
+          data: []
+        };
+      }
+    },
+
+    async addConversationMessage(materialId, message) {
+      try {
+        const response = await apiClient.post(`/materials/${materialId}/conversation`, message);
+        return {
+          success: true,
+          data: response.data
+        };
+      } catch (error) {
+        console.error('Error adding conversation message:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    },
+  // Chat with AI to modify existing material
+    // Chat with AI to modify existing material
+    // Chat with AI to modify existing material
+    async chatWithMaterial(materialId, chatData) {
+      try {
+        // Get user from localStorage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user.username || 'anonymous';
+
+        const response = await apiClient.post(`/material/${materialId}/chat`, {
+          prompt: chatData.prompt,
+          content: chatData.content,
+          language: chatData.language || 'German',
+          languageLevel: chatData.languageLevel || 'B1',
+          subject: chatData.subject || '',
+          modelName: chatData.modelName || 'llama3',
+          useDocumentContext: chatData.useDocumentContext || false,
+          userId: userId,
+        });
+        return {
+          success: true,
+          data: response.data,
+        };
+      } catch (error) {
+        console.error('Chat with material error:', error.message);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    },
+
+
 };
