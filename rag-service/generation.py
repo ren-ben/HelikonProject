@@ -234,7 +234,7 @@ def two_phase_parametric_generate(
     raw_content = raw_response.content
 
 
-    perfection_llm = get_llm(model_name, temperature=0.0)
+    perfection_llm = get_llm("llama3", temperature=0.1)
 
     verify_prompt = f"""Review and perfect this educational content:
 
@@ -333,7 +333,7 @@ def rag_two_phase_generate(
     raw_content = raw_response.content
 
 
-    perfection_llm = get_llm(model_name, temperature=0.0)
+    perfection_llm = get_llm("llama3", temperature=0.1)
 
     verify_prompt = f"""You are a senior programming teacher reviewing colleague's teaching materials.
 
