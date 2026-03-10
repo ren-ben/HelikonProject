@@ -22,4 +22,5 @@ public class MaterialRequest {
     private String userId;
     private String contextSubject;
     private String citationStyle;
+    private Boolean useTwoPhase;
 }

@@ -173,6 +173,7 @@ export default {
         modelName: params.modelName || 'llama3.2',
         useDocumentContext: params.useDocumentContext || false,
         citationStyle: params.citationStyle || 'numbered',
+        useTwoPhase: params.useTwoPhase,
       };
 
       // Call Spring Boot endpoint
@@ -528,8 +529,6 @@ export default {
         };
       }
     },
-  // Chat with AI to modify existing material
-    // Chat with AI to modify existing material
     // Chat with AI to modify existing material
     async chatWithMaterial(materialId, chatData) {
       try {
@@ -544,8 +543,7 @@ export default {
           languageLevel: chatData.languageLevel || 'B1',
           subject: chatData.subject || '',
           modelName: chatData.modelName || 'llama3',
-          useDocumentContext: chatData.useDocumentContext || false,
-          userId: userId,
+          useDocumentContext: chatData.useDocumentContext || false
         });
         return {
           success: true,

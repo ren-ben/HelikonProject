@@ -10,7 +10,7 @@ class GenerateRequest(BaseModel):
     topic: str
     prompt: str
     subject: str
-    languageLevel: str = "B1"
+    languageLevel: str = "C1"
     vocabPercentage: int = 30
     contentFocus: str = "balanced"
     includeVocabList: bool = True
@@ -20,7 +20,7 @@ class GenerateRequest(BaseModel):
     userId: str | None = None
     contextSubject: str | None = None
     citationStyle: str = "numbered"
-    useTwoPhase: bool = True
+    useTwoPhase: bool = None
 
 
 class SourceInfo(BaseModel):
@@ -63,7 +63,6 @@ def generate(req: GenerateRequest):
     try:
         use_rag = req.useDocumentContext and req.userId
         use_two_phase = req.useTwoPhase
-
         if use_rag and use_two_phase:
             result = rag_two_phase_generate(
                 user_prompt=req.prompt,
