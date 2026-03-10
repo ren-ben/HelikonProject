@@ -109,6 +109,35 @@ Saved materials live in PostgreSQL. The frontend fetches them all via `GET /mate
 | JWT access TTL | `jwt.expiration-ms` / `JWT_EXPIRATION_MS` | 86400000 (24h) |
 | JWT refresh TTL | `jwt.refresh-expiration-ms` / `JWT_REFRESH_EXPIRATION_MS` | 604800000 (7d) |
 
+## Diploma Thesis — Current Phase
+
+**Active task:** Writing the Implementation chapter for Oliwier Przewlocki's diploma thesis section.
+
+**Document history:**
+- `Literaturrecherche_OPrzewlocki (1).pdf` — Ch.1: Literature Research (AI in education, KR/vectorization, RAG theory, vector DBs, data security/GDPR, RBAC/ABAC)
+- `OPrzewlocki_StateOfTheArt_Machbarkeit_Konzept.pdf` — Ch.1: State of the Art (embedding families, vector DB comparison, RAG framework comparison); Ch.2: Feasibility Study (selected: E5 embeddings, ChromaDB, LangChain); Ch.3: Concept (system overview, pipeline, API, Docker infra, security/access control)
+
+**Implementation chapter scope (what Oliwier owns):**
+- Docker/Caddy infrastructure (docker-compose.yml, Dockerfiles, Caddyfile)
+- Spring Boot application structure (layered architecture, all packages)
+- PostgreSQL database design (User, LessonMaterial, Subject entities, schema)
+- JWT authentication & Spring Security (JwtService, JwtAuthenticationFilter, SecurityConfig)
+- User management & approval workflow (AuthService, DataInitializer, AdminService)
+- REST API design (all controllers: ClilController, AuthController, DocumentController, SubjectController, AdminController)
+- Material CRUD with ownership isolation (MaterialService, LessonMaterialRepository)
+- Document upload proxying to RAG service (DocumentController + DocumentProxyService)
+- RAG generation proxying (RagProxyService with WebClient)
+- Per-user subject management (SubjectService, SubjectController)
+- Security hardening (CORS, file validation, Caddy rate-limiting, Docker port lockdown)
+
+**Out of scope for Oliwier's implementation chapter:**
+- Python RAG service (rag-service/) — covered by a different team member
+- ChromaDB, LangChain, embeddings — part of RAG service chapter
+- Frontend (Vue 3 / Pinia) — covered by Bernhard & Danilo
+- User chat history — not implemented
+
+**Output file:** `docs/implementation_outline.typ`
+
 ## Roadmap & Scope
 
 Phases 1–7b are complete (Docker, RAG service, auth, proxy generation, frontend auth, document upload + RAG query, admin panel, RAG-augmented generation with subject tagging). The remaining objectives are planned in the phases below.

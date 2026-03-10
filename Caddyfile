@@ -3,6 +3,10 @@ helikonproject.com, www.helikonproject.com {
     reverse_proxy clil-frontend:80
 }
 
+db.helikonproject.com {
+    reverse_proxy clil-pgadmin:80
+}
+
 list-me.net {
     reverse_proxy listme-frontend:80
 }
