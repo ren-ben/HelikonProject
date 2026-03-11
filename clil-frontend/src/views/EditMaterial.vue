@@ -520,7 +520,6 @@ const deleteMaterial = async () => {
 
 
 // Chat with AI - use API client with automatic auth
-// Chat with AI - use API client with automatic auth
 const handleChatSubmit = async () => {
   if (!chatPrompt.value.trim() || !material.value) return;
 

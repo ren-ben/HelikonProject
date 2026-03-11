@@ -49,7 +49,6 @@ def chat_with_material(req: ChatRequest) -> ChatResponse:
         Task: Update the material according to the user's request. Keep the original structure unless asked to change it. Return ONLY the updated material content, no explanations."""
 
 
-        print(history_context)
         start_time = time.time()
 
         if req.useDocumentContext:

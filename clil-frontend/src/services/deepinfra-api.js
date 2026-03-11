@@ -543,7 +543,8 @@ export default {
           languageLevel: chatData.languageLevel || 'B1',
           subject: chatData.subject || '',
           modelName: chatData.modelName || 'llama3',
-          useDocumentContext: chatData.useDocumentContext || false
+          useDocumentContext: chatData.useDocumentContext || false,
+          userId: userId,
         });
         return {
           success: true,
