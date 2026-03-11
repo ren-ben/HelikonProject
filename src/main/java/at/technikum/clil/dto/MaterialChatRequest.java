@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -18,5 +20,6 @@ public class MaterialChatRequest {
     private String modelName;
     private Boolean useDocumentContext;
     private String userId;
+    private List<ConversationMessageDTO> chatHistory;
 }
 
