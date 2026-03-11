@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from generation import parametric_generate, rag_parametric_generate
 import time
-
+from fastapi import APIRouter, HTTPException
 router = APIRouter()
 
 
@@ -83,10 +83,7 @@ def chat_with_material(req: ChatRequest) -> ChatResponse:
         print(f"❌ Chat error: {e}")
         import traceback
         traceback.print_exc()
-        return ChatResponse(
-            formattedResponse=f"<div class='error'>Chat failed: {str(e)}</div>",
-            sources=[]
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def build_safe_history(chat_history, max_prompt_chars=5000):

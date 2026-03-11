@@ -546,6 +546,10 @@ export default {
           useDocumentContext: chatData.useDocumentContext || false,
           userId: userId,
         });
+        if (!response.data?.formattedResponse) {
+              return { success: false, error: 'Empty response from AI', data: null };
+        }
+
         return {
           success: true,
           data: response.data,

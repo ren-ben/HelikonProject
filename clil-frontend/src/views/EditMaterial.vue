@@ -542,9 +542,8 @@ const handleChatSubmit = async () => {
       modelName: selectedModel.value,
       useDocumentContext: useDocumentContext.value,
     });
-
     if (!response.success) {
-      throw new Error(response.error || 'Chat failed');
+        throw new Error(response.error || 'Chat failed');
     }
 
     await apiClient.addConversationMessage(material.value.id, {
