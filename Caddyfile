@@ -4,7 +4,10 @@ helikonproject.com, www.helikonproject.com {
 }
 
 db.helikonproject.com {
-    reverse_proxy clil-pgadmin:80
+    reverse_proxy clil-pgadmin:80 {
+        header_up X-Forwarded-Proto https
+        header_up X-Script-Name ""
+    }
 }
 
 list-me.net {
