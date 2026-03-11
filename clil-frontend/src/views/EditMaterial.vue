@@ -527,11 +527,7 @@ const handleChatSubmit = async () => {
   saveStatus.value = 'saving';
 
   try {
-    await apiClient.addConversationMessage(material.value.id, {
-      role: 'user',
-      message: chatPrompt.value,
-      modelUsed: selectedModel.value
-    });
+
 
     const response = await apiClient.chatWithMaterial(material.value.id, {
       prompt: chatPrompt.value,
@@ -545,6 +541,12 @@ const handleChatSubmit = async () => {
     if (!response.success) {
         throw new Error(response.error || 'Chat failed');
     }
+
+    await apiClient.addConversationMessage(material.value.id, {
+      role: 'user',
+      message: chatPrompt.value,
+      modelUsed: selectedModel.value
+    });
 
     await apiClient.addConversationMessage(material.value.id, {
       role: 'assistant',
