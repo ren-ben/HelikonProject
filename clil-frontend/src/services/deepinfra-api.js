@@ -165,6 +165,7 @@ export default {
         topic: params.topic,
         prompt: params.prompt,
         subject: params.subject || '',
+        language: params.language || 'German',
         languageLevel: params.languageLevel || 'B1',
         vocabPercentage: params.vocabPercentage || 30,
         contentFocus: params.contentFocus || 'balanced',
@@ -251,6 +252,7 @@ export default {
         content: response.data.formattedHtml || response.data.content,
         type: response.data.materialType,
         subject: response.data.subject || '',
+        language: response.data.language || 'German',
         languageLevel: response.data.languageLevel || 'B1',
         vocabPercentage: response.data.vocabPercentage || 30,
         created: response.data.createdAt,
@@ -292,13 +294,12 @@ export default {
         data: {
           id: response.data.id,
           title: response.data.topic,
-          content: response.data.aiResponse,
+          content: response.data.aiResponseß,
           type: response.data.materialType,
           subject: response.data.subject || '',
-          language: {
-            level: response.data.languageLevel || 'B1',
-            vocabPercentage: response.data.vocabPercentage || 30
-          },
+          level: response.data.languageLevel || 'B1',
+          vocabPercentage: response.data.vocabPercentage || 30,
+          language:response.data.language,
           created: response.data.createdAt,
           modified: response.data.modifiedAt || response.data.createdAt,
           tags: response.data.tags || []

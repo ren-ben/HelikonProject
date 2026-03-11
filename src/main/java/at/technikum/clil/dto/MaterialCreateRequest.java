@@ -16,6 +16,7 @@ public class MaterialCreateRequest {
     private String aiResponse;
     private String formattedHtml;
     private String subject;
+    private String language;
     private String languageLevel;
     private Integer vocabPercentage;
     private List<String> tags;

@@ -44,6 +44,7 @@ class MaterialsService {
         content: response.content,
         type: response.type,
         subject: response.subject,
+        language:response.language,
         languageLevel: response.languageLevel,
         vocabPercentage: response.vocabPercentage,
         created: response.created,
@@ -165,10 +166,9 @@ class MaterialsService {
       content: apiData.aiResponse || apiData.formattedHtml || apiData.content,
       type: apiData.materialType || apiData.type,
       subject: apiData.subject || '',
-      language: {
-        level: apiData.languageLevel || 'B1',
-        vocabPercentage: apiData.vocabPercentage || 30
-      },
+      language: apiData.language || 'German',
+      languageLevel: apiData.languageLevel || 'B1',
+      vocabPercentage: apiData.vocabPercentage || 30,
       created: apiData.createdAt || apiData.created,
       modified: apiData.modifiedAt || apiData.modified || apiData.createdAt || apiData.created,
       tags: apiData.tags || []
@@ -184,6 +184,7 @@ class MaterialsService {
       topic: frontendMaterial.title || frontendMaterial.topic,
       content: frontendMaterial.content, // Wird in aiResponse/formattedHtml umgewandelt
       subject: frontendMaterial.subject,
+      language: frontendMaterial.language || 'German',
       languageLevel: frontendMaterial.languageLevel || frontendMaterial.language?.level,
       vocabPercentage: frontendMaterial.vocabPercentage || frontendMaterial.language?.vocabPercentage,
       tags: frontendMaterial.tags || [],

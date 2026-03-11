@@ -1025,6 +1025,7 @@ const saveMaterial = async () => {
       title: generatedMaterial.value.title || form.value.topic,
       type: form.value.type,
       subject: form.value.subject,
+      language: form.value.language,
       content: previewContent.value,
       languageLevel: form.value.languageLevel,
       vocabPercentage: form.value.vocabPercentage,

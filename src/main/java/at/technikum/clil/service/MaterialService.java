@@ -41,6 +41,7 @@ public class MaterialService {
                 .aiResponse(content)
                 .formattedHtml(request.getFormattedHtml() != null ? request.getFormattedHtml() : content)
                 .subject(request.getSubject())
+                .language(request.getLanguage())
                 .languageLevel(request.getLanguageLevel())
                 .vocabPercentage(request.getVocabPercentage())
                 .tags(request.getTags())
@@ -86,6 +87,9 @@ public class MaterialService {
                     if (request.getLanguageLevel() != null) {
                         existingMaterial.setLanguageLevel(request.getLanguageLevel());
                     }
+                    if (request.getLanguage() != null) {
+                        existingMaterial.setLanguage(request.getLanguage());
+                    }
                     if (request.getVocabPercentage() != null) {
                         existingMaterial.setVocabPercentage(request.getVocabPercentage());
                     }
@@ -126,8 +130,10 @@ public class MaterialService {
         if (request.getFormattedHtml() != null) fields.append("formattedHtml,");
         if (request.getSubject() != null) fields.append("subject,");
         if (request.getLanguageLevel() != null) fields.append("languageLevel,");
+        if (request.getLanguage() != null) fields.append("language,");
         if (request.getVocabPercentage() != null) fields.append("vocabPercentage,");
         if (request.getTags() != null) fields.append("tags,");
+
         return fields.length() > 0 ? fields.substring(0, fields.length() - 1) : "none";
     }
 

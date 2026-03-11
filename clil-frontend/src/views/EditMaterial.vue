@@ -53,11 +53,12 @@
                 class="mb-3"
               ></v-text-field>
               <v-select
-                v-model="editableType"
-                :items="materialTypes"
+                v-model="editableLanguage"
+                :items="languageOptions"
                 item-title="title"
-                item-value="id"
-                label="Material-Typ"
+                item-value="value"
+                label="Sprache"
+                prepend-inner-icon="mdi-web"
                 variant="outlined"
                 density="compact"
                 class="mb-3"
@@ -299,6 +300,30 @@ const showPreview = ref(false);
 const showVersionHistory = ref(false);
 const snackbar = ref({ show: false, text: '', color: 'success' });
 const initialLoadComplete = ref(false);
+const editableLanguage = ref('German');
+
+const languageOptions = [
+  { title: 'Deutsch', value: 'German' },
+  { title: 'Englisch', value: 'English' },
+  { title: 'Französisch', value: 'French' },
+  { title: 'Spanisch', value: 'Spanish' },
+  { title: 'Italienisch', value: 'Italian' },
+  { title: 'Portugiesisch', value: 'Portuguese' },
+  { title: 'Niederländisch', value: 'Dutch' },
+  { title: 'Polnisch', value: 'Polish' },
+  { title: 'Russisch', value: 'Russian' },
+  { title: 'Ukrainisch', value: 'Ukrainian' },
+  { title: 'Tschechisch', value: 'Czech' },
+  { title: 'Slowakisch', value: 'Slovak' },
+  { title: 'Ungarisch', value: 'Hungarian' },
+  { title: 'Rumänisch', value: 'Romanian' },
+  { title: 'Türkisch', value: 'Turkish' },
+  { title: 'Schwedisch', value: 'Swedish' },
+  { title: 'Norwegisch', value: 'Norwegian' },
+  { title: 'Dänisch', value: 'Danish' },
+  { title: 'Finnisch', value: 'Finnish' },
+];
+
 
 // Globale Materialtypen aus Utils
 const materialTypes = computed(() =>
@@ -322,19 +347,16 @@ const loadMaterial = async (materialId) => {
   loading.value = true;
   try {
     // Versuche zuerst aus dem Store zu laden
-    material.value = materialsStore.getMaterialById(materialId);
-    
-    // Wenn nicht im Store, lade vom Backend
-    if (!material.value) {
-      const fetchedMaterial = await materialsStore.fetchMaterialById(materialId);
-      material.value = fetchedMaterial;
-    }
+    const fetchedMaterial = await materialsStore.fetchMaterialById(materialId);
+    material.value = fetchedMaterial;
+
     
     if (material.value) {
       editableContent.value = material.value.content || '';
       editableTitle.value = material.value.title || '';
       editableType.value = material.value.type || '';
       editableSubject.value = material.value.subject || '';
+      editableLanguage.value = material.value.language || 'German';
       editableLanguageLevel.value = material.value.languageLevel || 'B1';
       editableVocabPercentage.value = material.value.vocabPercentage || 30;
       editableTags.value = material.value.tags || [];
@@ -454,6 +476,11 @@ watch(editableVocabPercentage, () => {
   markUnsaved();
 });
 
+watch(editableLanguage, () => {
+  markUnsaved();
+});
+
+
 // Export-Dialog
 const handleExport = () => {
   exportDialog.value = true;
@@ -477,12 +504,14 @@ const forceSave = async () => {
             topic: editableTitle.value,
             materialType: editableType.value,
             subject: editableSubject.value,
+            language: editableLanguage.value,
             languageLevel: editableLanguageLevel.value,
             vocabPercentage: editableVocabPercentage.value,
             tags: editableTags.value
         });
         
         // Update local material object
+        material.value.language = editableLanguage.value;
         material.value.content = editableContent.value;
         material.value.title = editableTitle.value;
         material.value.type = editableType.value;
@@ -519,6 +548,7 @@ const deleteMaterial = async () => {
 };
 
 
+
 // Chat with AI - use API client with automatic auth
 const handleChatSubmit = async () => {
   if (!chatPrompt.value.trim() || !material.value) return;
@@ -532,7 +562,7 @@ const handleChatSubmit = async () => {
     const response = await apiClient.chatWithMaterial(material.value.id, {
       prompt: chatPrompt.value,
       content: editableContent.value,
-      language: material.value.language || 'German',
+      language: editableLanguage.value,
       languageLevel: editableLanguageLevel.value,
       subject: editableSubject.value,
       modelName: selectedModel.value,
