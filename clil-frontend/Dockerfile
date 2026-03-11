@@ -10,7 +10,7 @@ RUN npm install
 
 # Copy frontend source and build production bundle
 COPY clil-frontend/ .
-RUN NODE_OPTIONS="--max-old-space-size=512" npm run build
+RUN NODE_OPTIONS="--max-old-space-size=1024" npm run build
 
 # ─── Stage 2: Serve with nginx ────────────────────────────────
 # This container serves the Vue static files AND reverse-proxies

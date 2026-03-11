@@ -32,6 +32,7 @@ services:
       - postgres
     networks:
       - helikon
+      - caddy-net
 
   # ─── Backend (Spring Boot) ─────────────────────────────────
   spring-boot:
