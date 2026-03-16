@@ -2,7 +2,7 @@ import pathlib
 
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from llm import get_llm
+from llm import get_llm,_get_verify_llm
 from vector_store import get_vectorstore
 
 # load system prompt & save in cache
@@ -234,7 +234,7 @@ def two_phase_parametric_generate(
     raw_content = raw_response.content
 
 
-    perfection_llm = get_llm("llama3", temperature=0.1)
+    perfection_llm = _get_verify_llm(preferred_model="llama3", fallback_model=model_name, temperature=0.1)
 
     verify_prompt = f"""Review and perfect this educational content:
 
@@ -332,8 +332,7 @@ def rag_two_phase_generate(
     gen_time = time.time() - start_gen
     raw_content = raw_response.content
 
-
-    perfection_llm = get_llm("llama3", temperature=0.1)
+    perfection_llm = _get_verify_llm(preferred_model="llama3", fallback_model=model_name, temperature=0.1)
 
     verify_prompt = f"""You are a senior programming teacher reviewing colleague's teaching materials.
 

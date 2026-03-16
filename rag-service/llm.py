@@ -37,3 +37,14 @@ def get_llm(model_name: str | None = None, temperature: float | None = None):
             max_tokens=_LLM_PARAMS["max_tokens"],
         )
 
+
+def _get_verify_llm(preferred_model: str | None, fallback_model: str | None, temperature: float = 0.0):
+    """Try to use preferred_model (llama3) for verify phase, fall back to fallback_model."""
+    available = PROVIDER_MODELS.get(settings.llm_provider.lower(), [])
+
+    if preferred_model in available:
+        model = preferred_model
+    else:
+        model = fallback_model or settings.llm_model
+
+    return get_llm(model, temperature=temperature)

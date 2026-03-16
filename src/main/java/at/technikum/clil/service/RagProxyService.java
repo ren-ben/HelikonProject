@@ -80,14 +80,11 @@ public class RagProxyService {
                 .uri("/rag/chat")
                 .bodyValue(request)  // Send the DTO directly
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .map(body -> new RuntimeException("RAG error: " + body)))
                 .bodyToMono(ClilResponse.class)
-                .doOnSuccess(resp -> log.info("Chat completed"))
-                .onErrorResume(error -> {
-                    log.error("Chat error: {}", error.getMessage());
-                    return Mono.just(ClilResponse.builder()
-                            .formattedResponse("<div class='error'>Chat failed: " + error.getMessage() + "</div>")
-                            .build());
-                });
+                .doOnSuccess(resp -> log.info("Chat completed"));
     }
 
 

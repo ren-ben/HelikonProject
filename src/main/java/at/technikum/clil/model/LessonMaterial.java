@@ -38,6 +38,10 @@ public class LessonMaterial {
     @Column
     private String languageLevel;
 
+    @Column(name = "language")
+    private String language;
+
+
     @Column
     private Integer vocabPercentage;
 

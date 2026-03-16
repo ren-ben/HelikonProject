@@ -15,6 +15,7 @@ public class MaterialUpdateRequest {
     private String content;
     private String formattedHtml;
     private String subject;
+    private String language;
     private String languageLevel;
     private Integer vocabPercentage;
     private List<String> tags;

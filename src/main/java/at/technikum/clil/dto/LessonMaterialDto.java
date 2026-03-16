@@ -14,6 +14,7 @@ public record LessonMaterialDto(
         String contentFocus,
         Boolean includeVocabList,
         String description,
+        String language,
         List<String> tags,
         String createdAt,
         String modifiedAt
@@ -30,6 +31,7 @@ public record LessonMaterialDto(
                 entity.getContentFocus(),
                 entity.getIncludeVocabList(),
                 entity.getDescription(),
+                entity.getLanguage(),
                 entity.getTags(),
                 entity.getCreatedAt().toString(),
                 entity.getModifiedAt() != null ? entity.getModifiedAt().toString() : entity.getCreatedAt().toString()

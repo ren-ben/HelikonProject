@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from generation import parametric_generate, rag_parametric_generate
 import time
-
+from fastapi import APIRouter, HTTPException
 router = APIRouter()
 
 
@@ -49,7 +49,6 @@ def chat_with_material(req: ChatRequest) -> ChatResponse:
         Task: Update the material according to the user's request. Keep the original structure unless asked to change it. Return ONLY the updated material content, no explanations."""
 
 
-        print(history_context)
         start_time = time.time()
 
         if req.useDocumentContext:
@@ -68,7 +67,6 @@ def chat_with_material(req: ChatRequest) -> ChatResponse:
             )
 
         elapsed_time = time.time() - start_time
-
         print(f"Chat completed in {elapsed_time:.1f}s using model: {req.modelName}, RAG: {req.useDocumentContext}")
 
         return ChatResponse(
@@ -84,18 +82,14 @@ def chat_with_material(req: ChatRequest) -> ChatResponse:
         print(f"❌ Chat error: {e}")
         import traceback
         traceback.print_exc()
-        return ChatResponse(
-            formattedResponse=f"<div class='error'>Chat failed: {str(e)}</div>",
-            sources=[]
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def build_safe_history(chat_history, max_prompt_chars=5000):
     if not chat_history:
         return ""
-    safe_history = chat_history[1:]
 
-    candidates = safe_history[-10:]  # alle außer der userprompt weil sonst doppelt
+    candidates = chat_history[-10:]
 
     history_msgs = []
     current_size = 0
